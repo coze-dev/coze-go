@@ -78,7 +78,7 @@ type datasetsDocuments struct {
 	commonHeaderOpt []RequestOption
 }
 
-func newDocuments(core *core) *datasetsDocuments {
+func newDatasetsDocuments(core *core) *datasetsDocuments {
 	return &datasetsDocuments{client: core, commonHeaderOpt: []RequestOption{
 		withHTTPHeader("Agw-Js-Conv", "str"),
 	}}
@@ -104,7 +104,7 @@ type Document struct {
 	// The type of file format. Values include:
 	// 0: Document type, such as txt, pdf, online web pages, etc.
 	// 1: Spreadsheet type, such as xls spreadsheets, etc.
-	// 2: Photo type, such as png images, etc.
+	// 2: Images type, such as png images, etc.
 	FormatType DocumentFormatType `json:"format_type"`
 
 	// The number of times the file has been hit in conversations.
@@ -190,22 +190,25 @@ type DocumentChunkStrategy struct {
 type DocumentSourceInfo struct {
 	// Base64 encoding of the local file.
 	// Required when uploading local files.
-	FileBase64 string `json:"file_base64,omitempty"`
+	FileBase64 *string `json:"file_base64,omitempty"`
 
 	// The format of the local file, i.e., the file extension, such as "txt".
 	// Supported formats include PDF, TXT, DOC, DOCX.
 	// The uploaded file type should match the knowledge base type.
 	// Required when uploading local files.
-	FileType string `json:"file_type,omitempty"`
+	FileType *string `json:"file_type,omitempty"`
 
 	// The URL of the webpage.
 	// Required when uploading webpages.
-	WebUrl string `json:"web_url,omitempty"`
+	WebUrl *string `json:"web_url,omitempty"`
 
 	// The upload method of the file.
-	// Set to 1 to indicate uploading online webpages.
+	// 1 to indicate uploading online webpages.
+	// 5 to indicate uploading fileID.
 	// Required when uploading online webpages.
-	DocumentSource int `json:"document_source,omitempty"`
+	DocumentSource *int `json:"document_source,omitempty"`
+
+	SourceFileID *int64 `json:"source_file_id,omitempty"`
 }
 
 // DocumentUpdateRule represents update rules for datasetsDocuments
@@ -229,7 +232,7 @@ const (
 	DocumentFormatTypeDocument DocumentFormatType = 0
 	// Spreadsheet type, such as xls spreadsheets, etc.
 	DocumentFormatTypeSpreadsheet DocumentFormatType = 1
-	// Photo type, such as png images, etc.
+	// Images type, such as png images, etc.
 	DocumentFormatTypeImage DocumentFormatType = 2
 )
 
@@ -280,6 +283,11 @@ type CreateDatasetsDocumentsReq struct {
 	// rules; the default is to continue using the initial settings, and modifications are not
 	// supported. For detailed instructions, refer to the ChunkStrategy object.
 	ChunkStrategy *DocumentChunkStrategy `json:"chunk_strategy,omitempty"`
+
+	// The type of file format. Values include:
+	// 0: Document type, such as txt, pdf, online web pages, etc.
+	// 2: Images type, such as png images, etc.
+	FormatType DocumentFormatType `json:"format_type"`
 }
 
 // DeleteDatasetsDocumentsReq represents request for deleting datasetsDocuments
@@ -358,58 +366,69 @@ type UpdateDatasetsDocumentsResp struct {
 	baseModel
 }
 
-// BuildWebPage creates basic document information for webpage type
-func BuildWebPage(name string, url string) *DocumentBase {
+// DocumentBaseBuildWebPage creates basic document information for webpage type
+func DocumentBaseBuildWebPage(name string, url string, interval *int) *DocumentBase {
+	updateRule := DocumentUpdateRuleBuildNoAuto()
+	if interval != nil {
+		updateRule = DocumentUpdateRuleBuildAutoUpdate(*interval)
+	}
 	return &DocumentBase{
 		Name:       name,
-		SourceInfo: BuildWebPageSourceInfo(url),
-		UpdateRule: BuildNoAutoUpdateRule(),
+		SourceInfo: DocumentSourceInfoBuildWebPage(url),
+		UpdateRule: updateRule,
 	}
 }
 
-// BuildWebPageWithInterval creates webpage type document information with auto-update interval
-func BuildWebPageWithInterval(name string, url string, interval int) *DocumentBase {
+// DocumentBaseBuildLocalFile creates basic document information for local file type
+func DocumentBaseBuildLocalFile(name string, content string, fileType string) *DocumentBase {
 	return &DocumentBase{
 		Name:       name,
-		SourceInfo: BuildWebPageSourceInfo(url),
-		UpdateRule: BuildAutoUpdateRule(interval),
+		SourceInfo: DocumentSourceInfoBuildLocalFile(content, fileType),
 	}
 }
 
-// BuildLocalFile creates basic document information for local file type
-func BuildLocalFile(name string, content string, fileType string) *DocumentBase {
+// DocumentBaseBuildImage creates basic document information for image type
+func DocumentBaseBuildImage(name string, fileID int64) *DocumentBase {
 	return &DocumentBase{
 		Name:       name,
-		SourceInfo: BuildLocalFileSourceInfo(content, fileType),
+		SourceInfo: DocumentSourceInfoBuildImage(fileID),
 	}
 }
 
-// BuildWebPageSourceInfo creates document source information for webpage type
-func BuildWebPageSourceInfo(url string) *DocumentSourceInfo {
+// DocumentSourceInfoBuildWebPage creates document source information for webpage type
+func DocumentSourceInfoBuildWebPage(url string) *DocumentSourceInfo {
 	return &DocumentSourceInfo{
-		WebUrl:         url,
-		DocumentSource: 1,
+		WebUrl:         &url,
+		DocumentSource: ptr(1),
 	}
 }
 
-// BuildLocalFileSourceInfo creates document source information for local file type
-func BuildLocalFileSourceInfo(content string, fileType string) *DocumentSourceInfo {
+// DocumentSourceInfoBuildImage creates document source information for image type
+func DocumentSourceInfoBuildImage(fileID int64) *DocumentSourceInfo {
+	return &DocumentSourceInfo{
+		SourceFileID:   &fileID,
+		DocumentSource: ptr(5),
+	}
+}
+
+// DocumentSourceInfoBuildLocalFile creates document source information for local file type
+func DocumentSourceInfoBuildLocalFile(content string, fileType string) *DocumentSourceInfo {
 	encodedContent := base64.StdEncoding.EncodeToString([]byte(content))
 	return &DocumentSourceInfo{
-		FileBase64: encodedContent,
-		FileType:   fileType,
+		FileBase64: &encodedContent,
+		FileType:   &fileType,
 	}
 }
 
-// BuildNoAutoUpdateRule creates a rule for no automatic updates
-func BuildNoAutoUpdateRule() *DocumentUpdateRule {
+// DocumentUpdateRuleBuildNoAuto creates a rule for no automatic updates
+func DocumentUpdateRuleBuildNoAuto() *DocumentUpdateRule {
 	return &DocumentUpdateRule{
 		UpdateType: DocumentUpdateTypeNoAutoUpdate,
 	}
 }
 
-// BuildAutoUpdateRule creates a rule for automatic updates with specified interval
-func BuildAutoUpdateRule(interval int) *DocumentUpdateRule {
+// DocumentUpdateRuleBuildAutoUpdate creates a rule for automatic updates with specified interval
+func DocumentUpdateRuleBuildAutoUpdate(interval int) *DocumentUpdateRule {
 	return &DocumentUpdateRule{
 		UpdateType:     DocumentUpdateTypeAutoUpdate,
 		UpdateInterval: interval,

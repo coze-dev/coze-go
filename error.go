@@ -66,11 +66,11 @@ const (
 )
 
 // String implements the Stringer interface
-func (c *AuthErrorCode) String() string {
-	return string(*c)
+func (c AuthErrorCode) String() string {
+	return string(c)
 }
 
-type CozeAuthError struct {
+type AuthError struct {
 	HttpCode     int
 	Code         AuthErrorCode
 	ErrorMessage string
@@ -79,8 +79,8 @@ type CozeAuthError struct {
 	parent       error
 }
 
-func NewCozeAuthExceptionWithoutParent(error *authErrorFormat, statusCode int, logID string) *CozeAuthError {
-	return &CozeAuthError{
+func NewCozeAuthExceptionWithoutParent(error *authErrorFormat, statusCode int, logID string) *AuthError {
+	return &AuthError{
 		HttpCode:     statusCode,
 		ErrorMessage: error.ErrorMessage,
 		Code:         AuthErrorCode(error.ErrorCode),
@@ -90,7 +90,7 @@ func NewCozeAuthExceptionWithoutParent(error *authErrorFormat, statusCode int, l
 }
 
 // Error implements the error interface
-func (e *CozeAuthError) Error() string {
+func (e *AuthError) Error() string {
 	return fmt.Sprintf("HttpCode: %d, Code: %s, Message: %s, Param: %s, LogID: %s",
 		e.HttpCode,
 		e.Code,
@@ -100,13 +100,13 @@ func (e *CozeAuthError) Error() string {
 }
 
 // Unwrap returns the parent error
-func (e *CozeAuthError) Unwrap() error {
+func (e *AuthError) Unwrap() error {
 	return e.parent
 }
 
-// AsCozeAuthError 判断错误是否为 CozeAuthError 类型
-func AsCozeAuthError(err error) (*CozeAuthError, bool) {
-	var authErr *CozeAuthError
+// AsAuthError 判断错误是否为 CozeAuthError 类型
+func AsAuthError(err error) (*AuthError, bool) {
+	var authErr *AuthError
 	if errors.As(err, &authErr) {
 		return authErr, true
 	}

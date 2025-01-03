@@ -26,7 +26,9 @@ func main() {
 	}
 
 	// the developers can directly use file to upload
-	uploadResp, err := cozeCli.Files.Upload(ctx, file)
+	uploadResp, err := cozeCli.Files.Upload(ctx, &coze.UploadFilesReq{
+		File: file,
+	})
 	if err != nil {
 		fmt.Println("Error uploading file:", err)
 		return

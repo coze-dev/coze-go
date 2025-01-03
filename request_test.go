@@ -131,7 +131,7 @@ func TestClient_Request_Error(t *testing.T) {
 		var resp TestResponse
 		err := core.Request(context.Background(), http.MethodGet, "/test", nil, &resp)
 		assert.Error(t, err)
-		authErr, ok := err.(*CozeAuthError)
+		authErr, ok := err.(*AuthError)
 		assert.True(t, ok)
 		assert.Equal(t, "invalid_token", authErr.Code.String())
 		assert.Equal(t, "Token is invalid", authErr.ErrorMessage)

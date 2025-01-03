@@ -44,7 +44,7 @@ func main() {
 		PageSize: 10,
 	})
 	if err != nil {
-		if cozeErr, ok := coze.AsCozeAuthError(err); ok {
+		if cozeErr, ok := coze.AsAuthError(err); ok {
 			// Handle auth error
 			if cozeErr.Code == "unauthorized" {
 				fmt.Println("Authentication failed. Please check your token.")

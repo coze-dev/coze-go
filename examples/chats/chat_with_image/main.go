@@ -31,7 +31,7 @@ func main() {
 		fmt.Println("Error opening image:", err)
 		return
 	}
-	imageInfo, err := cozeCli.Files.Upload(ctx, images)
+	imageInfo, err := cozeCli.Files.Upload(ctx, &coze.UploadFilesReq{File: images})
 	if err != nil {
 		fmt.Println("Error uploading image:", err)
 		return

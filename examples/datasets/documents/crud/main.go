@@ -26,7 +26,7 @@ func main() {
 	createReq := &coze.CreateDatasetsDocumentsReq{
 		DatasetID: datasetID,
 		DocumentBases: []*coze.DocumentBase{
-			coze.BuildLocalFile("file doc examples", "your file content", "txt"),
+			coze.DocumentBaseBuildLocalFile("file doc examples", "your file content", "txt"),
 		},
 	}
 	createResp, err := cozeCli.Datasets.Documents.Create(ctx, createReq)

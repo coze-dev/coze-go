@@ -126,9 +126,9 @@ func TestNewCozeAuthExceptionWithoutParent(t *testing.T) {
 	assert.Nil(t, err.parent)
 }
 
-func TestCozeAuthError_Error(t *testing.T) {
+func TestAuthError_Error(t *testing.T) {
 	// 测试 Error() 方法
-	err := &CozeAuthError{
+	err := &AuthError{
 		HttpCode:     401,
 		Code:         AuthErrorCode("invalid_token"),
 		ErrorMessage: "invalid token",
@@ -140,28 +140,28 @@ func TestCozeAuthError_Error(t *testing.T) {
 	assert.Equal(t, expectedMsg, err.Error())
 }
 
-func TestCozeAuthError_Unwrap(t *testing.T) {
+func TestAuthError_Unwrap(t *testing.T) {
 	// 测试无父错误的情况
 	t.Run("No Parent", func(t *testing.T) {
-		err := &CozeAuthError{}
+		err := &AuthError{}
 		assert.Nil(t, err.Unwrap())
 	})
 
 	// 测试有父错误的情况
 	t.Run("With Parent", func(t *testing.T) {
 		parentErr := errors.New("parent error")
-		err := &CozeAuthError{
+		err := &AuthError{
 			parent: parentErr,
 		}
 		assert.Equal(t, parentErr, err.Unwrap())
 	})
 }
 
-func TestAsCozeAuthError(t *testing.T) {
+func TestAsAuthError(t *testing.T) {
 	tests := []struct {
 		name     string
 		err      error
-		wantErr  *CozeAuthError
+		wantErr  *AuthError
 		wantBool bool
 	}{
 		{
@@ -171,21 +171,21 @@ func TestAsCozeAuthError(t *testing.T) {
 			wantBool: false,
 		},
 		{
-			name:     "non-CozeAuthError",
+			name:     "non-AuthError",
 			err:      errors.New("standard error"),
 			wantErr:  nil,
 			wantBool: false,
 		},
 		{
-			name: "CozeAuthError",
-			err: &CozeAuthError{
+			name: "AuthError",
+			err: &AuthError{
 				HttpCode:     401,
 				Code:         AuthErrorCode("invalid_token"),
 				ErrorMessage: "invalid token",
 				Param:        "token_error",
 				LogID:        "test-log-id",
 			},
-			wantErr: &CozeAuthError{
+			wantErr: &AuthError{
 				HttpCode:     401,
 				Code:         AuthErrorCode("invalid_token"),
 				ErrorMessage: "invalid token",
@@ -195,15 +195,15 @@ func TestAsCozeAuthError(t *testing.T) {
 			wantBool: true,
 		},
 		{
-			name: "wrapped CozeAuthError",
-			err: fmt.Errorf("wrapped: %w", &CozeAuthError{
+			name: "wrapped AuthError",
+			err: fmt.Errorf("wrapped: %w", &AuthError{
 				HttpCode:     401,
 				Code:         AuthErrorCode("invalid_token"),
 				ErrorMessage: "invalid token",
 				Param:        "token_error",
 				LogID:        "test-log-id",
 			}),
-			wantErr: &CozeAuthError{
+			wantErr: &AuthError{
 				HttpCode:     401,
 				Code:         AuthErrorCode("invalid_token"),
 				ErrorMessage: "invalid token",
@@ -216,7 +216,7 @@ func TestAsCozeAuthError(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotErr, gotBool := AsCozeAuthError(tt.err)
+			gotErr, gotBool := AsAuthError(tt.err)
 			assert.Equal(t, tt.wantBool, gotBool)
 			if tt.wantErr != nil {
 				assert.Equal(t, tt.wantErr.HttpCode, gotErr.HttpCode)

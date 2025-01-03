@@ -64,7 +64,7 @@ func main() {
 		// You need to handle the exception and guide users to re-authenticate
 		// For different oauth type, the error code may be different,
 		// you should read document to get more information
-		authErr, ok := coze.AsCozeAuthError(err)
+		authErr, ok := coze.AsAuthError(err)
 		if ok {
 			switch authErr.Code {
 			}

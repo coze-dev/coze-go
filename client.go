@@ -13,8 +13,8 @@ type CozeAPI struct {
 	Workspaces    *workspace
 	Datasets      *datasets
 	Files         *files
-
-	baseURL string
+	Templates     *templates
+	baseURL       string
 }
 
 type newCozeAPIOpt struct {
@@ -83,8 +83,8 @@ func NewCozeAPI(auth Auth, opts ...CozeAPIOption) CozeAPI {
 		Workspaces:    newWorkspace(core),
 		Datasets:      newDatasets(core),
 		Files:         newFiles(core),
-
-		baseURL: opt.baseURL,
+		Templates:     newTemplates(core),
+		baseURL:       opt.baseURL,
 	}
 	return cozeClient
 }

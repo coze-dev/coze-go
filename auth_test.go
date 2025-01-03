@@ -323,7 +323,7 @@ func TestOAuthError(t *testing.T) {
 		})
 		require.Error(t, err)
 
-		authErr, ok := AsCozeAuthError(err)
+		authErr, ok := AsAuthError(err)
 		require.True(t, ok)
 		assert.Equal(t, "unauthorized", authErr.Code.String())
 	})

@@ -48,12 +48,12 @@ func TestDatasetsDocuments(t *testing.T) {
 		}
 
 		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
-		documents := newDocuments(core)
+		documents := newDatasetsDocuments(core)
 
 		resp, err := documents.Create(context.Background(), &CreateDatasetsDocumentsReq{
 			DatasetID: 123,
 			DocumentBases: []*DocumentBase{
-				BuildLocalFile("test.txt", "test content", "txt"),
+				DocumentBaseBuildLocalFile("test.txt", "test content", "txt"),
 			},
 			ChunkStrategy: &DocumentChunkStrategy{
 				ChunkType: 0,
@@ -88,12 +88,12 @@ func TestDatasetsDocuments(t *testing.T) {
 		}
 
 		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
-		documents := newDocuments(core)
+		documents := newDatasetsDocuments(core)
 
 		resp, err := documents.Update(context.Background(), &UpdateDatasetsDocumentsReq{
 			DocumentID:   123,
 			DocumentName: "updated.txt",
-			UpdateRule:   BuildAutoUpdateRule(24),
+			UpdateRule:   DocumentUpdateRuleBuildAutoUpdate(24),
 		})
 
 		require.NoError(t, err)
@@ -117,7 +117,7 @@ func TestDatasetsDocuments(t *testing.T) {
 		}
 
 		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
-		documents := newDocuments(core)
+		documents := newDatasetsDocuments(core)
 
 		resp, err := documents.Delete(context.Background(), &DeleteDatasetsDocumentsReq{
 			DocumentIDs: []int64{123, 456},
@@ -168,7 +168,7 @@ func TestDatasetsDocuments(t *testing.T) {
 		}
 
 		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
-		documents := newDocuments(core)
+		documents := newDatasetsDocuments(core)
 
 		paged, err := documents.List(context.Background(), &ListDatasetsDocumentsReq{
 			DatasetID: 123,
@@ -210,7 +210,7 @@ func TestDatasetsDocuments(t *testing.T) {
 		}
 
 		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
-		documents := newDocuments(core)
+		documents := newDatasetsDocuments(core)
 
 		paged, err := documents.List(context.Background(), &ListDatasetsDocumentsReq{
 			DatasetID: 123,
@@ -223,14 +223,14 @@ func TestDatasetsDocuments(t *testing.T) {
 	// Test helper functions
 	t.Run("Test helper functions", func(t *testing.T) {
 		// Test BuildWebPage
-		webPage := BuildWebPage("test page", "https://example.com")
+		webPage := DocumentBaseBuildWebPage("test page", "https://example.com", nil)
 		assert.Equal(t, "test page", webPage.Name)
 		assert.Equal(t, "https://example.com", webPage.SourceInfo.WebUrl)
 		assert.Equal(t, 1, webPage.SourceInfo.DocumentSource)
 		assert.Equal(t, DocumentUpdateTypeNoAutoUpdate, webPage.UpdateRule.UpdateType)
 
 		// Test BuildWebPageWithInterval
-		webPageWithInterval := BuildWebPageWithInterval("test page", "https://example.com", 24)
+		webPageWithInterval := DocumentBaseBuildWebPage("test page", "https://example.com", ptr(24))
 		assert.Equal(t, "test page", webPageWithInterval.Name)
 		assert.Equal(t, "https://example.com", webPageWithInterval.SourceInfo.WebUrl)
 		assert.Equal(t, 1, webPageWithInterval.SourceInfo.DocumentSource)
@@ -238,18 +238,18 @@ func TestDatasetsDocuments(t *testing.T) {
 		assert.Equal(t, 24, webPageWithInterval.UpdateRule.UpdateInterval)
 
 		// Test BuildLocalFile
-		localFile := BuildLocalFile("test.txt", "test content", "txt")
+		localFile := DocumentBaseBuildLocalFile("test.txt", "test content", "txt")
 		assert.Equal(t, "test.txt", localFile.Name)
 		assert.Equal(t, "txt", localFile.SourceInfo.FileType)
 		assert.NotEmpty(t, localFile.SourceInfo.FileBase64)
 
 		// Test BuildAutoUpdateRule
-		autoUpdateRule := BuildAutoUpdateRule(24)
+		autoUpdateRule := DocumentUpdateRuleBuildAutoUpdate(24)
 		assert.Equal(t, DocumentUpdateTypeAutoUpdate, autoUpdateRule.UpdateType)
 		assert.Equal(t, 24, autoUpdateRule.UpdateInterval)
 
 		// Test BuildNoAutoUpdateRule
-		noAutoUpdateRule := BuildNoAutoUpdateRule()
+		noAutoUpdateRule := DocumentUpdateRuleBuildNoAuto()
 		assert.Equal(t, DocumentUpdateTypeNoAutoUpdate, noAutoUpdateRule.UpdateType)
 	})
 }

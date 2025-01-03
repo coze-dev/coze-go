@@ -77,8 +77,8 @@ const (
 	MessageRoleAssistant MessageRole = "assistant"
 )
 
-func (m *MessageRole) String() string {
-	return string(*m)
+func (m MessageRole) String() string {
+	return string(m)
 }
 
 // MessageType represents the type of message

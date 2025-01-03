@@ -39,7 +39,9 @@ func TestFiles(t *testing.T) {
 		// Create a test file content
 		content := []byte("test file content")
 		fileReader := bytes.NewReader(content)
-		uploadReq := NewUploadFileReq(fileReader, "test.txt")
+		uploadReq := &UploadFilesReq{
+			File: NewUploadFile(fileReader, "test.txt"),
+		}
 
 		resp, err := files.Upload(context.Background(), uploadReq)
 
@@ -105,8 +107,9 @@ func TestFiles(t *testing.T) {
 
 		content := []byte("test file content")
 		fileReader := bytes.NewReader(content)
-		uploadReq := NewUploadFileReq(fileReader, "test.txt")
-
+		uploadReq := &UploadFilesReq{
+			File: NewUploadFile(fileReader, "test.txt"),
+		}
 		resp, err := files.Upload(context.Background(), uploadReq)
 
 		require.Error(t, err)
@@ -137,7 +140,7 @@ func TestFiles(t *testing.T) {
 	t.Run("Test UploadFilesReq", func(t *testing.T) {
 		content := []byte("test file content")
 		fileReader := bytes.NewReader(content)
-		uploadReq := NewUploadFileReq(fileReader, "test.txt")
+		uploadReq := NewUploadFile(fileReader, "test.txt")
 
 		assert.Equal(t, "test.txt", uploadReq.Name())
 

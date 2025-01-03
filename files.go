@@ -6,10 +6,10 @@ import (
 	"net/http"
 )
 
-func (r *files) Upload(ctx context.Context, req fileInterface) (*UploadFilesResp, error) {
+func (r *files) Upload(ctx context.Context, req *UploadFilesReq) (*UploadFilesResp, error) {
 	path := "/v1/files/upload"
 	resp := &uploadFilesResp{}
-	err := r.core.UploadFile(ctx, path, req, req.Name(), nil, resp)
+	err := r.core.UploadFile(ctx, path, req.File, req.File.Name(), nil, resp)
 	if err != nil {
 		return nil, err
 	}
@@ -53,24 +53,28 @@ type FileInfo struct {
 	FileName string `json:"file_name"`
 }
 
-type fileInterface interface {
+type FileTypes interface {
 	io.Reader
 	Name() string
 }
 
-type UploadFilesReq struct {
+type implFileInterface struct {
 	io.Reader
 	fileName string
 }
 
-func (r *UploadFilesReq) Name() string {
+func (r *implFileInterface) Name() string {
 	return r.fileName
 }
 
-func NewUploadFileReq(reader io.Reader, fileName string) *UploadFilesReq {
-	return &UploadFilesReq{
-		fileName: fileName,
+type UploadFilesReq struct {
+	File FileTypes
+}
+
+func NewUploadFile(reader io.Reader, fileName string) FileTypes {
+	return &implFileInterface{
 		Reader:   reader,
+		fileName: fileName,
 	}
 }
 

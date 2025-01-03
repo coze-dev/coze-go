@@ -17,9 +17,8 @@ func main() {
 
 	// Get an access_token through personal access token or oauth.
 	token := os.Getenv("COZE_API_TOKEN")
+	workflowID := os.Getenv("WORKFLOW_ID")
 	botID := os.Getenv("PUBLISHED_BOT_ID")
-	userID := os.Getenv("USER_ID")
-
 	authCli := coze.NewTokenAuth(token)
 
 	// Init the Coze client through the access_token.
@@ -27,15 +26,18 @@ func main() {
 
 	//
 	// Step one, create chats
-	req := &coze.CreateChatsReq{
-		BotID:  botID,
-		UserID: userID,
-		Messages: []*coze.Message{
+	req := &coze.WorkflowsChatStreamReq{
+		BotID:      &botID,
+		WorkflowID: workflowID,
+		AdditionalMessages: []*coze.Message{
 			coze.BuildUserQuestionText("What can you do?", nil),
+		},
+		Parameters: map[string]any{
+			"name": "John",
 		},
 	}
 
-	resp, err := cozeCli.Chat.Stream(ctx, req)
+	resp, err := cozeCli.Workflows.Chat.Stream(ctx, req)
 	if err != nil {
 		fmt.Printf("Error starting chats: %v\n", err)
 		return

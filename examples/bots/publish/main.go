@@ -28,7 +28,10 @@ func main() {
 		fmt.Println("Error opening file:", err)
 		return
 	}
-	avatarInfo, err := cozeCli.Files.Upload(ctx, coze.NewUploadFileReq(file, file.Name()))
+	uploadReq := &coze.UploadFilesReq{
+		File: file,
+	}
+	avatarInfo, err := cozeCli.Files.Upload(ctx, uploadReq)
 	if err != nil {
 		fmt.Println("Error uploading avatar:", err)
 		return
@@ -81,7 +84,10 @@ func main() {
 		fmt.Println("Error opening file:", err)
 		return
 	}
-	newAvatarInfo, err := cozeCli.Files.Upload(ctx, coze.NewUploadFileReq(newFile, newFile.Name()))
+	newUploadReq := &coze.UploadFilesReq{
+		File: newFile,
+	}
+	newAvatarInfo, err := cozeCli.Files.Upload(ctx, newUploadReq)
 	if err != nil {
 		fmt.Println("Error uploading new avatar:", err)
 		return

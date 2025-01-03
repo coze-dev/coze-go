@@ -75,7 +75,7 @@ func main() {
 		Poll:       true,
 	})
 	if err != nil {
-		authErr, ok := coze.AsCozeAuthError(err)
+		authErr, ok := coze.AsAuthError(err)
 		if !ok {
 			fmt.Printf("Failed to get access token: %v\n", err)
 			return
