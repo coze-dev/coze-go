@@ -61,7 +61,7 @@ func NewCozeAPI(auth Auth, opts ...CozeAPIOption) CozeAPI {
 		option(opt)
 	}
 	if opt.client == nil {
-		opt.client = http.DefaultClient
+		opt.client = &http.Client{}
 	}
 	saveTransport := opt.client.Transport
 	if saveTransport == nil {
