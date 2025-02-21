@@ -45,6 +45,7 @@ type getAccessTokenReq struct {
 	DurationSeconds int    `json:"duration_seconds,omitempty"`
 	Scope           *Scope `json:"scope,omitempty"`
 	LogID           string `json:"log_id,omitempty"`
+	AccountID       *int64 `json:"account_id,omitempty"`
 }
 
 // GetPKCEOAuthURLResp represents the PKCE authorization URL response
@@ -153,6 +154,7 @@ type OAuthClient struct {
 
 const (
 	getTokenPath               = "/api/permission/oauth2/token"
+	getAccountTokenPath        = "/api/permission/oauth2/account/%d/token"
 	getDeviceCodePath          = "/api/permission/oauth2/device/code"
 	getWorkspaceDeviceCodePath = "/api/permission/oauth2/workspace_id/%s/device/code"
 )
@@ -299,7 +301,11 @@ func (c *OAuthClient) getAccessToken(ctx context.Context, params getAccessTokenP
 	if params.Secret != "" {
 		opt = append(opt, withHTTPHeader(authorizeHeader, fmt.Sprintf("Bearer %s", params.Secret)))
 	}
-	if err := c.core.Request(genAuthContext(ctx), http.MethodPost, getTokenPath, req, result, opt...); err != nil {
+	path := getTokenPath
+	if req.AccountID != nil && *req.AccountID > 0 {
+		path = fmt.Sprintf(getAccountTokenPath, params.Request.AccountID)
+	}
+	if err := c.core.Request(genAuthContext(ctx), http.MethodPost, path, req, result, opt...); err != nil {
 		return nil, err
 	}
 	return result, nil
@@ -591,6 +597,7 @@ type GetJWTAccessTokenReq struct {
 	TTL         int     `json:"ttl,omitempty"`          // Token validity period (in seconds)
 	Scope       *Scope  `json:"scope,omitempty"`        // Permission scope
 	SessionName *string `json:"session_name,omitempty"` // Session name
+	AccountID   *int64  `json:"account_id,omitempty"`   // Account ID
 }
 
 // GetAccessToken gets the access token, using options pattern
@@ -617,6 +624,7 @@ func (c *JWTOAuthClient) GetAccessToken(ctx context.Context, opts *GetJWTAccessT
 			GrantType:       string(GrantTypeJWTCode),
 			DurationSeconds: ttl,
 			Scope:           opts.Scope,
+			AccountID:       opts.AccountID,
 		},
 	}
 	return c.getAccessToken(ctx, req)

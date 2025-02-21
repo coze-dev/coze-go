@@ -42,6 +42,7 @@ func NewJWTAuth(client *JWTOAuthClient, opt *GetJWTAccessTokenReq) Auth {
 		Scope:       opt.Scope,
 		SessionName: opt.SessionName,
 		client:      client,
+		accountID:   opt.AccountID,
 	}
 }
 
@@ -57,6 +58,7 @@ type jwtOAuthImpl struct {
 	client      *JWTOAuthClient
 	accessToken *string
 	expireIn    int64
+	accountID   *int64
 }
 
 func (r *jwtOAuthImpl) needRefresh() bool {
@@ -71,6 +73,7 @@ func (r *jwtOAuthImpl) Token(ctx context.Context) (string, error) {
 		TTL:         r.TTL,
 		SessionName: r.SessionName,
 		Scope:       r.Scope,
+		AccountID:   r.accountID,
 	})
 	if err != nil {
 		return "", err

@@ -182,4 +182,32 @@ qI39/arl6ZhTeQMv7TrpQ6Q=
 		assert.Error(t, err)
 		assert.Empty(t, token)
 	})
+
+	t.Run("Token with specified account_id", func(t *testing.T) {
+		mockTransport := &mockTransport{
+			roundTripFunc: func(req *http.Request) (*http.Response, error) {
+				return mockResponse(http.StatusOK, &OAuthToken{
+					AccessToken: "test_access_token",
+					ExpiresIn:   3600,
+				})
+			},
+		}
+
+		client, err := NewJWTOAuthClient(NewJWTOAuthClientParam{
+			ClientID:      "test_client_id",
+			PublicKey:     "test_public_key",
+			PrivateKeyPEM: testPrivateKey,
+		}, WithAuthBaseURL(ComBaseURL),
+			WithAuthHttpClient(&http.Client{Transport: mockTransport}))
+		require.NoError(t, err)
+
+		accountID := int64(1234567890123456)
+		auth := NewJWTAuth(client, &GetJWTAccessTokenReq{
+			AccountID: &accountID,
+		})
+
+		token1, err := auth.Token(context.Background())
+		require.NoError(t, err)
+		assert.Equal(t, "test_access_token", token1)
+	})
 }
