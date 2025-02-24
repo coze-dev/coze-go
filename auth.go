@@ -303,7 +303,7 @@ func (c *OAuthClient) getAccessToken(ctx context.Context, params getAccessTokenP
 	}
 	path := getTokenPath
 	if req.AccountID != nil && *req.AccountID > 0 {
-		path = fmt.Sprintf(getAccountTokenPath, params.Request.AccountID)
+		path = fmt.Sprintf(getAccountTokenPath, *req.AccountID)
 	}
 	if err := c.core.Request(genAuthContext(ctx), http.MethodPost, path, req, result, opt...); err != nil {
 		return nil, err
