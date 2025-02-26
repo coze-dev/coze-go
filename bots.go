@@ -136,6 +136,18 @@ type BotModelInfo struct {
 	ModelName string `json:"model_name"`
 }
 
+type BotModelInfoConfig struct {
+	TopK             int     `json:"top_k,omitempty"`
+	TopP             float64 `json:"top_p,omitempty"`
+	ModelID          string  `json:"model_id"`
+	MaxTokens        int     `json:"max_tokens,omitempty"`
+	Temperature      float64 `json:"temperature,omitempty"`
+	ContextRound     int     `json:"context_round,omitempty"`
+	ResponseFormat   string  `json:"response_format,omitempty"` //text,markdown,json
+	PresencePenalty  float64 `json:"presence_penalty,omitempty"`
+	FrequencyPenalty float64 `json:"frequency_penalty,omitempty"`
+}
+
 // BotOnboardingInfo represents bot onboarding information
 type BotOnboardingInfo struct {
 	Prologue           string   `json:"prologue,omitempty"`
@@ -164,12 +176,13 @@ type BotPromptInfo struct {
 }
 
 type CreateBotsReq struct {
-	SpaceID        string             `json:"space_id"`        // Space ID
-	Name           string             `json:"name"`            // Name
-	Description    string             `json:"description"`     // Description
-	IconFileID     string             `json:"icon_file_id"`    // Icon file ID
-	PromptInfo     *BotPromptInfo     `json:"prompt_info"`     // Prompt information
-	OnboardingInfo *BotOnboardingInfo `json:"onboarding_info"` // Onboarding information
+	SpaceID         string              `json:"space_id"`          // Space ID
+	Name            string              `json:"name"`              // Name
+	Description     string              `json:"description"`       // Description
+	IconFileID      string              `json:"icon_file_id"`      // Icon file ID
+	PromptInfo      *BotPromptInfo      `json:"prompt_info"`       // Prompt information
+	OnboardingInfo  *BotOnboardingInfo  `json:"onboarding_info"`   // Onboarding information
+	ModelInfoConfig *BotModelInfoConfig `json:"model_info_config"` // ModelInfoConfig information
 }
 
 // CreateBotsResp 创建机器人响应
@@ -235,13 +248,14 @@ type RetrieveBotsResp struct {
 
 // UpdateBotsReq represents the request structure for updating a bot
 type UpdateBotsReq struct {
-	BotID          string             `json:"bot_id"`          // Bot ID
-	Name           string             `json:"name"`            // Name
-	Description    string             `json:"description"`     // Description
-	IconFileID     string             `json:"icon_file_id"`    // Icon file ID
-	PromptInfo     *BotPromptInfo     `json:"prompt_info"`     // Prompt information
-	OnboardingInfo *BotOnboardingInfo `json:"onboarding_info"` // Onboarding information
-	Knowledge      *BotKnowledge      `json:"knowledge"`       // Knowledge
+	BotID           string              `json:"bot_id"`            // Bot ID
+	Name            string              `json:"name"`              // Name
+	Description     string              `json:"description"`       // Description
+	IconFileID      string              `json:"icon_file_id"`      // Icon file ID
+	PromptInfo      *BotPromptInfo      `json:"prompt_info"`       // Prompt information
+	OnboardingInfo  *BotOnboardingInfo  `json:"onboarding_info"`   // Onboarding information
+	Knowledge       *BotKnowledge       `json:"knowledge"`         // Knowledge
+	ModelInfoConfig *BotModelInfoConfig `json:"model_info_config"` // ModelInfoConfig information
 }
 
 // UpdateBotsResp 更新机器人响应

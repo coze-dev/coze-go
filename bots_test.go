@@ -38,6 +38,17 @@ func TestBots(t *testing.T) {
 				Prologue:           "Test Prologue",
 				SuggestedQuestions: []string{"Q1", "Q2"},
 			},
+			ModelInfoConfig: &BotModelInfoConfig{
+				ModelID:          "test_model_id",
+				ContextRound:     3,
+				FrequencyPenalty: 0.5,
+				MaxTokens:        100,
+				PresencePenalty:  0.5,
+				ResponseFormat:   "json",
+				Temperature:      0.5,
+				TopK:             10,
+				TopP:             0.5,
+			},
 		})
 
 		require.NoError(t, err)

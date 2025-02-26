@@ -51,6 +51,9 @@ func main() {
 			SuggestedQuestions: []string{"question 1", "question 2"},
 		},
 		IconFileID: avatarInfo.FileInfo.ID,
+		ModelInfoConfig: &coze.BotModelInfoConfig{
+			ModelID: "1738675210", //DeepSeek-V3
+		},
 	})
 	if err != nil {
 		fmt.Println("Error creating bot:", err)
