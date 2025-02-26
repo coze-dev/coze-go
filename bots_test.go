@@ -38,6 +38,9 @@ func TestBots(t *testing.T) {
 				Prologue:           "Test Prologue",
 				SuggestedQuestions: []string{"Q1", "Q2"},
 			},
+			ModelInfoConfig: &BotModelInfoConfig{
+				ModelID: "test_model_id",
+			},
 		})
 
 		require.NoError(t, err)
