@@ -1,3 +1,5 @@
+github.com/coze-dev/coze-go v0.0.0-20250224065116-8383e75e7e94 h1:joR8y56g5loOCiHTgGIkVSmikUXuIKMUg6yw5XCQNNY=
+github.com/coze-dev/coze-go v0.0.0-20250224065116-8383e75e7e94/go.mod h1:zc7+Lrzh5Lm7BYmqbtjMnV3eoRJpjE05LSqtT+iH+LE=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/golang-jwt/jwt v3.2.2+incompatible h1:IfV12K8xAKAnZqdXVzCZ+TOjboZ2keLg81eXfW3O+oY=
