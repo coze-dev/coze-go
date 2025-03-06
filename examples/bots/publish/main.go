@@ -52,7 +52,7 @@ func main() {
 		},
 		IconFileID: avatarInfo.FileInfo.ID,
 		ModelInfoConfig: &coze.BotModelInfoConfig{
-			ModelID: "1738675210", //DeepSeek-V3
+			ModelID: "1738675210", // DeepSeek-V3
 		},
 	})
 	if err != nil {
