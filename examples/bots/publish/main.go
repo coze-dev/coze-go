@@ -102,6 +102,9 @@ func main() {
 	updateResp, err := cozeCli.Bots.Update(ctx, &coze.UpdateBotsReq{
 		BotID:      botID,
 		IconFileID: newAvatarInfo.FileInfo.ID,
+		ModelInfoConfig: &coze.BotModelInfoConfig{
+			ModelID: "1738675210", //DeepSeek-V3
+		},
 	})
 	if err != nil {
 		fmt.Println("Error updating bot:", err)
