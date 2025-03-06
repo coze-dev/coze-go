@@ -143,7 +143,7 @@ type BotModelInfoConfig struct {
 	MaxTokens        int     `json:"max_tokens,omitempty"`
 	Temperature      float64 `json:"temperature,omitempty"`
 	ContextRound     int     `json:"context_round,omitempty"`
-	ResponseFormat   string  `json:"response_format,omitempty"` //text,markdown,json
+	ResponseFormat   string  `json:"response_format,omitempty"` // text,markdown,json
 	PresencePenalty  float64 `json:"presence_penalty,omitempty"`
 	FrequencyPenalty float64 `json:"frequency_penalty,omitempty"`
 }
