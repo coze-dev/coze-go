@@ -12,6 +12,9 @@ type Message struct {
 	// multimodal (a mix of text, images, and files), message cards, and more.
 	Content string `json:"content"`
 
+	// The reasoning_content of the thought process message
+	ReasoningContent string `json:"reasoning_content"`
+
 	// The type of message content.
 	ContentType MessageContentType `json:"content_type"`
 
