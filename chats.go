@@ -393,6 +393,10 @@ type SubmitToolOutputsChatReq struct {
 	Stream *bool `json:"stream,omitempty"`
 }
 
+type WorkflowDebug struct {
+	DebugUrl string `json:"debug_url"`
+}
+
 // CreateChatsResp represents the response to create a chat
 type createChatsResp struct {
 	baseResponse
@@ -439,9 +443,10 @@ type SubmitToolOutputsChatResp struct {
 
 // ChatEvent represents a chat event in the streaming response
 type ChatEvent struct {
-	Event   ChatEventType `json:"event"`
-	Chat    *Chat         `json:"chat,omitempty"`
-	Message *Message      `json:"message,omitempty"`
+	Event         ChatEventType  `json:"event"`
+	Chat          *Chat          `json:"chat,omitempty"`
+	Message       *Message       `json:"message,omitempty"`
+	WorkflowDebug *WorkflowDebug `json:"workflow_debug,omitempty"`
 }
 
 func doParseChatEvent(eventLine map[string]string) (*ChatEvent, error) {
@@ -449,7 +454,11 @@ func doParseChatEvent(eventLine map[string]string) (*ChatEvent, error) {
 	data := eventLine["data"]
 	switch eventType {
 	case ChatEventDone:
-		return &ChatEvent{Event: eventType}, nil
+		workflowDebug := &WorkflowDebug{}
+		if err := json.Unmarshal([]byte(data), workflowDebug); err != nil {
+			return nil, err
+		}
+		return &ChatEvent{Event: eventType, WorkflowDebug: workflowDebug}, nil
 	case ChatEventError:
 		return nil, errors.New(data)
 	case ChatEventConversationMessageDelta, ChatEventConversationMessageCompleted, ChatEventConversationAudioDelta:
