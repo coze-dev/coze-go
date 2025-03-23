@@ -455,8 +455,10 @@ func doParseChatEvent(eventLine map[string]string) (*ChatEvent, error) {
 	switch eventType {
 	case ChatEventDone:
 		workflowDebug := &WorkflowDebug{}
-		if err := json.Unmarshal([]byte(data), workflowDebug); err != nil {
-			return nil, err
+		if data != "" {
+			if err := json.Unmarshal([]byte(data), workflowDebug); err != nil {
+				return nil, err
+			}
 		}
 		return &ChatEvent{Event: eventType, WorkflowDebug: workflowDebug}, nil
 	case ChatEventError:
