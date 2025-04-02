@@ -136,7 +136,7 @@ func TestAudioSpeech(t *testing.T) {
 	})
 
 	// Test Transcription method
-	t.Run("Transcription speech error", func(t *testing.T) {
+	t.Run("Transcription with different text", func(t *testing.T) {
 		mockTransport := &mockTransport{
 			roundTripFunc: func(req *http.Request) (*http.Response, error) {
 				// Verify request method and path
@@ -170,5 +170,20 @@ func TestAudioSpeech(t *testing.T) {
 		// Read and verify response body
 		require.NoError(t, err)
 		assert.NotEqual(t, resp.Data.Text, "this_test_2")
+	})
+
+	t.Run("Transcription error", func(t *testing.T) {
+		mockTransport := &mockTransport{
+			roundTripFunc: func(req *http.Request) (*http.Response, error) {
+				return mockResponse(http.StatusBadRequest, &baseResponse{})
+			},
+		}
+		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		speech := newSpeech(core)
+		reader := strings.NewReader("testmp3")
+		resp, err := speech.Transcription(context.Background(), reader, "")
+
+		require.Error(t, err)
+		assert.Nil(t, resp)
 	})
 }
