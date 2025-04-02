@@ -35,17 +35,18 @@ type GetDeviceAuthResp struct {
 
 // getAccessTokenReq represents the access token request
 type getAccessTokenReq struct {
-	ClientID        string `json:"client_id"`
-	Code            string `json:"code,omitempty"`
-	GrantType       string `json:"grant_type"`
-	RedirectURI     string `json:"redirect_uri,omitempty"`
-	RefreshToken    string `json:"refresh_token,omitempty"`
-	CodeVerifier    string `json:"code_verifier,omitempty"`
-	DeviceCode      string `json:"device_code,omitempty"`
-	DurationSeconds int    `json:"duration_seconds,omitempty"`
-	Scope           *Scope `json:"scope,omitempty"`
-	LogID           string `json:"log_id,omitempty"`
-	AccountID       *int64 `json:"account_id,omitempty"`
+	ClientID        string  `json:"client_id"`
+	Code            string  `json:"code,omitempty"`
+	GrantType       string  `json:"grant_type"`
+	RedirectURI     string  `json:"redirect_uri,omitempty"`
+	RefreshToken    string  `json:"refresh_token,omitempty"`
+	CodeVerifier    string  `json:"code_verifier,omitempty"`
+	DeviceCode      string  `json:"device_code,omitempty"`
+	DurationSeconds int     `json:"duration_seconds,omitempty"`
+	Scope           *Scope  `json:"scope,omitempty"`
+	LogID           string  `json:"log_id,omitempty"`
+	AccountID       *int64  `json:"account_id,omitempty"`
+	EnterpriseID    *string `json:"enterprise_id,omitempty"` // Enterprise ID
 }
 
 // GetPKCEOAuthURLResp represents the PKCE authorization URL response
@@ -87,6 +88,15 @@ type OAuthToken struct {
 type Scope struct {
 	AccountPermission   *ScopeAccountPermission   `json:"account_permission"`
 	AttributeConstraint *ScopeAttributeConstraint `json:"attribute_constraint,omitempty"`
+}
+
+type DeviceInfo struct {
+	DeviceID       *string `json:"device_id,omitempty"`
+	CustomConsumer *string `json:"custom_consumer,omitempty"`
+}
+
+type SessionContext struct {
+	DeviceInfo *DeviceInfo `json:"device_info,omitempty"`
 }
 
 func BuildBotChat(botIDList []string, permissionList []string) *Scope {
@@ -155,6 +165,7 @@ type OAuthClient struct {
 const (
 	getTokenPath               = "/api/permission/oauth2/token"
 	getAccountTokenPath        = "/api/permission/oauth2/account/%d/token"
+	getEnterpriseTokenPath     = "/api/permission/oauth2/enterprise_id/%s/token"
 	getDeviceCodePath          = "/api/permission/oauth2/device/code"
 	getWorkspaceDeviceCodePath = "/api/permission/oauth2/workspace_id/%s/device/code"
 )
@@ -304,6 +315,8 @@ func (c *OAuthClient) getAccessToken(ctx context.Context, params getAccessTokenP
 	path := getTokenPath
 	if req.AccountID != nil && *req.AccountID > 0 {
 		path = fmt.Sprintf(getAccountTokenPath, *req.AccountID)
+	} else if req.EnterpriseID != nil && *req.EnterpriseID != "" {
+		path = fmt.Sprintf(getEnterpriseTokenPath, *req.EnterpriseID)
 	}
 	if err := c.core.Request(genAuthContext(ctx), http.MethodPost, path, req, result, opt...); err != nil {
 		return nil, err
@@ -594,10 +607,12 @@ func NewJWTOAuthClient(param NewJWTOAuthClientParam, opts ...OAuthClientOption) 
 
 // GetJWTAccessTokenReq represents options for getting JWT OAuth token
 type GetJWTAccessTokenReq struct {
-	TTL         int     `json:"ttl,omitempty"`          // Token validity period (in seconds)
-	Scope       *Scope  `json:"scope,omitempty"`        // Permission scope
-	SessionName *string `json:"session_name,omitempty"` // Session name
-	AccountID   *int64  `json:"account_id,omitempty"`   // Account ID
+	TTL            int             `json:"ttl,omitempty"`             // Token validity period (in seconds)
+	Scope          *Scope          `json:"scope,omitempty"`           // Permission scope
+	SessionName    *string         `json:"session_name,omitempty"`    // Session name
+	AccountID      *int64          `json:"account_id,omitempty"`      // Account ID
+	EnterpriseID   *string         `json:"enterprise_id,omitempty"`   // Enterprise ID
+	SessionContext *SessionContext `json:"session_context,omitempty"` // SessionContext
 }
 
 // GetAccessToken gets the access token, using options pattern
@@ -611,7 +626,7 @@ func (c *JWTOAuthClient) GetAccessToken(ctx context.Context, opts *GetJWTAccessT
 		ttl = opts.TTL
 	}
 
-	jwtCode, err := c.generateJWT(ttl, opts.SessionName)
+	jwtCode, err := c.generateJWT(ttl, opts.SessionName, opts.SessionContext)
 	if err != nil {
 		return nil, err
 	}
@@ -625,12 +640,13 @@ func (c *JWTOAuthClient) GetAccessToken(ctx context.Context, opts *GetJWTAccessT
 			DurationSeconds: ttl,
 			Scope:           opts.Scope,
 			AccountID:       opts.AccountID,
+			EnterpriseID:    opts.EnterpriseID,
 		},
 	}
 	return c.getAccessToken(ctx, req)
 }
 
-func (c *JWTOAuthClient) generateJWT(ttl int, sessionName *string) (string, error) {
+func (c *JWTOAuthClient) generateJWT(ttl int, sessionName *string, sessionContext *SessionContext) (string, error) {
 	now := time.Now()
 	jti, err := generateRandomString(16)
 	if err != nil {
@@ -649,6 +665,9 @@ func (c *JWTOAuthClient) generateJWT(ttl int, sessionName *string) (string, erro
 	// If session_name is provided, add it to claims
 	if sessionName != nil {
 		claims["session_name"] = *sessionName
+	}
+	if sessionContext != nil {
+		claims["session_context"] = sessionContext
 	}
 
 	// Create token
