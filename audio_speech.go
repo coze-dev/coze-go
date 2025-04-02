@@ -45,13 +45,6 @@ type CreateAudioSpeechReq struct {
 	Speed          *float32     `json:"speed"`
 }
 
-type CreateAudioTranscriptionReq struct {
-	Input          string       `json:"input"`
-	VoiceID        string       `json:"voice_id"`
-	ResponseFormat *AudioFormat `json:"response_format"`
-	Speed          *float32     `json:"speed"`
-}
-
 // CreateAudioSpeechResp represents the response for creating speech
 type CreateAudioSpeechResp struct {
 	baseResponse
