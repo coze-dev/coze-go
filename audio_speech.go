@@ -20,6 +20,15 @@ func (r *audioSpeech) Create(ctx context.Context, req *CreateAudioSpeechReq) (*C
 	return res, nil
 }
 
+func (r *audioSpeech) Transcription(ctx context.Context, reader io.Reader, filename string) (*CreateAudioTranscriptionResp, error) {
+	uri := "/v1/audio/transcriptions"
+	resp := &CreateAudioTranscriptionResp{}
+	if err := r.core.UploadFile(ctx, uri, reader, filename, nil, resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
 type audioSpeech struct {
 	core *core
 }
@@ -41,6 +50,15 @@ type CreateAudioSpeechResp struct {
 	baseResponse
 	// TODO 没有 json tag？
 	Data io.ReadCloser
+}
+
+type CreateAudioTranscriptionResp struct {
+	baseResponse
+	Data AudioTranscriptionsData `json:"data"`
+}
+
+type AudioTranscriptionsData struct {
+	Text string `json:"text"`
 }
 
 func (c *CreateAudioSpeechResp) WriteToFile(path string) error {
