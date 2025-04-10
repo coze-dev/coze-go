@@ -16,7 +16,7 @@ func main() {
 	// Init the Coze client through the access_token.
 	cozeCli := coze.NewCozeAPI(authCli, coze.WithBaseURL(os.Getenv("COZE_API_BASE")))
 
-	//filename := "/Users/u/Downloads/hello.mp3"
+	// filename := "/Users/u/Downloads/hello.mp3"
 	filename := os.Getenv("COZE_AUDIO_FILE")
 	file, err := os.Open(filename)
 	if err != nil {
