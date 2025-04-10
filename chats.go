@@ -460,14 +460,15 @@ func doParseChatEvent(eventLine map[string]string) (*ChatEvent, error) {
 	data := eventLine["data"]
 	switch eventType {
 	case ChatEventDone:
-		workflowDebug := &WorkflowDebug{}
-		if data != "" && data != "[DONE]" {
+		if data != "" && data != "[DONE]" && data != `"[DONE]"` {
+			workflowDebug := &WorkflowDebug{}
 			if err := json.Unmarshal([]byte(data), workflowDebug); err != nil {
 				logger.Warnf(context.Background(), "workflow.done unmarshal WorkflowDebug failed, msg=%s, err=%s", data, err)
 				return &ChatEvent{Event: eventType}, nil
 			}
+			return &ChatEvent{Event: eventType, WorkflowDebug: workflowDebug}, nil
 		}
-		return &ChatEvent{Event: eventType, WorkflowDebug: workflowDebug}, nil
+		return &ChatEvent{Event: eventType}, nil
 	case ChatEventError:
 		return nil, errors.New(data)
 	case ChatEventConversationMessageDelta, ChatEventConversationMessageCompleted, ChatEventConversationAudioDelta:
