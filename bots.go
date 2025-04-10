@@ -149,7 +149,7 @@ type BotModelInfoConfig struct {
 }
 
 // WorkflowIdList represents workflow ID information
-type WorkflowIdList struct {
+type WorkflowIDList struct {
 	Ids []WorkflowIdInfo `json:"ids"`
 }
 
