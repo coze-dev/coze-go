@@ -40,7 +40,7 @@ type audio struct {
 	Rooms         *audioRooms
 	Speech        *audioSpeech
 	Voices        *audioVoices
-	Transcription *audioTranscription
+	Transcriptions *audioTranscriptions
 }
 
 func newAudio(core *core) *audio {
@@ -48,6 +48,6 @@ func newAudio(core *core) *audio {
 		Rooms:         newRooms(core),
 		Speech:        newSpeech(core),
 		Voices:        newVoice(core),
-		Transcription: newTranscription(core),
+		Transcriptions: newTranscriptions(core),
 	}
 }

@@ -5,9 +5,9 @@ import (
 	"io"
 )
 
-func (r *audioTranscription) Create(ctx context.Context, req *AudioSpeechTranscriptionsReq) (*CreateAudioTranscriptionResp, error) {
+func (r *audioTranscriptions) Create(ctx context.Context, req *AudioSpeechTranscriptionsReq) (*CreateAudioTranscriptionsResp, error) {
 	uri := "/v1/audio/transcriptions"
-	resp := &CreateAudioTranscriptionResp{}
+	resp := &CreateAudioTranscriptionsResp{}
 	if err := r.core.UploadFile(ctx, uri, req.Audio, req.Filename, nil, resp); err != nil {
 		return nil, err
 	}
@@ -19,7 +19,7 @@ type AudioSpeechTranscriptionsReq struct {
 	Audio    io.Reader `json:"audio"`
 }
 
-type CreateAudioTranscriptionResp struct {
+type CreateAudioTranscriptionsResp struct {
 	baseResponse
 	Data AudioTranscriptionsData `json:"data"`
 }
@@ -28,10 +28,10 @@ type AudioTranscriptionsData struct {
 	Text string `json:"text"`
 }
 
-type audioTranscription struct {
+type audioTranscriptions struct {
 	core *core
 }
 
-func newTranscription(core *core) *audioTranscription {
-	return &audioTranscription{core: core}
+func newTranscriptions(core *core) *audioTranscriptions {
+	return &audioTranscriptions{core: core}
 }
