@@ -18,8 +18,6 @@ type HTTPClient interface {
 	Do(*http.Request) (*http.Response, error)
 }
 
-var stdHTTPClientInterface HTTPClient = &http.Client{}
-
 type core struct {
 	*clientOption
 }
