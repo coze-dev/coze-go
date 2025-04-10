@@ -106,6 +106,9 @@ type CreateConversationsReq struct {
 
 	// Bind and isolate conversation on different bots.
 	BotID string `json:"bot_id,omitempty"`
+
+	// Optional: Specify a connector ID. Supports passing in 999 (Chat SDK) and 1024 (API). If not provided, the default is 1024 (API).
+	ConnectorID string `json:"connector_id"`
 }
 
 // ListConversationsReq represents request for listing conversations

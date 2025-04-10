@@ -353,6 +353,9 @@ type CreateChatsReq struct {
 
 	// Additional information, typically used to encapsulate some business-related fields.
 	MetaData map[string]string `json:"meta_data,omitempty"`
+
+	// Optional: Specify a connector ID. Supports passing in 999 (Chat SDK) and 1024 (API). If not provided, the default is 1024 (API).
+	ConnectorID string `json:"connector_id"`
 }
 
 // CancelChatsReq represents the request to cancel a chat
@@ -391,6 +394,13 @@ type SubmitToolOutputsChatReq struct {
 	ToolOutputs []*ToolOutput `json:"tool_outputs"`
 
 	Stream *bool `json:"stream,omitempty"`
+
+	// Optional: Specify a connector ID. Supports passing in 999 (Chat SDK) and 1024 (API). If not provided, the default is 1024 (API).
+	ConnectorID string `json:"connector_id"`
+}
+
+type WorkflowDebug struct {
+	DebugUrl string `json:"debug_url"`
 }
 
 // CreateChatsResp represents the response to create a chat
@@ -439,9 +449,10 @@ type SubmitToolOutputsChatResp struct {
 
 // ChatEvent represents a chat event in the streaming response
 type ChatEvent struct {
-	Event   ChatEventType `json:"event"`
-	Chat    *Chat         `json:"chat,omitempty"`
-	Message *Message      `json:"message,omitempty"`
+	Event         ChatEventType  `json:"event"`
+	Chat          *Chat          `json:"chat,omitempty"`
+	Message       *Message       `json:"message,omitempty"`
+	WorkflowDebug *WorkflowDebug `json:"workflow_debug,omitempty"`
 }
 
 func doParseChatEvent(eventLine map[string]string) (*ChatEvent, error) {
@@ -449,7 +460,14 @@ func doParseChatEvent(eventLine map[string]string) (*ChatEvent, error) {
 	data := eventLine["data"]
 	switch eventType {
 	case ChatEventDone:
-		return &ChatEvent{Event: eventType}, nil
+		workflowDebug := &WorkflowDebug{}
+		if data != "" && data != "[DONE]" {
+			if err := json.Unmarshal([]byte(data), workflowDebug); err != nil {
+				logger.Warnf(context.Background(), "workflow.done unmarshal WorkflowDebug failed, msg=%s, err=%s", data, err)
+				return &ChatEvent{Event: eventType}, nil
+			}
+		}
+		return &ChatEvent{Event: eventType, WorkflowDebug: workflowDebug}, nil
 	case ChatEventError:
 		return nil, errors.New(data)
 	case ChatEventConversationMessageDelta, ChatEventConversationMessageCompleted, ChatEventConversationAudioDelta:

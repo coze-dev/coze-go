@@ -189,7 +189,7 @@ func packInstance(ctx context.Context, instance any, resp *http.Response) error 
 func isResponseSuccess(ctx context.Context, baseResp baseRespInterface, bodyBytes []byte, httpResponse *httpResponse) error {
 	baseResp.SetHTTPResponse(httpResponse)
 	if baseResp.GetCode() != 0 {
-		logger.Warnf(ctx, "request unsuccessful: %s, log_id:%s", string(bodyBytes), httpResponse.LogID())
+		logger.Warnf(ctx, "request failed, body=%s, log_id=%s", string(bodyBytes), httpResponse.LogID())
 		return NewError(baseResp.GetCode(), baseResp.GetMsg(), httpResponse.LogID())
 	}
 	return nil

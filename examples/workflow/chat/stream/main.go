@@ -57,9 +57,10 @@ func main() {
 		if event.Event == coze.ChatEventConversationMessageDelta {
 			fmt.Print(event.Message.Content)
 		} else if event.Event == coze.ChatEventConversationChatCompleted {
-			fmt.Printf("Token usage:%d\n", event.Chat.Usage.TokenCount)
-		} else {
 			fmt.Printf("\n")
+			fmt.Printf("Token usage:%d\n", event.Chat.Usage.TokenCount)
+		} else if event.Event == coze.ChatEventDone {
+			fmt.Printf("debug_url: %s\n", event.WorkflowDebug.DebugUrl)
 		}
 	}
 
