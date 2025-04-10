@@ -54,8 +54,8 @@ func main() {
 		ModelInfoConfig: &coze.BotModelInfoConfig{
 			ModelID: "1738675210",
 		},
-		WorkflowIdList: &coze.WorkflowIdList{
-			Ids: []coze.WorkflowIdInfo{
+		WorkflowIdList: &coze.WorkflowIDList{
+			Ids: []coze.WorkflowIDInfo{
 				{
 					Id: os.Getenv("WORKFLOW_ID"),
 				},
@@ -113,8 +113,8 @@ func main() {
 		ModelInfoConfig: &coze.BotModelInfoConfig{
 			ModelID: "1738675210",
 		},
-		WorkflowIdList: &coze.WorkflowIdList{
-			Ids: []coze.WorkflowIdInfo{
+		WorkflowIdList: &coze.WorkflowIDList{
+			Ids: []coze.WorkflowIDInfo{
 				{
 					Id: os.Getenv("WORKFLOW_ID"),
 				},
