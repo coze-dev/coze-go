@@ -57,7 +57,7 @@ func main() {
 		WorkflowIDList: &coze.WorkflowIDList{
 			IDs: []coze.WorkflowIDInfo{
 				{
-					Id: os.Getenv("WORKFLOW_ID"),
+					ID: os.Getenv("WORKFLOW_ID"),
 				},
 			},
 		},
