@@ -55,7 +55,7 @@ func main() {
 			ModelID: "1738675210",
 		},
 		WorkflowIdList: &coze.WorkflowIdList{
-			Ids: []coze.WorkflowId{
+			Ids: []coze.WorkflowIdInfo{
 				{
 					Id: os.Getenv("WORKFLOW_ID"),
 				},
@@ -114,7 +114,7 @@ func main() {
 			ModelID: "1738675210",
 		},
 		WorkflowIdList: &coze.WorkflowIdList{
-			Ids: []coze.WorkflowId{
+			Ids: []coze.WorkflowIdInfo{
 				{
 					Id: os.Getenv("WORKFLOW_ID"),
 				},
