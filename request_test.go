@@ -43,7 +43,7 @@ func TestClient_Request_Success(t *testing.T) {
 		Body:       io.NopCloser(bytes.NewReader(respBody)),
 		Header:     make(http.Header),
 	}
-	mockResp.Header.Set(httpRespLogIDKey, "test-log-id")
+	mockResp.Header.Set(httpLogIDKey, "test-log-id")
 
 	// 创建测试客户端
 	core := newCore(&newCozeAPIOpt{baseURL: "https://api.test.com", client: &mockHTTP{
@@ -92,7 +92,7 @@ func TestClient_Request_Error(t *testing.T) {
 			Body:       io.NopCloser(bytes.NewReader(respBody)),
 			Header:     make(http.Header),
 		}
-		mockResp.Header.Set(httpRespLogIDKey, "test-log-id")
+		mockResp.Header.Set(httpLogIDKey, "test-log-id")
 
 		core := newCore(&newCozeAPIOpt{baseURL: "https://api.test.com", client: &mockHTTP{
 			Response: mockResp,
@@ -121,7 +121,7 @@ func TestClient_Request_Error(t *testing.T) {
 			Body:       io.NopCloser(bytes.NewReader(respBody)),
 			Header:     make(http.Header),
 		}
-		mockResp.Header.Set(httpRespLogIDKey, "test-log-id")
+		mockResp.Header.Set(httpLogIDKey, "test-log-id")
 
 		core := newCore(&newCozeAPIOpt{baseURL: "https://api.test.com", client: &mockHTTP{
 			Response: mockResp,
@@ -154,7 +154,7 @@ func TestClient_UploadFile_Success(t *testing.T) {
 		Body:       io.NopCloser(bytes.NewReader(respBody)),
 		Header:     make(http.Header),
 	}
-	mockResp.Header.Set(httpRespLogIDKey, "test-log-id")
+	mockResp.Header.Set(httpLogIDKey, "test-log-id")
 
 	core := newCore(&newCozeAPIOpt{baseURL: "https://api.test.com", client: &mockHTTP{
 		Response: mockResp,
@@ -219,7 +219,7 @@ func TestClient_UploadFile_Error(t *testing.T) {
 			Body:       io.NopCloser(bytes.NewReader(respBody)),
 			Header:     make(http.Header),
 		}
-		mockResp.Header.Set(httpRespLogIDKey, "test-log-id")
+		mockResp.Header.Set(httpLogIDKey, "test-log-id")
 
 		core := newCore(&newCozeAPIOpt{baseURL: "https://api.test.com", client: &mockHTTP{
 			Response: mockResp,

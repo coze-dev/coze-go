@@ -202,7 +202,7 @@ func isResponseSuccess(ctx context.Context, baseResp baseRespInterface, bodyByte
 }
 
 func checkHttpResp(ctx context.Context, resp *http.Response) error {
-	logID := resp.Header.Get(httpRespLogIDKey)
+	logID := resp.Header.Get(httpLogIDKey)
 	// 鉴权的情况，需要解析
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, err := io.ReadAll(resp.Body)

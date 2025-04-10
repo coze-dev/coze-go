@@ -20,7 +20,7 @@ type httpResponse struct {
 
 func (r *httpResponse) LogID() string {
 	if r.logid == "" {
-		r.logid = r.Header.Get(httpRespLogIDKey)
+		r.logid = r.Header.Get(httpLogIDKey)
 	}
 	return r.logid
 }

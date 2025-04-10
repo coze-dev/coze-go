@@ -27,9 +27,9 @@ func (c *core) setCommonHeaders(req *http.Request) error {
 
 	// logid
 	if c.enableLogID {
-		logID := req.Context().Value("logid")
-		if logID != nil {
-			req.Header.Set("X-Coze-Log-ID", logID.(string))
+		v := req.Context().Value(ctxLogIDKey)
+		if logid, ok := v.(string); ok && logid != "" {
+			req.Header.Set(httpLogIDKey, logid)
 		}
 	}
 

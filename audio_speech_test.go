@@ -26,7 +26,7 @@ func TestAudioSpeech(t *testing.T) {
 					Header:     http.Header{},
 					Body:       io.NopCloser(strings.NewReader("mock audio data")),
 				}
-				resp.Header.Set(httpRespLogIDKey, "test_log_id")
+				resp.Header.Set(httpLogIDKey, "test_log_id")
 				return resp, nil
 			},
 		}

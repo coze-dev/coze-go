@@ -95,7 +95,7 @@ data: {}
 					Header: make(http.Header),
 				}
 				mockResp.Header.Set("Content-Type", "application/json")
-				mockResp.Header.Set(httpRespLogIDKey, "test_log_id")
+				mockResp.Header.Set(httpLogIDKey, "test_log_id")
 				return mockResp, nil
 			},
 		}
