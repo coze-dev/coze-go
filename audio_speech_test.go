@@ -31,7 +31,7 @@ func TestAudioSpeech(t *testing.T) {
 			},
 		}
 
-		core := newCore(&newCozeAPIOpt{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		speech := newSpeech(core)
 
 		resp, err := speech.Create(context.Background(), &CreateAudioSpeechReq{
@@ -60,7 +60,7 @@ func TestAudioSpeech(t *testing.T) {
 			},
 		}
 
-		core := newCore(&newCozeAPIOpt{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		speech := newSpeech(core)
 
 		resp, err := speech.Create(context.Background(), &CreateAudioSpeechReq{
@@ -83,7 +83,7 @@ func TestAudioSpeech(t *testing.T) {
 			},
 		}
 
-		core := newCore(&newCozeAPIOpt{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		speech := newSpeech(core)
 
 		resp, err := speech.Create(context.Background(), &CreateAudioSpeechReq{

@@ -19,7 +19,7 @@ type CozeAPI struct {
 	baseURL       string
 }
 
-type newCozeAPIOpt struct {
+type clientOption struct {
 	baseURL     string
 	client      HTTPClient
 	logLevel    LogLevel
@@ -27,43 +27,43 @@ type newCozeAPIOpt struct {
 	enableLogID bool
 }
 
-type CozeAPIOption func(*newCozeAPIOpt)
+type CozeAPIOption func(*clientOption)
 
 // WithBaseURL adds the base URL for the API
 func WithBaseURL(baseURL string) CozeAPIOption {
-	return func(opt *newCozeAPIOpt) {
+	return func(opt *clientOption) {
 		opt.baseURL = baseURL
 	}
 }
 
 // WithHttpClient sets a custom HTTP core
 func WithHttpClient(client HTTPClient) CozeAPIOption {
-	return func(opt *newCozeAPIOpt) {
+	return func(opt *clientOption) {
 		opt.client = client
 	}
 }
 
 // WithLogLevel sets the logging level
 func WithLogLevel(level LogLevel) CozeAPIOption {
-	return func(opt *newCozeAPIOpt) {
+	return func(opt *clientOption) {
 		opt.logLevel = level
 	}
 }
 
 func WithLogger(logger Logger) CozeAPIOption {
-	return func(opt *newCozeAPIOpt) {
+	return func(opt *clientOption) {
 		setLogger(logger)
 	}
 }
 
 func WithEnableLogID(enableLogID bool) CozeAPIOption {
-	return func(opt *newCozeAPIOpt) {
+	return func(opt *clientOption) {
 		opt.enableLogID = enableLogID
 	}
 }
 
 func NewCozeAPI(auth Auth, opts ...CozeAPIOption) CozeAPI {
-	opt := &newCozeAPIOpt{
+	opt := &clientOption{
 		baseURL:  ComBaseURL,
 		client:   nil,
 		logLevel: LogLevelInfo, // Default log level is Info

@@ -46,7 +46,7 @@ func TestClient_Request_Success(t *testing.T) {
 	mockResp.Header.Set(httpLogIDKey, "test-log-id")
 
 	// 创建测试客户端
-	core := newCore(&newCozeAPIOpt{baseURL: "https://api.test.com", client: &mockHTTP{
+	core := newCore(&clientOption{baseURL: "https://api.test.com", client: &mockHTTP{
 		Response: mockResp,
 		Error:    nil,
 	}})
@@ -69,7 +69,7 @@ func TestClient_Request_Success(t *testing.T) {
 func TestClient_Request_Error(t *testing.T) {
 	// 测试 HTTP 错误
 	t.Run("HTTP Error", func(t *testing.T) {
-		core := newCore(&newCozeAPIOpt{baseURL: "https://api.test.com", client: &mockHTTP{
+		core := newCore(&clientOption{baseURL: "https://api.test.com", client: &mockHTTP{
 			Response: nil,
 			Error:    errors.New("network error"),
 		}})
@@ -94,7 +94,7 @@ func TestClient_Request_Error(t *testing.T) {
 		}
 		mockResp.Header.Set(httpLogIDKey, "test-log-id")
 
-		core := newCore(&newCozeAPIOpt{baseURL: "https://api.test.com", client: &mockHTTP{
+		core := newCore(&clientOption{baseURL: "https://api.test.com", client: &mockHTTP{
 			Response: mockResp,
 			Error:    nil,
 		}})
@@ -123,7 +123,7 @@ func TestClient_Request_Error(t *testing.T) {
 		}
 		mockResp.Header.Set(httpLogIDKey, "test-log-id")
 
-		core := newCore(&newCozeAPIOpt{baseURL: "https://api.test.com", client: &mockHTTP{
+		core := newCore(&clientOption{baseURL: "https://api.test.com", client: &mockHTTP{
 			Response: mockResp,
 			Error:    nil,
 		}})
@@ -156,7 +156,7 @@ func TestClient_UploadFile_Success(t *testing.T) {
 	}
 	mockResp.Header.Set(httpLogIDKey, "test-log-id")
 
-	core := newCore(&newCozeAPIOpt{baseURL: "https://api.test.com", client: &mockHTTP{
+	core := newCore(&clientOption{baseURL: "https://api.test.com", client: &mockHTTP{
 		Response: mockResp,
 		Error:    nil,
 	}})
@@ -188,7 +188,7 @@ func TestClient_UploadFile_Success(t *testing.T) {
 func TestClient_UploadFile_Error(t *testing.T) {
 	// 测试上传错误
 	t.Run("Upload Error", func(t *testing.T) {
-		core := newCore(&newCozeAPIOpt{baseURL: "https://api.test.com", client: &mockHTTP{
+		core := newCore(&clientOption{baseURL: "https://api.test.com", client: &mockHTTP{
 			Response: nil,
 			Error:    errors.New("upload failed"),
 		}})
@@ -221,7 +221,7 @@ func TestClient_UploadFile_Error(t *testing.T) {
 		}
 		mockResp.Header.Set(httpLogIDKey, "test-log-id")
 
-		core := newCore(&newCozeAPIOpt{baseURL: "https://api.test.com", client: &mockHTTP{
+		core := newCore(&clientOption{baseURL: "https://api.test.com", client: &mockHTTP{
 			Response: mockResp,
 			Error:    nil,
 		}})
@@ -267,12 +267,12 @@ func TestNewClient(t *testing.T) {
 	// 测试创建客户端
 	t.Run("With Custom Doer", func(t *testing.T) {
 		customDoer := &mockHTTP{}
-		core := newCore(&newCozeAPIOpt{baseURL: "https://api.test.com", client: customDoer})
+		core := newCore(&clientOption{baseURL: "https://api.test.com", client: customDoer})
 		assert.Equal(t, customDoer, core.client)
 	})
 
 	t.Run("With Nil Doer", func(t *testing.T) {
-		core := newCore(&newCozeAPIOpt{baseURL: "https://api.test.com"})
+		core := newCore(&clientOption{baseURL: "https://api.test.com"})
 		assert.NotNil(t, core.client)
 		_, ok := core.client.(*http.Client)
 		assert.True(t, ok)

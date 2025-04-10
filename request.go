@@ -21,17 +21,17 @@ type HTTPClient interface {
 var stdHTTPClientInterface HTTPClient = &http.Client{}
 
 type core struct {
-	*newCozeAPIOpt
+	*clientOption
 }
 
-func newCore(opt *newCozeAPIOpt) *core {
+func newCore(opt *clientOption) *core {
 	if opt.client == nil {
 		opt.client = &http.Client{
 			Timeout: time.Second * 5,
 		}
 	}
 	return &core{
-		newCozeAPIOpt: opt,
+		clientOption: opt,
 	}
 }
 

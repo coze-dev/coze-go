@@ -244,7 +244,7 @@ func newOAuthClient(clientID, clientSecret string, opts ...OAuthClientOption) (*
 		baseURL:      initSettings.baseURL,
 		wwwURL:       initSettings.wwwURL,
 		hostName:     hostName,
-		core: newCore(&newCozeAPIOpt{
+		core: newCore(&clientOption{
 			baseURL: initSettings.baseURL,
 			client:  httpClient,
 		}),

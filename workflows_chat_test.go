@@ -40,7 +40,7 @@ data: {}
 			},
 		}
 
-		core := newCore(&newCozeAPIOpt{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		chat := newWorkflowsChat(core)
 
 		// Create test request
@@ -100,7 +100,7 @@ data: {}
 			},
 		}
 
-		core := newCore(&newCozeAPIOpt{
+		core := newCore(&clientOption{
 			baseURL: ComBaseURL,
 			client:  &http.Client{Transport: mockTransport},
 		})

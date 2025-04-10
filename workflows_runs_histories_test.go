@@ -43,7 +43,7 @@ func TestWorkflowRunsHistories(t *testing.T) {
 			},
 		}
 
-		core := newCore(&newCozeAPIOpt{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		histories := newWorkflowRunsHistories(core)
 
 		resp, err := histories.Retrieve(context.Background(), &RetrieveWorkflowsRunsHistoriesReq{
@@ -80,7 +80,7 @@ func TestWorkflowRunsHistories(t *testing.T) {
 			},
 		}
 
-		core := newCore(&newCozeAPIOpt{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		histories := newWorkflowRunsHistories(core)
 
 		resp, err := histories.Retrieve(context.Background(), &RetrieveWorkflowsRunsHistoriesReq{
