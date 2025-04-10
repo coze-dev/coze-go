@@ -54,6 +54,13 @@ func main() {
 		ModelInfoConfig: &coze.BotModelInfoConfig{
 			ModelID: "1738675210",
 		},
+		WorkflowIdList: &coze.WorkflowIdList{
+			Ids: []coze.WorkflowId{
+				{
+					Id: os.Getenv("WORKFLOW_ID"),
+				},
+			},
+		},
 	})
 	if err != nil {
 		fmt.Println("Error creating bot:", err)
@@ -101,9 +108,17 @@ func main() {
 	// Update bot
 	updateResp, err := cozeCli.Bots.Update(ctx, &coze.UpdateBotsReq{
 		BotID:      botID,
+		Name:       "the name of your bot",
 		IconFileID: newAvatarInfo.FileInfo.ID,
 		ModelInfoConfig: &coze.BotModelInfoConfig{
 			ModelID: "1738675210",
+		},
+		WorkflowIdList: &coze.WorkflowIdList{
+			Ids: []coze.WorkflowId{
+				{
+					Id: os.Getenv("WORKFLOW_ID"),
+				},
+			},
 		},
 	})
 	if err != nil {
