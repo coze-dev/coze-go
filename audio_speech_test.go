@@ -125,7 +125,10 @@ func TestAudioSpeech(t *testing.T) {
 		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
 		speech := newSpeech(core)
 		reader := strings.NewReader("testmp3")
-		resp, err := speech.Transcription(context.Background(), reader, "")
+		resp, err := speech.Transcription(context.Background(), &AudioSpeechTranscriptionsReq{
+			Filename: "testmp3",
+			Audio:    reader,
+		})
 
 		require.NoError(t, err)
 		assert.Equal(t, "test_log_id", resp.HTTPResponse.LogID())
@@ -162,7 +165,10 @@ func TestAudioSpeech(t *testing.T) {
 		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
 		speech := newSpeech(core)
 		reader := strings.NewReader("testmp3")
-		resp, err := speech.Transcription(context.Background(), reader, "")
+		resp, err := speech.Transcription(context.Background(), &AudioSpeechTranscriptionsReq{
+			Filename: "testmp3",
+			Audio:    reader,
+		})
 
 		require.NoError(t, err)
 		assert.Equal(t, "test_log_id", resp.HTTPResponse.LogID())
@@ -181,7 +187,10 @@ func TestAudioSpeech(t *testing.T) {
 		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
 		speech := newSpeech(core)
 		reader := strings.NewReader("testmp3")
-		resp, err := speech.Transcription(context.Background(), reader, "")
+		resp, err := speech.Transcription(context.Background(), &AudioSpeechTranscriptionsReq{
+			Filename: "testmp3",
+			Audio:    reader,
+		})
 
 		require.Error(t, err)
 		assert.Nil(t, resp)

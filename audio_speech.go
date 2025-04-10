@@ -20,10 +20,10 @@ func (r *audioSpeech) Create(ctx context.Context, req *CreateAudioSpeechReq) (*C
 	return res, nil
 }
 
-func (r *audioSpeech) Transcription(ctx context.Context, reader io.Reader, filename string) (*CreateAudioTranscriptionResp, error) {
+func (r *audioSpeech) Transcription(ctx context.Context, req *AudioSpeechTranscriptionsReq) (*CreateAudioTranscriptionResp, error) {
 	uri := "/v1/audio/transcriptions"
 	resp := &CreateAudioTranscriptionResp{}
-	if err := r.core.UploadFile(ctx, uri, reader, filename, nil, resp); err != nil {
+	if err := r.core.UploadFile(ctx, uri, req.Audio, req.Filename, nil, resp); err != nil {
 		return nil, err
 	}
 	return resp, nil
@@ -43,6 +43,11 @@ type CreateAudioSpeechReq struct {
 	VoiceID        string       `json:"voice_id"`
 	ResponseFormat *AudioFormat `json:"response_format"`
 	Speed          *float32     `json:"speed"`
+}
+
+type AudioSpeechTranscriptionsReq struct {
+	Filename string    `json:"filename"`
+	Audio    io.Reader `json:"audio"`
 }
 
 // CreateAudioSpeechResp represents the response for creating speech

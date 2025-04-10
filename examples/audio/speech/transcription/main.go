@@ -25,7 +25,10 @@ func main() {
 	}
 	defer file.Close()
 
-	resp, err := cozeCli.Audio.Speech.Transcription(context.Background(), file, filename)
+	resp, err := cozeCli.Audio.Speech.Transcription(context.Background(), &coze.AudioSpeechTranscriptionsReq{
+		Filename: filename,
+		Audio:    file,
+	})
 	if err != nil {
 		fmt.Println("Error creating speech:", err)
 		return
