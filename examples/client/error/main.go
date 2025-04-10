@@ -26,7 +26,7 @@ func main() {
 	if err != nil {
 		if cozeErr, ok := coze.AsCozeError(err); ok {
 			// Handle Coze API error
-			fmt.Printf("Coze API error: %s (code: %s)\n", cozeErr.Message, cozeErr.Code)
+			fmt.Printf("Coze API error: %s (code: %d)\n", cozeErr.Message, cozeErr.Code)
 			return
 		}
 		// Handle other errors

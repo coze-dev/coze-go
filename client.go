@@ -2,6 +2,7 @@ package coze
 
 import (
 	"net/http"
+	"time"
 )
 
 type CozeAPI struct {
@@ -19,9 +20,11 @@ type CozeAPI struct {
 }
 
 type newCozeAPIOpt struct {
-	baseURL  string
-	client   *http.Client
-	logLevel LogLevel
+	baseURL     string
+	client      HTTPClient
+	logLevel    LogLevel
+	auth        Auth
+	enableLogID bool
 }
 
 type CozeAPIOption func(*newCozeAPIOpt)
@@ -34,7 +37,7 @@ func WithBaseURL(baseURL string) CozeAPIOption {
 }
 
 // WithHttpClient sets a custom HTTP core
-func WithHttpClient(client *http.Client) CozeAPIOption {
+func WithHttpClient(client HTTPClient) CozeAPIOption {
 	return func(opt *newCozeAPIOpt) {
 		opt.client = client
 	}
@@ -53,28 +56,31 @@ func WithLogger(logger Logger) CozeAPIOption {
 	}
 }
 
+func WithEnableLogID(enableLogID bool) CozeAPIOption {
+	return func(opt *newCozeAPIOpt) {
+		opt.enableLogID = enableLogID
+	}
+}
+
 func NewCozeAPI(auth Auth, opts ...CozeAPIOption) CozeAPI {
 	opt := &newCozeAPIOpt{
 		baseURL:  ComBaseURL,
+		client:   nil,
 		logLevel: LogLevelInfo, // Default log level is Info
+		auth:     auth,
 	}
 	for _, option := range opts {
 		option(opt)
 	}
 	if opt.client == nil {
-		opt.client = &http.Client{}
+		opt.client = &http.Client{
+			Timeout: time.Second * 5,
+		}
 	}
-	saveTransport := opt.client.Transport
-	if saveTransport == nil {
-		saveTransport = http.DefaultTransport
-	}
-	opt.client.Transport = &authTransport{
-		auth: auth,
-		next: saveTransport,
-	}
-	core := newCore(opt.client, opt.baseURL)
+
+	core := newCore(opt)
 	setLevel(opt.logLevel)
-	// Set log level
+
 	cozeClient := CozeAPI{
 		Audio:         newAudio(core),
 		Bots:          newBots(core),

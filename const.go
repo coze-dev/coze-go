@@ -6,6 +6,7 @@ const (
 )
 
 const (
-	logIDHeader     = "x-tt-logid"
-	authorizeHeader = "Authorization"
+	httpRespLogIDKey = "X-Tt-Logid"
+	ctxLogIDKey      = "K_LOGID"
+	authorizeHeader  = "Authorization"
 )

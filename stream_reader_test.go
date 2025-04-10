@@ -15,7 +15,7 @@ import (
 
 func mockHTTPResponse() *httpResponse {
 	header := http.Header{}
-	header.Set(logIDHeader, "test_log_id")
+	header.Set(httpRespLogIDKey, "test_log_id")
 	return &httpResponse{
 		Header: header,
 	}

@@ -208,7 +208,9 @@ func WithAuthHttpClient(client HTTPClient) OAuthClientOption {
 // newOAuthClient creates a new OAuth core
 func newOAuthClient(clientID, clientSecret string, opts ...OAuthClientOption) (*OAuthClient, error) {
 	initSettings := &oauthOption{
-		baseURL: ComBaseURL,
+		baseURL:    ComBaseURL,
+		wwwURL:     "",
+		httpClient: nil,
 	}
 
 	for _, opt := range opts {
@@ -229,7 +231,7 @@ func newOAuthClient(clientID, clientSecret string, opts ...OAuthClientOption) (*
 	if initSettings.httpClient != nil {
 		httpClient = initSettings.httpClient
 	} else {
-		httpClient = http.DefaultClient
+		httpClient = &http.Client{Timeout: time.Second * 5}
 	}
 
 	if initSettings.wwwURL == "" {
@@ -242,7 +244,10 @@ func newOAuthClient(clientID, clientSecret string, opts ...OAuthClientOption) (*
 		baseURL:      initSettings.baseURL,
 		wwwURL:       initSettings.wwwURL,
 		hostName:     hostName,
-		core:         newCore(httpClient, initSettings.baseURL),
+		core: newCore(&newCozeAPIOpt{
+			baseURL: initSettings.baseURL,
+			client:  httpClient,
+		}),
 	}, nil
 }
 
