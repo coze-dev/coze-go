@@ -14,7 +14,7 @@ import (
 
 func TestAudioTranscription(t *testing.T) {
 	// Test Transcription method
-	t.Run("Transcription with different text", func(t *testing.T) {
+	t.Run("Transcriptions with different text", func(t *testing.T) {
 		mockTransport := &mockTransport{
 			roundTripFunc: func(req *http.Request) (*http.Response, error) {
 				// Verify request method and path
