@@ -49,8 +49,7 @@ func TestAudioTranscription(t *testing.T) {
 		assert.Equal(t, "test_log_id", resp.HTTPResponse.LogID())
 
 		// Read and verify response body
-		require.NoError(t, err)
-		assert.NotEqual(t, resp.Data.Text, "this_test_2")
+		assert.Equal(t, "this_test", resp.Data.Text)
 	})
 
 	t.Run("Transcription error", func(t *testing.T) {
