@@ -32,12 +32,12 @@ func TestAudioTranscription(t *testing.T) {
 					Header:     http.Header{},
 					Body:       io.NopCloser(strings.NewReader(string(v))),
 				}
-				resp.Header.Set(logIDHeader, "test_log_id")
+				resp.Header.Set(httpLogIDKey, "test_log_id")
 				return resp, nil
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		transcription := newTranscriptions(core)
 		reader := strings.NewReader("testmp3")
 		resp, err := transcription.Create(context.Background(), &AudioSpeechTranscriptionsReq{
@@ -59,7 +59,7 @@ func TestAudioTranscription(t *testing.T) {
 				return mockResponse(http.StatusBadRequest, &baseResponse{})
 			},
 		}
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		transcription := newTranscriptions(core)
 		reader := strings.NewReader("testmp3")
 		resp, err := transcription.Create(context.Background(), &AudioSpeechTranscriptionsReq{
