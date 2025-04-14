@@ -38,7 +38,7 @@ func TestAudioTranscription(t *testing.T) {
 		}
 
 		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
-		transcription := newTranscription(core)
+		transcription := newTranscriptions(core)
 		reader := strings.NewReader("testmp3")
 		resp, err := transcription.Create(context.Background(), &AudioSpeechTranscriptionsReq{
 			Filename: "testmp3",
@@ -60,7 +60,7 @@ func TestAudioTranscription(t *testing.T) {
 			},
 		}
 		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
-		transcription := newTranscription(core)
+		transcription := newTranscriptions(core)
 		reader := strings.NewReader("testmp3")
 		resp, err := transcription.Create(context.Background(), &AudioSpeechTranscriptionsReq{
 			Filename: "testmp3",
