@@ -25,7 +25,7 @@ func main() {
 	}
 	defer file.Close()
 
-	resp, err := cozeCli.Audio.Transcription.Create(context.Background(), &coze.AudioSpeechTranscriptionsReq{
+	resp, err := cozeCli.Audio.Transcriptions.Create(context.Background(), &coze.AudioSpeechTranscriptionsReq{
 		Filename: filename,
 		Audio:    file,
 	})
