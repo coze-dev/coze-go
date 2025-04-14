@@ -40,7 +40,7 @@ data: {}
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		chat := newWorkflowsChat(core)
 
 		// Create test request
@@ -95,12 +95,15 @@ data: {}
 					Header: make(http.Header),
 				}
 				mockResp.Header.Set("Content-Type", "application/json")
-				mockResp.Header.Set("X-Tt-Logid", "test_log_id")
+				mockResp.Header.Set(httpLogIDKey, "test_log_id")
 				return mockResp, nil
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{
+			baseURL: ComBaseURL,
+			client:  &http.Client{Transport: mockTransport},
+		})
 		chat := newWorkflowsChat(core)
 
 		req := &WorkflowsChatStreamReq{

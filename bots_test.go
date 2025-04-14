@@ -23,7 +23,7 @@ func TestBots(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		bots := newBots(core)
 
 		resp, err := bots.Create(context.Background(), &CreateBotsReq{
@@ -57,7 +57,7 @@ func TestBots(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		bots := newBots(core)
 
 		resp, err := bots.Update(context.Background(), &UpdateBotsReq{
@@ -97,7 +97,7 @@ func TestBots(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		bots := newBots(core)
 
 		resp, err := bots.Publish(context.Background(), &PublishBotsReq{
@@ -160,7 +160,7 @@ func TestBots(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		bots := newBots(core)
 
 		resp, err := bots.Retrieve(context.Background(), &RetrieveBotsReq{
@@ -210,7 +210,7 @@ func TestBots(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		bots := newBots(core)
 
 		paged, err := bots.List(context.Background(), &ListBotsReq{
@@ -247,7 +247,7 @@ func TestBots(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		bots := newBots(core)
 
 		paged, err := bots.List(context.Background(), &ListBotsReq{

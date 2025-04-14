@@ -39,7 +39,7 @@ func TestConversationsMessages(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		messages := newConversationMessage(core)
 
 		resp, err := messages.Create(context.Background(), &CreateMessageReq{
@@ -100,7 +100,7 @@ func TestConversationsMessages(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		messages := newConversationMessage(core)
 
 		paged, err := messages.List(context.Background(), &ListConversationsMessagesReq{
@@ -153,7 +153,7 @@ func TestConversationsMessages(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		messages := newConversationMessage(core)
 
 		resp, err := messages.Retrieve(context.Background(), &RetrieveConversationsMessagesReq{
@@ -200,7 +200,7 @@ func TestConversationsMessages(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		messages := newConversationMessage(core)
 
 		resp, err := messages.Update(context.Background(), &UpdateConversationMessagesReq{
@@ -247,7 +247,7 @@ func TestConversationsMessages(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		messages := newConversationMessage(core)
 
 		resp, err := messages.Delete(context.Background(), &DeleteConversationsMessagesReq{
@@ -275,7 +275,7 @@ func TestConversationsMessages(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		messages := newConversationMessage(core)
 
 		paged, err := messages.List(context.Background(), &ListConversationsMessagesReq{
@@ -305,7 +305,7 @@ func TestConversationsMessages(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		messages := newConversationMessage(core)
 
 		createReq := &CreateMessageReq{

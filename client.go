@@ -2,6 +2,7 @@ package coze
 
 import (
 	"net/http"
+	"time"
 )
 
 type CozeAPI struct {
@@ -18,63 +19,68 @@ type CozeAPI struct {
 	baseURL       string
 }
 
-type newCozeAPIOpt struct {
-	baseURL  string
-	client   *http.Client
-	logLevel LogLevel
+type clientOption struct {
+	baseURL     string
+	client      HTTPClient
+	logLevel    LogLevel
+	auth        Auth
+	enableLogID bool
 }
 
-type CozeAPIOption func(*newCozeAPIOpt)
+type CozeAPIOption func(*clientOption)
 
 // WithBaseURL adds the base URL for the API
 func WithBaseURL(baseURL string) CozeAPIOption {
-	return func(opt *newCozeAPIOpt) {
+	return func(opt *clientOption) {
 		opt.baseURL = baseURL
 	}
 }
 
 // WithHttpClient sets a custom HTTP core
-func WithHttpClient(client *http.Client) CozeAPIOption {
-	return func(opt *newCozeAPIOpt) {
+func WithHttpClient(client HTTPClient) CozeAPIOption {
+	return func(opt *clientOption) {
 		opt.client = client
 	}
 }
 
 // WithLogLevel sets the logging level
 func WithLogLevel(level LogLevel) CozeAPIOption {
-	return func(opt *newCozeAPIOpt) {
+	return func(opt *clientOption) {
 		opt.logLevel = level
 	}
 }
 
 func WithLogger(logger Logger) CozeAPIOption {
-	return func(opt *newCozeAPIOpt) {
+	return func(opt *clientOption) {
 		setLogger(logger)
 	}
 }
 
+func WithEnableLogID(enableLogID bool) CozeAPIOption {
+	return func(opt *clientOption) {
+		opt.enableLogID = enableLogID
+	}
+}
+
 func NewCozeAPI(auth Auth, opts ...CozeAPIOption) CozeAPI {
-	opt := &newCozeAPIOpt{
+	opt := &clientOption{
 		baseURL:  ComBaseURL,
+		client:   nil,
 		logLevel: LogLevelInfo, // Default log level is Info
+		auth:     auth,
 	}
 	for _, option := range opts {
 		option(opt)
 	}
 	if opt.client == nil {
-		opt.client = &http.Client{}
+		opt.client = &http.Client{
+			Timeout: time.Second * 5,
+		}
 	}
-	saveTransport := opt.client.Transport
-	if saveTransport == nil {
-		saveTransport = http.DefaultTransport
-	}
-	opt.client.Transport = &authTransport{
-		auth: auth,
-		next: saveTransport,
-	}
-	core := newCore(opt.client, opt.baseURL)
+
+	core := newCore(opt)
 	setLevel(opt.logLevel)
-	// Set log level
+
 	cozeClient := CozeAPI{
 		Audio:         newAudio(core),
 		Bots:          newBots(core),

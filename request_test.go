@@ -43,13 +43,13 @@ func TestClient_Request_Success(t *testing.T) {
 		Body:       io.NopCloser(bytes.NewReader(respBody)),
 		Header:     make(http.Header),
 	}
-	mockResp.Header.Set(logIDHeader, "test-log-id")
+	mockResp.Header.Set(httpLogIDKey, "test-log-id")
 
 	// 创建测试客户端
-	core := newCore(&mockHTTP{
+	core := newCore(&clientOption{baseURL: "https://api.test.com", client: &mockHTTP{
 		Response: mockResp,
 		Error:    nil,
-	}, "https://api.test.com")
+	}})
 
 	// 执行请求
 	var actualResp TestResponse
@@ -69,10 +69,10 @@ func TestClient_Request_Success(t *testing.T) {
 func TestClient_Request_Error(t *testing.T) {
 	// 测试 HTTP 错误
 	t.Run("HTTP Error", func(t *testing.T) {
-		core := newCore(&mockHTTP{
+		core := newCore(&clientOption{baseURL: "https://api.test.com", client: &mockHTTP{
 			Response: nil,
 			Error:    errors.New("network error"),
-		}, "https://api.test.com")
+		}})
 
 		var resp TestResponse
 		err := core.Request(context.Background(), http.MethodGet, "/test", nil, &resp)
@@ -92,12 +92,12 @@ func TestClient_Request_Error(t *testing.T) {
 			Body:       io.NopCloser(bytes.NewReader(respBody)),
 			Header:     make(http.Header),
 		}
-		mockResp.Header.Set(logIDHeader, "test-log-id")
+		mockResp.Header.Set(httpLogIDKey, "test-log-id")
 
-		core := newCore(&mockHTTP{
+		core := newCore(&clientOption{baseURL: "https://api.test.com", client: &mockHTTP{
 			Response: mockResp,
 			Error:    nil,
-		}, "https://api.test.com")
+		}})
 
 		var resp TestResponse
 		err := core.Request(context.Background(), http.MethodGet, "/test", nil, &resp)
@@ -121,12 +121,12 @@ func TestClient_Request_Error(t *testing.T) {
 			Body:       io.NopCloser(bytes.NewReader(respBody)),
 			Header:     make(http.Header),
 		}
-		mockResp.Header.Set(logIDHeader, "test-log-id")
+		mockResp.Header.Set(httpLogIDKey, "test-log-id")
 
-		core := newCore(&mockHTTP{
+		core := newCore(&clientOption{baseURL: "https://api.test.com", client: &mockHTTP{
 			Response: mockResp,
 			Error:    nil,
-		}, "https://api.test.com")
+		}})
 
 		var resp TestResponse
 		err := core.Request(context.Background(), http.MethodGet, "/test", nil, &resp)
@@ -154,12 +154,12 @@ func TestClient_UploadFile_Success(t *testing.T) {
 		Body:       io.NopCloser(bytes.NewReader(respBody)),
 		Header:     make(http.Header),
 	}
-	mockResp.Header.Set(logIDHeader, "test-log-id")
+	mockResp.Header.Set(httpLogIDKey, "test-log-id")
 
-	core := newCore(&mockHTTP{
+	core := newCore(&clientOption{baseURL: "https://api.test.com", client: &mockHTTP{
 		Response: mockResp,
 		Error:    nil,
-	}, "https://api.test.com")
+	}})
 
 	// 创建测试文件内容
 	fileContent := "test file content"
@@ -188,10 +188,10 @@ func TestClient_UploadFile_Success(t *testing.T) {
 func TestClient_UploadFile_Error(t *testing.T) {
 	// 测试上传错误
 	t.Run("Upload Error", func(t *testing.T) {
-		core := newCore(&mockHTTP{
+		core := newCore(&clientOption{baseURL: "https://api.test.com", client: &mockHTTP{
 			Response: nil,
 			Error:    errors.New("upload failed"),
-		}, "https://api.test.com")
+		}})
 
 		var resp TestResponse
 		err := core.UploadFile(
@@ -219,12 +219,12 @@ func TestClient_UploadFile_Error(t *testing.T) {
 			Body:       io.NopCloser(bytes.NewReader(respBody)),
 			Header:     make(http.Header),
 		}
-		mockResp.Header.Set(logIDHeader, "test-log-id")
+		mockResp.Header.Set(httpLogIDKey, "test-log-id")
 
-		core := newCore(&mockHTTP{
+		core := newCore(&clientOption{baseURL: "https://api.test.com", client: &mockHTTP{
 			Response: mockResp,
 			Error:    nil,
-		}, "https://api.test.com")
+		}})
 
 		var resp TestResponse
 		err := core.UploadFile(
@@ -267,14 +267,14 @@ func TestNewClient(t *testing.T) {
 	// 测试创建客户端
 	t.Run("With Custom Doer", func(t *testing.T) {
 		customDoer := &mockHTTP{}
-		core := newCore(customDoer, "https://api.test.com")
-		assert.Equal(t, customDoer, core.httpClient)
+		core := newCore(&clientOption{baseURL: "https://api.test.com", client: customDoer})
+		assert.Equal(t, customDoer, core.client)
 	})
 
 	t.Run("With Nil Doer", func(t *testing.T) {
-		core := newCore(nil, "https://api.test.com")
-		assert.NotNil(t, core.httpClient)
-		_, ok := core.httpClient.(*http.Client)
+		core := newCore(&clientOption{baseURL: "https://api.test.com"})
+		assert.NotNil(t, core.client)
+		_, ok := core.client.(*http.Client)
 		assert.True(t, ok)
 	})
 }

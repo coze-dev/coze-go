@@ -28,7 +28,7 @@ func TestAudioVoices(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		voices := newVoice(core)
 
 		// Create mock audio file
@@ -67,7 +67,7 @@ func TestAudioVoices(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		voices := newVoice(core)
 
 		resp, err := voices.Clone(context.Background(), &CloneAudioVoicesReq{
@@ -81,7 +81,7 @@ func TestAudioVoices(t *testing.T) {
 
 	// Test Clone method with nil file
 	t.Run("Clone voice with nil file", func(t *testing.T) {
-		core := newCore(&http.Client{}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{}})
 		voices := newVoice(core)
 
 		resp, err := voices.Clone(context.Background(), &CloneAudioVoicesReq{
@@ -143,7 +143,7 @@ func TestAudioVoices(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		voices := newVoice(core)
 
 		paged, err := voices.List(context.Background(), &ListAudioVoicesReq{
@@ -201,7 +201,7 @@ func TestAudioVoices(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		voices := newVoice(core)
 
 		paged, err := voices.List(context.Background(), &ListAudioVoicesReq{})
@@ -220,7 +220,7 @@ func TestAudioVoices(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		voices := newVoice(core)
 
 		paged, err := voices.List(context.Background(), &ListAudioVoicesReq{

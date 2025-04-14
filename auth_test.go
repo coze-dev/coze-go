@@ -42,7 +42,7 @@ func mockResponse(statusCode int, body interface{}) (*http.Response, error) {
 		Body:       mockReadCloser{buffer},
 		Header:     make(http.Header),
 	}
-	mockResp.Header.Set(logIDHeader, "test_log_id")
+	mockResp.Header.Set(httpLogIDKey, "test_log_id")
 	return mockResp, nil
 }
 

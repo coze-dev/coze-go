@@ -33,7 +33,7 @@ func TestFiles(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		files := newFiles(core)
 
 		// Create a test file content
@@ -78,7 +78,7 @@ func TestFiles(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		files := newFiles(core)
 
 		resp, err := files.Retrieve(context.Background(), &RetrieveFilesReq{
@@ -102,7 +102,7 @@ func TestFiles(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		files := newFiles(core)
 
 		content := []byte("test file content")
@@ -125,7 +125,7 @@ func TestFiles(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		files := newFiles(core)
 
 		resp, err := files.Retrieve(context.Background(), &RetrieveFilesReq{

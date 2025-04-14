@@ -32,7 +32,7 @@ func TestDatasets(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		datasets := newDatasets(core)
 
 		// Create test request
@@ -87,7 +87,7 @@ func TestDatasets(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		datasets := newDatasets(core)
 
 		// Create test request
@@ -124,7 +124,7 @@ func TestDatasets(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		datasets := newDatasets(core)
 
 		// Create test request
@@ -157,7 +157,7 @@ func TestDatasets(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		datasets := newDatasets(core)
 
 		// Create test request
@@ -198,7 +198,7 @@ func TestDatasets(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		datasets := newDatasets(core)
 
 		// Create test request

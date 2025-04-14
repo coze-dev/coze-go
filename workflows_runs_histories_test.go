@@ -43,7 +43,7 @@ func TestWorkflowRunsHistories(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		histories := newWorkflowRunsHistories(core)
 
 		resp, err := histories.Retrieve(context.Background(), &RetrieveWorkflowsRunsHistoriesReq{
@@ -80,7 +80,7 @@ func TestWorkflowRunsHistories(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		histories := newWorkflowRunsHistories(core)
 
 		resp, err := histories.Retrieve(context.Background(), &RetrieveWorkflowsRunsHistoriesReq{

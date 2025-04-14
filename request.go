@@ -19,19 +19,17 @@ type HTTPClient interface {
 }
 
 type core struct {
-	httpClient HTTPClient
-	baseURL    string
+	*clientOption
 }
 
-func newCore(httpClient HTTPClient, baseURL string) *core {
-	if httpClient == nil {
-		httpClient = &http.Client{
+func newCore(opt *clientOption) *core {
+	if opt.client == nil {
+		opt.client = &http.Client{
 			Timeout: time.Second * 5,
 		}
 	}
 	return &core{
-		httpClient: httpClient,
-		baseURL:    baseURL,
+		clientOption: opt,
 	}
 }
 
@@ -104,9 +102,12 @@ func (c *core) UploadFile(ctx context.Context, path string, reader io.Reader, fi
 			return fmt.Errorf("apply option: %w", err)
 		}
 	}
-	setUserAgent(req)
 
-	resp, err := c.httpClient.Do(req)
+	if err := c.setCommonHeaders(req); err != nil {
+		return err
+	}
+
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return fmt.Errorf("do request: %w", err)
 	}
@@ -141,16 +142,19 @@ func (c *core) RawRequest(ctx context.Context, method, path string, body any, op
 		}
 	}
 
-	setUserAgent(req)
-	resp, err := c.httpClient.Do(req)
+	if err := c.setCommonHeaders(req); err != nil {
+		return nil, err
+	}
+
+	resp, err := c.client.Do(req)
 	if err != nil {
 		return nil, err
 	}
-	err = checkHttpResp(ctx, resp)
-	if err != nil {
+
+	if err = checkHttpResp(ctx, resp); err != nil {
 		return nil, err
 	}
-	return resp, err
+	return resp, nil
 }
 
 func (c *core) StreamRequest(ctx context.Context, method, path string, body any, opts ...RequestOption) (*http.Response, error) {
@@ -196,7 +200,7 @@ func isResponseSuccess(ctx context.Context, baseResp baseRespInterface, bodyByte
 }
 
 func checkHttpResp(ctx context.Context, resp *http.Response) error {
-	logID := resp.Header.Get(logIDHeader)
+	logID := resp.Header.Get(httpLogIDKey)
 	// 鉴权的情况，需要解析
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, err := io.ReadAll(resp.Body)

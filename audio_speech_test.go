@@ -26,12 +26,12 @@ func TestAudioSpeech(t *testing.T) {
 					Header:     http.Header{},
 					Body:       io.NopCloser(strings.NewReader("mock audio data")),
 				}
-				resp.Header.Set(logIDHeader, "test_log_id")
+				resp.Header.Set(httpLogIDKey, "test_log_id")
 				return resp, nil
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		speech := newSpeech(core)
 
 		resp, err := speech.Create(context.Background(), &CreateAudioSpeechReq{
@@ -60,7 +60,7 @@ func TestAudioSpeech(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		speech := newSpeech(core)
 
 		resp, err := speech.Create(context.Background(), &CreateAudioSpeechReq{
@@ -83,7 +83,7 @@ func TestAudioSpeech(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		speech := newSpeech(core)
 
 		resp, err := speech.Create(context.Background(), &CreateAudioSpeechReq{

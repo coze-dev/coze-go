@@ -47,7 +47,7 @@ func TestWorkspaces(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		workspaces := newWorkspace(core)
 
 		paged, err := workspaces.List(context.Background(), &ListWorkspaceReq{
@@ -93,7 +93,7 @@ func TestWorkspaces(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		workspaces := newWorkspace(core)
 
 		paged, err := workspaces.List(context.Background(), NewListWorkspaceReq())
@@ -112,7 +112,7 @@ func TestWorkspaces(t *testing.T) {
 			},
 		}
 
-		core := newCore(&http.Client{Transport: mockTransport}, ComBaseURL)
+		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
 		workspaces := newWorkspace(core)
 
 		paged, err := workspaces.List(context.Background(), &ListWorkspaceReq{

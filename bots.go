@@ -148,6 +148,15 @@ type BotModelInfoConfig struct {
 	FrequencyPenalty float64 `json:"frequency_penalty,omitempty"`
 }
 
+// WorkflowIDList represents workflow ID information
+type WorkflowIDList struct {
+	IDs []WorkflowIDInfo `json:"ids"`
+}
+
+type WorkflowIDInfo struct {
+	ID string `json:"id"`
+}
+
 // BotOnboardingInfo represents bot onboarding information
 type BotOnboardingInfo struct {
 	Prologue           string   `json:"prologue,omitempty"`
@@ -183,6 +192,7 @@ type CreateBotsReq struct {
 	PromptInfo      *BotPromptInfo      `json:"prompt_info"`       // Prompt information
 	OnboardingInfo  *BotOnboardingInfo  `json:"onboarding_info"`   // Onboarding information
 	ModelInfoConfig *BotModelInfoConfig `json:"model_info_config"` // ModelInfoConfig information
+	WorkflowIDList  *WorkflowIDList     `json:"workflow_id_list"`  // WorkflowIDList information
 }
 
 // CreateBotsResp 创建机器人响应
@@ -256,6 +266,7 @@ type UpdateBotsReq struct {
 	OnboardingInfo  *BotOnboardingInfo  `json:"onboarding_info"`   // Onboarding information
 	Knowledge       *BotKnowledge       `json:"knowledge"`         // Knowledge
 	ModelInfoConfig *BotModelInfoConfig `json:"model_info_config"` // ModelInfoConfig information
+	WorkflowIDList  *WorkflowIDList     `json:"workflow_id_list"`  // WorkflowIDList information
 }
 
 // UpdateBotsResp 更新机器人响应
