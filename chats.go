@@ -36,7 +36,6 @@ func (r *chat) CreateAndPoll(ctx context.Context, req *CreateChatsReq, timeout *
 	conversationID := chat.ConversationID
 	now := time.Now()
 	for {
-		time.Sleep(time.Second)
 		if timeout != nil && time.Since(now) > time.Duration(*timeout)*time.Second {
 			logger.Infof(ctx, "Create timeout: ", *timeout, " seconds, cancel Create")
 			cancelResp, err := r.Cancel(ctx, &CancelChatsReq{
@@ -50,6 +49,8 @@ func (r *chat) CreateAndPoll(ctx context.Context, req *CreateChatsReq, timeout *
 			chat = cancelResp.Chat
 			break
 		}
+
+		time.Sleep(time.Second)
 		retrieveChat, err := r.Retrieve(ctx, &RetrieveChatsReq{
 			ConversationID: conversationID,
 			ChatID:         chat.ID,
@@ -61,6 +62,11 @@ func (r *chat) CreateAndPoll(ctx context.Context, req *CreateChatsReq, timeout *
 			chat = retrieveChat.Chat
 			logger.Infof(ctx, "Create completed, spend: %v", time.Since(now))
 			break
+		}
+		if retrieveChat.Chat.Status == ChatStatusFailed {
+			chat = retrieveChat.Chat
+			logger.Infof(ctx, "Create failed, spend: %v", time.Since(now))
+			return nil, errors.New(" ChatStatusFailed filled ")
 		}
 	}
 	messages, err := r.Messages.List(ctx, &ListChatsMessagesReq{
@@ -75,6 +81,7 @@ func (r *chat) CreateAndPoll(ctx context.Context, req *CreateChatsReq, timeout *
 		Messages: messages.Messages,
 	}, nil
 }
+
 
 func (r *chat) Stream(ctx context.Context, req *CreateChatsReq) (Stream[ChatEvent], error) {
 	method := http.MethodPost
