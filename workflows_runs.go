@@ -306,6 +306,8 @@ type RunWorkflowsReq struct {
 	IsAsync bool `json:"is_async,omitempty"`
 
 	AppID string `json:"app_id,omitempty"`
+	//	Connector ID, optional
+	ConnectorID *string `json:"connector_id,omitempty"`
 }
 
 // ResumeRunWorkflowsReq represents request for resuming workflow runs
