@@ -67,10 +67,10 @@ func (r *chat) CreateAndPoll(ctx context.Context, req *CreateChatsReq, timeout *
 			logger.Infof(ctx, "Create completed, spend: %v", time.Since(now))
 			break
 		}
-		if retrieveChat.Chat.Status == ChatStatusFailed {
+		if retrieveChat.Chat.Status == ChatStatusFailed || retrieveChat.Chat.Status == ChatStatusCancelled || retrieveChat.Chat.Status == ChatStatusRequiresAction {
 			chat = retrieveChat.Chat
 			logger.Infof(ctx, "Create failed, spend: %v", time.Since(now))
-			return nil, errors.New(" ChatStatusFailed filled ")
+			return nil, errors.New(" chat status exist; status: " + string(chat.Status))
 		}
 	}
 	messages, err := r.Messages.List(ctx, &ListChatsMessagesReq{
