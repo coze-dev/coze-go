@@ -179,6 +179,7 @@ func TestConversations(t *testing.T) {
 				return mockResponse(http.StatusOK, &clearConversationsResp{
 					Data: &ClearConversationsResp{
 						ConversationID: "conv1",
+						ID:             "new_section",
 					},
 				})
 			},
@@ -194,6 +195,7 @@ func TestConversations(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "test_log_id", resp.LogID())
 		assert.Equal(t, "conv1", resp.ConversationID)
+		assert.Equal(t, "new_section", resp.ID)
 	})
 
 	// Test List method with default pagination

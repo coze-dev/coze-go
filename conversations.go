@@ -178,5 +178,6 @@ type clearConversationsResp struct {
 
 type ClearConversationsResp struct {
 	baseModel
+	ID             string `json:"id"`
 	ConversationID string `json:"conversation_id"`
 }
