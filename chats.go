@@ -86,7 +86,6 @@ func (r *chat) CreateAndPoll(ctx context.Context, req *CreateChatsReq, timeout *
 	}, nil
 }
 
-
 func (r *chat) Stream(ctx context.Context, req *CreateChatsReq) (Stream[ChatEvent], error) {
 	method := http.MethodPost
 	uri := "/v3/chat"
