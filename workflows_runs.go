@@ -254,15 +254,27 @@ func ParseWorkflowEventInterrupt(data string) (*WorkflowEventInterrupt, error) {
 type WorkflowEventMessage struct {
 	// The content of the streamed output message.
 	Content string `json:"content"`
+	
+	// The type of the content.
+	ContentType string `json:"content_type"`
+
+	Cost string `json:"cost"`
+
+	NodeID string `json:"node_id"`
 
 	// The name of the node that outputs the message, such as the message node or end node.
 	NodeTitle string `json:"node_title"`
+
+	NodeType string `json:"node_type"`
 
 	// The message ID of this message within the node, starting at 0.
 	NodeSeqID string `json:"node_seq_id"`
 
 	// Whether the current message is the last data packet for this node.
 	NodeIsFinish bool `json:"node_is_finish"`
+	
+	// The number of tokens used in generating this message.
+	Token int `json:"token"`
 
 	// Additional fields.
 	Ext map[string]any `json:"ext,omitempty"`
