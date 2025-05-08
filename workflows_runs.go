@@ -254,7 +254,7 @@ func ParseWorkflowEventInterrupt(data string) (*WorkflowEventInterrupt, error) {
 type WorkflowEventMessage struct {
 	// The content of the streamed output message.
 	Content string `json:"content"`
-	
+
 	// The type of the content.
 	ContentType string `json:"content_type"`
 
@@ -272,7 +272,7 @@ type WorkflowEventMessage struct {
 
 	// Whether the current message is the last data packet for this node.
 	NodeIsFinish bool `json:"node_is_finish"`
-	
+
 	// The number of tokens used in generating this message.
 	Token int `json:"token"`
 
