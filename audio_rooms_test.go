@@ -38,10 +38,16 @@ func TestAudioRooms(t *testing.T) {
 			BotID:          "bot1",
 			ConversationID: "conv1",
 			VoiceID:        "voice1",
+			WorkflowID:     "workflow1",
 			Config: &RoomConfig{
 				AudioConfig: &RoomAudioConfig{
 					Codec: AudioCodecOPUS,
 				},
+				VideoConfig: &RoomVideoConfig{
+					Codec:           VideoCodecH264,
+					StreamVideoType: StreamVideoTypeMain,
+				},
+				PrologueContent: "Hello Coze",
 			},
 		})
 
@@ -109,5 +115,19 @@ func TestAudioCodec(t *testing.T) {
 		assert.Equal(t, AudioCodec("G711A"), AudioCodecG711A)
 		assert.Equal(t, AudioCodec("OPUS"), AudioCodecOPUS)
 		assert.Equal(t, AudioCodec("G722"), AudioCodecG722)
+	})
+}
+
+func TestVideoCodec(t *testing.T) {
+	t.Run("VideoCodec constants", func(t *testing.T) {
+		assert.Equal(t, VideoCodec("H264"), VideoCodecH264)
+		assert.Equal(t, VideoCodec("BYTEVC1"), VideoCodecBYTEVC1)
+	})
+}
+
+func TestStreamVideoType(t *testing.T) {
+	t.Run("StreamVideoType constants", func(t *testing.T) {
+		assert.Equal(t, StreamVideoType("main"), StreamVideoTypeMain)
+		assert.Equal(t, StreamVideoType("screen"), StreamVideoTypeScreen)
 	})
 }

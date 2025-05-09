@@ -40,12 +40,37 @@ type CreateAudioRoomsReq struct {
 	ConversationID string      `json:"conversation_id,omitempty"`
 	VoiceID        string      `json:"voice_id,omitempty"`
 	UID            string      `json:"uid,omitempty"`
+	WorkflowID     string      `json:"workflow_id,omitempty"`
 	Config         *RoomConfig `json:"config,omitempty"`
 }
 
 // RoomConfig represents the room configuration
 type RoomConfig struct {
-	AudioConfig *RoomAudioConfig `json:"audio_config"`
+	AudioConfig     *RoomAudioConfig `json:"audio_config,omitempty"`
+	VideoConfig     *RoomVideoConfig `json:"video_config,omitempty"`
+	PrologueContent string           `json:"prologue_content,omitempty"`
+}
+
+// VideoCodec represents the video codec
+type VideoCodec string
+
+const (
+	VideoCodecH264    VideoCodec = "H264"
+	VideoCodecBYTEVC1 VideoCodec = "BYTEVC1"
+)
+
+// StreamVideoType represents the stream video type
+type StreamVideoType string
+
+const (
+	StreamVideoTypeMain   StreamVideoType = "main"
+	StreamVideoTypeScreen StreamVideoType = "screen"
+)
+
+// RoomVideoConfig represents the room video configuration
+type RoomVideoConfig struct {
+	Codec           VideoCodec      `json:"codec,omitempty"`
+	StreamVideoType StreamVideoType `json:"stream_video_type,omitempty"`
 }
 
 // RoomAudioConfig represents the room audio configuration
