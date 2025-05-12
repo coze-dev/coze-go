@@ -357,7 +357,7 @@ type CreateChatsReq struct {
 	// Optional: Specify a connector ID. Supports passing in 999 (Chat SDK) and 1024 (API). If not provided, the default is 1024 (API).
 	ConnectorID string `json:"connector_id"`
 
-	// Optional：Assign values to custom parameters and pass them to the conversation flow
+	// Optional：Assign values to custom parameters and pass them to the workflow
 	Parameters map[string]any `json:"parameters,omitempty"`
 }
 
