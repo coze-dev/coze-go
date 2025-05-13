@@ -1,33 +1,13 @@
 package coze
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
 	"testing"
 
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 )
-
-func unmarshalRequestBody[T any](req *http.Request) (T, error) {
-	var t T
-	if req == nil || req.Body == nil {
-		return t, fmt.Errorf("request or request body is nil")
-	}
-	defer req.Body.Close()
-	bodyBytes, err := io.ReadAll(req.Body)
-	if err != nil {
-		return t, fmt.Errorf("failed to read request body: %w", err)
-	}
-	// Restore the body so it can be read again if needed by other handlers/middlewares
-	req.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
-	err = json.Unmarshal(bodyBytes, &t)
-	return t, err
-}
 
 func TestVariablesService_Retrieve(t *testing.T) {
 	mockClient := &http.Client{}
