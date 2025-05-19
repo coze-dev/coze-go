@@ -9,10 +9,8 @@ import (
 	"github.com/coze-dev/coze-go"
 )
 
-//
 // This examples describes how to use the chats interface to initiate conversations,
 // poll the status of the conversation, and obtain the messages after the conversation is completed.
-//
 
 func main() {
 	// Get an access_token through personal access token or oauth.

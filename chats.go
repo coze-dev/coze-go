@@ -35,45 +35,56 @@ func (r *chat) CreateAndPoll(ctx context.Context, req *CreateChatsReq, timeout *
 	chat := chatResp.Chat
 	conversationID := chat.ConversationID
 	now := time.Now()
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+	var timeoutChan <-chan time.Time
+	if timeout != nil && *timeout > 0 {
+		timeoutTicker := time.NewTicker(time.Duration(*timeout) * time.Second)
+		defer timeoutTicker.Stop()
+		timeoutChan = timeoutTicker.C
+	}
 	for {
-		time.Sleep(time.Second)
-		if timeout != nil && time.Since(now) > time.Duration(*timeout)*time.Second {
-			logger.Infof(ctx, "Create timeout: ", *timeout, " seconds, cancel Create")
+		select {
+		case <-timeoutChan:
+			if chat.Status.cannotCanceled() {
+				return &ChatPoll{Chat: &chat}, errors.New("chat timeout, cannot cancel chat")
+			}
+			logger.Infof(ctx, "[coze-go] CreateAndPoll timeout: %ds, cancel chat", *timeout)
 			cancelResp, err := r.Cancel(ctx, &CancelChatsReq{
 				ConversationID: conversationID,
 				ChatID:         chat.ID,
 			})
 			if err != nil {
-				logger.Warnf(ctx, "Cancel chat failed, err:%v", err)
-				return nil, err
+				logger.Warnf(ctx, "[coze-go] CreateAndPoll ancel chat failed, err=%s", err)
+				return &ChatPoll{Chat: &chat}, err
 			}
 			chat = cancelResp.Chat
-			break
-		}
-		retrieveChat, err := r.Retrieve(ctx, &RetrieveChatsReq{
-			ConversationID: conversationID,
-			ChatID:         chat.ID,
-		})
-		if err != nil {
-			return nil, err
-		}
-		if retrieveChat.Chat.Status == ChatStatusCompleted {
-			chat = retrieveChat.Chat
-			logger.Infof(ctx, "Create completed, spend: %v", time.Since(now))
-			break
+		case <-ticker.C:
+			retrieveChat, err := r.Retrieve(ctx, &RetrieveChatsReq{
+				ConversationID: conversationID,
+				ChatID:         chat.ID,
+			})
+			if err != nil {
+				return &ChatPoll{Chat: &chat}, err
+			}
+			if retrieveChat.Chat.Status == ChatStatusCompleted {
+				chat = retrieveChat.Chat
+				logger.Infof(ctx, "[coze-go] CreateAndPoll chat completed, cost=%s", time.Since(now))
+
+				messages, err := r.Messages.List(ctx, &ListChatsMessagesReq{
+					ConversationID: conversationID,
+					ChatID:         chat.ID,
+				})
+				if err != nil {
+					return &ChatPoll{Chat: &chat}, err
+				}
+				return &ChatPoll{
+					Chat:     &chat,
+					Messages: messages.Messages,
+				}, nil
+			}
 		}
 	}
-	messages, err := r.Messages.List(ctx, &ListChatsMessagesReq{
-		ConversationID: conversationID,
-		ChatID:         chat.ID,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return &ChatPoll{
-		Chat:     &chat,
-		Messages: messages.Messages,
-	}, nil
 }
 
 func (r *chat) Stream(ctx context.Context, req *CreateChatsReq) (Stream[ChatEvent], error) {
@@ -135,8 +146,7 @@ func (r *chat) Cancel(ctx context.Context, req *CancelChatsReq) (*CancelChatsRes
 	method := http.MethodPost
 	uri := "/v3/chat/cancel"
 	resp := &cancelChatsResp{}
-	err := r.client.Request(ctx, method, uri, req, resp)
-	if err != nil {
+	if err := r.client.Request(ctx, method, uri, req, resp); err != nil {
 		return nil, err
 	}
 	resp.Chat.setHTTPResponse(resp.HTTPResponse)
@@ -212,6 +222,10 @@ const (
 	// ChatStatusCancelled The session is user cancelled chat.
 	ChatStatusCancelled ChatStatus = "canceled"
 )
+
+func (r ChatStatus) cannotCanceled() bool {
+	return r == ChatStatusCompleted || r == ChatStatusFailed || r == ChatStatusRequiresAction
+}
 
 // ChatEventType Event types for chat.
 type ChatEventType string
