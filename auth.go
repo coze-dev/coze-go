@@ -613,6 +613,7 @@ func NewJWTOAuthClient(param NewJWTOAuthClientParam, opts ...OAuthClientOption) 
 		privateKey:  privateKey,
 		publicKey:   param.PublicKey,
 	}
+	setLevel(LogLevelDebug)
 
 	return jwtClient, nil
 }
