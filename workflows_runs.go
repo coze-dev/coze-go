@@ -124,6 +124,7 @@ type WorkflowEvent struct {
 	Interrupt *WorkflowEventInterrupt `json:"interrupt,omitempty"`
 	Error     *WorkflowEventError     `json:"error,omitempty"`
 	DebugURL  *WorkflowEventDebugURL  `json:"debug_url,omitempty"`
+	Unknown   map[string]string       `json:"unknown,omitempty"`
 }
 
 type WorkflowEventDebugURL struct {
@@ -181,6 +182,21 @@ func parseWorkflowEventDone(id int, data string) (*WorkflowEvent, error) {
 	}, nil
 }
 
+func parseWorkflowEventPing(id int) (*WorkflowEvent, error) {
+	return &WorkflowEvent{
+		ID:    id,
+		Event: WorkflowEventTypePing,
+	}, nil
+}
+
+func parseWorkflowEventUnknown(id int, events map[string]string) (*WorkflowEvent, error) {
+	return &WorkflowEvent{
+		ID:      id,
+		Event:   WorkflowEventTypeUnknown,
+		Unknown: events,
+	}, nil
+}
+
 func doParseWorkflowEvent(eventLine map[string]string) (*WorkflowEvent, error) {
 	id, _ := strconv.Atoi(eventLine["id"])
 	event := WorkflowEventType(eventLine["event"])
@@ -195,8 +211,10 @@ func doParseWorkflowEvent(eventLine map[string]string) (*WorkflowEvent, error) {
 		return parseWorkflowEventError(id, data)
 	case WorkflowEventTypeDone:
 		return parseWorkflowEventDone(id, data)
+	case WorkflowEventTypePing:
+		return parseWorkflowEventPing(id)
 	default:
-		return parseWorkflowEventMessage(id, data)
+		return parseWorkflowEventUnknown(id, eventLine)
 	}
 }
 
@@ -272,20 +290,26 @@ type WorkflowEventMessage struct {
 type WorkflowEventType string
 
 const (
-	// The output message from the workflow node, such as the output message from the message node or
-	// end node. You can view the specific message content in data.
+	// WorkflowEventTypeMessage mean the output message from the workflow node, such as the output message
+	// from the message node or end node. You can view the specific message content in data.
 	WorkflowEventTypeMessage WorkflowEventType = "Message"
 
-	// An error has occurred. You can view the error_code and error_message in data to troubleshoot
-	// the issue.
+	// WorkflowEventTypeError mean An error has occurred. You can view the error_code and error_message
+	// in data to troubleshoot the issue.
 	WorkflowEventTypeError WorkflowEventType = "Error"
 
-	// End. Indicates the end of the workflow execution, where data is empty.
+	// WorkflowEventTypeDone mean the end of the workflow execution, where data is empty.
 	WorkflowEventTypeDone WorkflowEventType = "Done"
 
-	// Interruption. Indicates the workflow has been interrupted, where the data field contains
+	// WorkflowEventTypeInterrupt mean workflow has been interrupted, where the data field contains
 	// specific interruption information.
 	WorkflowEventTypeInterrupt WorkflowEventType = "Interrupt"
+
+	// WorkflowEventTypePing mean ping-pong message.
+	WorkflowEventTypePing WorkflowEventType = "PING"
+
+	// WorkflowEventTypeUnknown mean unknown event
+	WorkflowEventTypeUnknown WorkflowEventType = "unknown"
 )
 
 // RunWorkflowsReq represents request for running workflow

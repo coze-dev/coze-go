@@ -5,7 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
+	"time"
 
 	"github.com/coze-dev/coze-go"
 )
@@ -16,20 +18,30 @@ func main() {
 	token := os.Getenv("COZE_API_TOKEN")
 	authCli := coze.NewTokenAuth(token)
 
+	customClient := &http.Client{
+		Timeout: time.Minute * 20,
+	}
+
 	// Init the Coze client through the access_token.
-	cozeCli := coze.NewCozeAPI(authCli, coze.WithBaseURL(os.Getenv("COZE_API_BASE")))
+	cozeCli := coze.NewCozeAPI(authCli,
+		coze.WithBaseURL(os.Getenv("COZE_API_BASE")),
+		coze.WithHttpClient(customClient),
+		coze.WithLogLevel(coze.LogLevelDebug),
+	)
 
 	ctx := context.Background()
-	workflowID := os.Getenv("WORKFLOW_ID")
+	workflowID := os.Getenv("COZE_WORKFLOW_ID")
+	appID := os.Getenv("COZE_APP_ID")
 
 	// if your workflow need input params, you can send them by map
 	data := map[string]interface{}{
-		"date": "param values",
+		// "date": "param values",
 	}
 
 	req := &coze.RunWorkflowsReq{
 		WorkflowID: workflowID,
 		Parameters: data,
+		AppID:      appID,
 	}
 
 	resp, err := cozeCli.Workflows.Runs.Stream(ctx, req)

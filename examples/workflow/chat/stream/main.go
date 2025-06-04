@@ -11,14 +11,22 @@ import (
 	"github.com/coze-dev/coze-go"
 )
 
+func ofNotZero[T comparable](v T) *T {
+	var empty T
+	if v == empty {
+		return &v
+	}
+	return nil
+}
+
 func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	// Get an access_token through personal access token or oauth.
 	token := os.Getenv("COZE_API_TOKEN")
-	workflowID := os.Getenv("WORKFLOW_ID")
-	botID := os.Getenv("PUBLISHED_BOT_ID")
+	workflowID := os.Getenv("COZE_WORKFLOW_ID")
+	botID := os.Getenv("COZE_BOT_ID")
 	authCli := coze.NewTokenAuth(token)
 
 	// Init the Coze client through the access_token.
@@ -27,7 +35,7 @@ func main() {
 	//
 	// Step one, create chats
 	req := &coze.WorkflowsChatStreamReq{
-		BotID:      &botID,
+		BotID:      ofNotZero(botID),
 		WorkflowID: workflowID,
 		AdditionalMessages: []*coze.Message{
 			coze.BuildUserQuestionText("What can you do?", nil),
