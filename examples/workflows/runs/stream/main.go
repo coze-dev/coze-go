@@ -35,7 +35,7 @@ func main() {
 
 	// if your workflow need input params, you can send them by map
 	data := map[string]interface{}{
-		// "date": "param values",
+		"date": "param values",
 	}
 
 	req := &coze.RunWorkflowsReq{
