@@ -26,6 +26,33 @@ func NewTokenAuth(accessToken string) Auth {
 	}
 }
 
+func NewJWTAuth(client *JWTOAuthClient, opt *GetJWTAccessTokenReq) Auth {
+	if opt == nil {
+		opt = &GetJWTAccessTokenReq{}
+	}
+	if opt.TTL <= 0 {
+		opt.TTL = 900
+	}
+	if opt.Store == nil {
+		opt.Store = newFixedKeyMemStore()
+	}
+
+	return &jwtOAuthImpl{
+		TTL:           opt.TTL,
+		Scope:         opt.Scope,
+		SessionName:   opt.SessionName,
+		refreshBefore: getRefreshBefore(opt.TTL),
+		client:        client,
+		accountID:     opt.AccountID,
+		store:         opt.Store,
+	}
+}
+
+// Token returns the access token.
+func (r *tokenAuthImpl) Token(ctx context.Context) (string, error) {
+	return r.accessToken, nil
+}
+
 func getRefreshBefore(ttl int) int64 {
 	if ttl >= 600 {
 		return 30
@@ -37,54 +64,23 @@ func getRefreshBefore(ttl int) int64 {
 	return 0
 }
 
-func NewJWTAuth(client *JWTOAuthClient, opt *GetJWTAccessTokenReq) Auth {
-	ttl := 900
-	if opt == nil {
-		return &jwtOAuthImpl{
-			TTL:           ttl,
-			client:        client,
-			refreshBefore: getRefreshBefore(ttl),
-		}
-	}
-	if opt.TTL > 0 {
-		ttl = opt.TTL
-	}
-
-	return &jwtOAuthImpl{
-		TTL:           ttl,
-		Scope:         opt.Scope,
-		SessionName:   opt.SessionName,
-		refreshBefore: getRefreshBefore(ttl),
-		client:        client,
-		accountID:     opt.AccountID,
-	}
-}
-
-// Token returns the access token.
-func (r *tokenAuthImpl) Token(ctx context.Context) (string, error) {
-	return r.accessToken, nil
-}
-
 type jwtOAuthImpl struct {
 	TTL           int
 	SessionName   *string
 	Scope         *Scope
 	client        *JWTOAuthClient
-	accessToken   *string
-	expireIn      int64
-	refreshBefore int64 // refresh moment before expireIn, unit second
-	refreshAt     int64
+	refreshBefore int64 // 在到期前多少秒刷新
 	accountID     *int64
-}
-
-func (r *jwtOAuthImpl) needRefresh() bool {
-	return r.accessToken == nil || time.Now().Unix() > r.refreshAt
+	store         Store
+	storeKey      string
 }
 
 func (r *jwtOAuthImpl) Token(ctx context.Context) (string, error) {
-	if !r.needRefresh() {
-		return ptrValue(r.accessToken), nil
+	token, _ := r.store.Get(ctx, r.storeKey)
+	if token != "" {
+		return token, nil
 	}
+
 	resp, err := r.client.GetAccessToken(ctx, &GetJWTAccessTokenReq{
 		TTL:         r.TTL,
 		SessionName: r.SessionName,
@@ -94,8 +90,10 @@ func (r *jwtOAuthImpl) Token(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	r.accessToken = ptr(resp.AccessToken)
-	r.expireIn = resp.ExpiresIn
-	r.refreshAt = resp.ExpiresIn - r.refreshBefore
+
+	// resp.ExpiresIn 是到期的时间戳, 减去 r.refreshBefore buffer 时间, 再减去当前时间, 得到缓存 ttl
+	ttl := time.Second * time.Duration(resp.ExpiresIn-r.refreshBefore-time.Now().Unix())
+	_ = r.store.Set(ctx, r.storeKey, resp.AccessToken, ttl)
+
 	return resp.AccessToken, nil
 }

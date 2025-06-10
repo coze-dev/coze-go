@@ -625,6 +625,7 @@ type GetJWTAccessTokenReq struct {
 	AccountID      *int64          `json:"account_id,omitempty"`      // Account ID
 	EnterpriseID   *string         `json:"enterprise_id,omitempty"`   // Enterprise ID
 	SessionContext *SessionContext `json:"session_context,omitempty"` // SessionContext
+	Store          Store           `json:"store,omitempty"`           // Store
 }
 
 // GetAccessToken gets the access token, using options pattern
