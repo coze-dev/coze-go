@@ -206,46 +206,44 @@ func WithAuthHttpClient(client HTTPClient) OAuthClientOption {
 }
 
 // newOAuthClient creates a new OAuth core
-func newOAuthClient(clientID, clientSecret string, opts ...OAuthClientOption) (*OAuthClient, error) {
-	initSettings := &oauthOption{
+func newOAuthClient(clientID, clientSecret string, options ...OAuthClientOption) (*OAuthClient, error) {
+	opt := &oauthOption{
 		baseURL:    ComBaseURL,
 		wwwURL:     "",
 		httpClient: nil,
 	}
-
-	for _, opt := range opts {
-		opt(initSettings)
+	for _, option := range options {
+		option(opt)
 	}
 
-	var hostName string
-	if initSettings.baseURL != "" {
-		parsedURL, err := url.Parse(initSettings.baseURL)
-		if err != nil {
-			return nil, fmt.Errorf("invalid base URL %s: %w", initSettings.baseURL, err)
-		}
-		hostName = parsedURL.Host
-	} else {
-		return nil, errors.New("base URL is required")
+	// validate base_url
+	if opt.baseURL == "" {
+		return nil, errors.New("base_url is required")
 	}
+	parsedURL, err := url.Parse(opt.baseURL)
+	if err != nil {
+		return nil, fmt.Errorf("invalid base_url %s: %w", opt.baseURL, err)
+	}
+
 	var httpClient HTTPClient
-	if initSettings.httpClient != nil {
-		httpClient = initSettings.httpClient
+	if opt.httpClient != nil {
+		httpClient = opt.httpClient
 	} else {
 		httpClient = &http.Client{Timeout: time.Second * 5}
 	}
 
-	if initSettings.wwwURL == "" {
-		initSettings.wwwURL = strings.Replace(initSettings.baseURL, "api.", "www.", 1)
+	if opt.wwwURL == "" {
+		opt.wwwURL = strings.Replace(opt.baseURL, "api.", "www.", 1)
 	}
 
 	return &OAuthClient{
 		clientID:     clientID,
 		clientSecret: clientSecret,
-		baseURL:      initSettings.baseURL,
-		wwwURL:       initSettings.wwwURL,
-		hostName:     hostName,
+		baseURL:      opt.baseURL,
+		wwwURL:       opt.wwwURL,
+		hostName:     parsedURL.Hostname(),
 		core: newCore(&clientOption{
-			baseURL: initSettings.baseURL,
+			baseURL: opt.baseURL,
 			client:  httpClient,
 		}),
 	}, nil
