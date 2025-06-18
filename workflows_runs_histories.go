@@ -20,10 +20,15 @@ func (r *workflowRunsHistories) Retrieve(ctx context.Context, req *RetrieveWorkf
 
 type workflowRunsHistories struct {
 	core *core
+
+	ExecuteNodes *workflowsRunsHistoriesExecuteNodes
 }
 
 func newWorkflowRunsHistories(core *core) *workflowRunsHistories {
-	return &workflowRunsHistories{core: core}
+	return &workflowRunsHistories{
+		core:         core,
+		ExecuteNodes: newWorkflowsRunsHistoriesExecuteNodes(core),
+	}
 }
 
 // WorkflowRunMode represents how the workflow runs
