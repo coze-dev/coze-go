@@ -27,3 +27,4 @@ go.work.sum
 /.vscode
 /output
 coverage.out
+integrations/
