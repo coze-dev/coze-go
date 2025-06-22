@@ -6,7 +6,11 @@ import (
 )
 
 // Duplicate creates a copy of an existing template
-func (r *templates) Duplicate(ctx context.Context, req *DuplicateTemplateReq) (*TemplateDuplicateResp, error) {
+func (r *templates) Duplicate(ctx context.Context, templateID string, req *DuplicateTemplateReq) (*TemplateDuplicateResp, error) {
+	if req == nil {
+		req = &DuplicateTemplateReq{}
+	}
+	req.TemplateID = templateID
 	request := &RawRequestReq{
 		Method: http.MethodPost,
 		URL:    "/v1/templates/:template_id/duplicate",
