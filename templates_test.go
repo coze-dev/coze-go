@@ -25,8 +25,7 @@ func TestTemplates(t *testing.T) {
 			})
 		})))
 
-		resp, err := templates.Duplicate(context.Background(), &DuplicateTemplateReq{
-			TemplateID:  templateID,
+		resp, err := templates.Duplicate(context.Background(), templateID, &DuplicateTemplateReq{
 			WorkspaceID: workspaceID,
 		})
 		as.Nil(err)
