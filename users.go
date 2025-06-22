@@ -17,8 +17,7 @@ func (r *users) Me(ctx context.Context) (*User, error) {
 	return response.User, err
 }
 
-type GetUserMeReq struct {
-}
+type GetUserMeReq struct{}
 
 // User represents a Coze user
 type User struct {
