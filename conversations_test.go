@@ -14,10 +14,11 @@ import (
 
 func newCoreWithTransport(transport http.RoundTripper) *core {
 	return newCore(&clientOption{
-		baseURL:  ComBaseURL,
-		client:   &http.Client{Transport: transport},
-		logLevel: LogLevelInfo,
-		auth:     NewTokenAuth("token"),
+		baseURL:     CnBaseURL,
+		client:      &http.Client{Transport: transport},
+		logLevel:    LogLevelDebug,
+		auth:        NewTokenAuth("token"),
+		enableLogID: true,
 	})
 }
 

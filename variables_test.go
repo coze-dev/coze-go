@@ -2,124 +2,80 @@ package coze
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
-	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestVariablesService_Retrieve(t *testing.T) {
-	mockClient := &http.Client{}
-	httpmock.ActivateNonDefault(mockClient)
-	defer httpmock.DeactivateAndReset()
+func Test_Variables(t *testing.T) {
+	as := assert.New(t)
 
-	cli := NewCozeAPI(NewTokenAuth("test-token"), WithHttpClient(mockClient))
+	t.Run("retrieve", func(t *testing.T) {
+		t.Run("success", func(t *testing.T) {
+			connectorUID := randomString(10)
+			keywords := []string{randomString(10), randomString(10)}
+			appID := randomString(10)
+			variables := newVariables(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+				as.Equal(connectorUID, req.URL.Query().Get("connector_uid"))
+				as.Equal(strings.Join(keywords, ","), req.URL.Query().Get("keywords"))
+				as.Equal(appID, req.URL.Query().Get("app_id"))
+				return mockResponse(http.StatusOK, &retrieveVariablesResp{
+					Data: &RetrieveVariablesResp{
+						Items: []*VariableValue{
+							{Keyword: keywords[0], Value: keywords[0]},
+						},
+					},
+				})
+			})))
+			res, err := variables.Retrieve(context.Background(), &RetrieveVariablesReq{
+				ConnectorUID: connectorUID,
+				Keywords:     keywords,
+				AppID:        ptr(appID),
+			})
+			as.Nil(err)
+			as.NotNil(res)
+			as.NotEmpty(res.Response().LogID())
+			as.Len(res.Items, 1)
+			as.Equal(keywords[0], res.Items[0].Keyword)
+			as.Equal(keywords[0], res.Items[0].Value)
+			as.Equal(int64(0), res.Items[0].CreateTime)
+			as.Equal(int64(0), res.Items[0].UpdateTime)
+		})
 
-	ctx := context.Background()
-
-	t.Run("Test with valid req", func(t *testing.T) {
-		mockResp := `{
-  "code": 0,
-  "msg": "Success",
-  "data": {
-    "items": [
-      {
-        "value": "val1",
-        "create_time": 0,
-        "update_time": 0,
-        "keyword": "key1"
-      },
-      {
-        "update_time": 1744637812,
-        "keyword": "key2",
-        "value": "val2",
-        "create_time": 1744637812
-      }
-    ]
-  },
-  "detail": {
-    "logid": "20241210152726467C48D89D6DB2****"
-  }
-}
-`
-
-		httpmock.RegisterResponder("GET", "/v1/variables",
-			func(req *http.Request) (*http.Response, error) {
-				resp := httpmock.NewStringResponse(200, mockResp)
-				return resp, nil
-			},
-		)
-
-		req := &RetrieveVariablesReq{
-			ConnectorUID: "test-connector-uid",
-			Keywords:     []string{"key1", "key2"},
-			AppID:        ptr("test-app-id"),
-		}
-		res, err := cli.Variables.Retrieve(ctx, req)
-		assert.NoError(t, err)
-		assert.NotNil(t, res)
-
-		assert.Len(t, res.Items, 2)
-		assert.Equal(t, "key1", res.Items[0].Keyword)
-		assert.Equal(t, "val1", res.Items[0].Value)
-		assert.Equal(t, int64(0), res.Items[0].CreateTime)
-		assert.Equal(t, int64(0), res.Items[0].UpdateTime)
-
-		assert.Equal(t, "key2", res.Items[1].Keyword)
-		assert.Equal(t, "val2", res.Items[1].Value)
-		assert.Equal(t, int64(1744637812), res.Items[1].CreateTime)
-		assert.Equal(t, int64(1744637812), res.Items[1].UpdateTime)
+		t.Run("req nil", func(t *testing.T) {
+			variables := newVariables(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+				if req.URL.Query().Get("connector_uid") == "" {
+					return nil, fmt.Errorf("invalid req")
+				}
+				return mockResponse(http.StatusOK, &retrieveVariablesResp{
+					Data: &RetrieveVariablesResp{
+						Items: []*VariableValue{},
+					},
+				})
+			})))
+			_, err := variables.Retrieve(context.Background(), nil)
+			as.NotNil(err)
+			as.Contains(err.Error(), "invalid req")
+		})
 	})
 
-	t.Run("Test with nil req", func(t *testing.T) {
-		_, err := cli.Variables.Retrieve(ctx, nil)
-		assert.Error(t, err)
-		assert.Equal(t, "invalid req", err.Error())
-	})
-}
-
-func TestVariablesService_Update(t *testing.T) {
-	mockClient := &http.Client{}
-	httpmock.ActivateNonDefault(mockClient)
-	defer httpmock.DeactivateAndReset()
-
-	cli := NewCozeAPI(NewTokenAuth("test-token"), WithHttpClient(mockClient))
-
-	ctx := context.Background()
-
-	t.Run("Test with valid req", func(t *testing.T) {
-		mockResp := `{
-  "code": 0,
-  "msg": "",
-  "detail": {
-    "logid": "20250416125552EE59A23A87AD80CA7051"
-  }
-}
-`
-		httpmock.RegisterResponder("PUT", "/v1/variables",
-			func(req *http.Request) (*http.Response, error) {
-				resp := httpmock.NewStringResponse(200, mockResp)
-				return resp, nil
-			},
-		)
-
-		req := &UpdateVariablesReq{
-			ConnectorUID: "test-connector-uid",
-			Data: []VariableValue{
-				{Keyword: "key1", Value: "new_value1"},
-				{Keyword: "key2", Value: "new_value2"},
-			},
-			AppID: ptr("test-app-id"),
-		}
-		respData, err := cli.Variables.Update(ctx, req)
-		assert.NoError(t, err)
-		assert.NotNil(t, respData)
-	})
-
-	t.Run("Test with nil req", func(t *testing.T) {
-		_, err := cli.Variables.Update(ctx, nil)
-		assert.Error(t, err)
-		assert.Equal(t, "invalid req", err.Error())
+	t.Run("update", func(t *testing.T) {
+		t.Run("success", func(t *testing.T) {
+			connectorUID := randomString(10)
+			keywords := []string{randomString(10), randomString(10)}
+			variables := newVariables(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+				return mockResponse(http.StatusOK, &updateVariablesResp{})
+			})))
+			res, err := variables.Update(context.Background(), &UpdateVariablesReq{
+				ConnectorUID: connectorUID,
+				Data:         []VariableValue{{Keyword: keywords[0], Value: keywords[0]}},
+			})
+			as.Nil(err)
+			as.NotNil(res)
+			as.NotEmpty(res.Response().LogID())
+		})
 	})
 }

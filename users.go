@@ -5,6 +5,21 @@ import (
 	"net/http"
 )
 
+// Me retrieves the current user's information
+func (r *users) Me(ctx context.Context) (*User, error) {
+	request := &RawRequestReq{
+		Method: http.MethodGet,
+		URL:    "/v1/users/me",
+		Body:   new(GetUserMeReq),
+	}
+	response := new(meResp)
+	err := r.client.rawRequest(ctx, request, response)
+	return response.User, err
+}
+
+type GetUserMeReq struct {
+}
+
 // User represents a Coze user
 type User struct {
 	baseModel
@@ -27,17 +42,4 @@ func newUsers(core *core) *users {
 	return &users{
 		client: core,
 	}
-}
-
-// Me retrieves the current user's information
-func (r *users) Me(ctx context.Context) (*User, error) {
-	method := http.MethodGet
-	uri := "/v1/users/me"
-	resp := &meResp{}
-	if err := r.client.Request(ctx, method, uri, nil, resp); err != nil {
-		return nil, err
-	}
-
-	resp.User.setHTTPResponse(resp.HTTPResponse)
-	return resp.User, nil
 }

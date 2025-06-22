@@ -214,15 +214,10 @@ func (r *rawHttpRequest) parseRawRequestReqBody(body interface{}, isFile bool) e
 
 	if err := rangeStruct(body, func(fieldVV reflect.Value, fieldVT reflect.StructField) error {
 		if path := fieldVT.Tag.Get("path"); path != "" {
-			if strings.Contains(r.URL, ":"+path) {
-				r.URL = strings.ReplaceAll(r.URL, ":"+path, reflectToString(fieldVV))
-			} else {
-				r.URL = strings.ReplaceAll(r.URL, "{"+path+"}", reflectToString(fieldVV))
-			}
+			r.URL = strings.ReplaceAll(r.URL, ":"+path, reflectToString(fieldVV))
 		} else if queryKey := fieldVT.Tag.Get("query"); queryKey != "" {
 			value := reflectToQueryString(fieldVV)
-			sep := fieldVT.Tag.Get("join_sep")
-			if sep != "" {
+			if sep := fieldVT.Tag.Get("sep"); sep != "" {
 				query.Add(queryKey, strings.Join(value, sep))
 			} else {
 				for _, v := range value {
@@ -395,6 +390,9 @@ func rangeStruct(v interface{}, f func(fieldVV reflect.Value, fieldVT reflect.St
 		vv = vv.Elem()
 		vt = vt.Elem()
 	}
+	if !vv.IsValid() {
+		return nil
+	}
 
 	for i := 0; i < vt.NumField(); i++ {
 		fieldVV := vv.Field(i)
@@ -458,8 +456,19 @@ func findBaseModelInValueBFS(v reflect.Value) *baseModel {
 
 		for i := 0; i < current.NumField(); i++ {
 			field := current.Field(i)
-			if field.Kind() == reflect.Ptr && !field.IsNil() {
-				queue = append(queue, field)
+			fieldType := t.Field(i)
+			if field.Kind() == reflect.Ptr {
+				if field.IsNil() {
+					if couldContainBaseModel(fieldType.Type.Elem()) {
+						if field.CanSet() {
+							newValue := reflect.New(fieldType.Type.Elem())
+							field.Set(newValue)
+							queue = append(queue, newValue)
+						}
+					}
+				} else {
+					queue = append(queue, field)
+				}
 			}
 			if field.Kind() == reflect.Struct {
 				queue = append(queue, field)
@@ -470,6 +479,30 @@ func findBaseModelInValueBFS(v reflect.Value) *baseModel {
 	return nil
 }
 
+func couldContainBaseModel(t reflect.Type) bool {
+	if t == nil {
+		return false
+	}
+	if t.Kind() == reflect.Ptr {
+		return couldContainBaseModel(t.Elem())
+	}
+	if t.Kind() != reflect.Struct {
+		return false
+	}
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		if field.Type.Name() == "baseModel" && field.Anonymous {
+			return true
+		}
+		if field.Type.Kind() == reflect.Struct || field.Type.Kind() == reflect.Ptr {
+			if couldContainBaseModel(field.Type) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func setBaseRespInterface(resp any, httpResponse *http.Response) {
 	if resp == nil {
 		return
@@ -478,7 +511,9 @@ func setBaseRespInterface(resp any, httpResponse *http.Response) {
 	if v, ok := resp.(baseRespInterface); ok {
 		v.SetHTTPResponse(h)
 	}
-	if v := getBaseModelPointer(resp); v != nil {
+	v := getBaseModelPointer(resp)
+	fmt.Println("find base model pointer", v)
+	if v != nil {
 		v.setHTTPResponse(h)
 	}
 }

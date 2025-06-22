@@ -2,21 +2,35 @@ package coze
 
 import (
 	"context"
-	"errors"
 	"net/http"
-	"strings"
 )
 
-// variables manages variable-related API interactions.
+// Retrieve 获取用户变量的值
 //
-// Update API docs: https://www.coze.cn/open/docs/developer_guides/update_variable
-// Retrieve API docs: https://www.coze.cn/open/docs/developer_guides/read_variable
-type variables struct {
-	core *core
+// docs: https://www.coze.cn/open/docs/developer_guides/read_variable
+func (r *variables) Retrieve(ctx context.Context, req *RetrieveVariablesReq) (*RetrieveVariablesResp, error) {
+	request := &RawRequestReq{
+		Method: http.MethodGet,
+		URL:    "/v1/variables",
+		Body:   req,
+	}
+	response := new(retrieveVariablesResp)
+	err := r.core.rawRequest(ctx, request, response)
+	return response.Data, err
 }
 
-func newVariables(core *core) *variables {
-	return &variables{core: core}
+// Update 设置用户变量的值
+//
+// docs: https://www.coze.cn/open/docs/developer_guides/update_variable
+func (r *variables) Update(ctx context.Context, req *UpdateVariablesReq) (*UpdateVariablesResp, error) {
+	request := &RawRequestReq{
+		Method: http.MethodPut,
+		URL:    "/v1/variables",
+		Body:   req,
+	}
+	response := new(updateVariablesResp)
+	err := r.core.rawRequest(ctx, request, response)
+	return response.Data, err
 }
 
 // VariableValue represents a single variable with its keyword and value.
@@ -29,56 +43,16 @@ type VariableValue struct {
 
 // RetrieveVariablesReq represents the parameters for retrieving variables.
 type RetrieveVariablesReq struct {
-	ConnectorUID string   `json:"connector_uid"`          // Required: Unique identifier for the connector
-	Keywords     []string `json:"keywords"`               // Required: List of variable keywords to retrieve
-	AppID        *string  `json:"app_id,omitempty"`       // Optional: Application ID filter
-	BotID        *string  `json:"bot_id,omitempty"`       // Optional: Bot ID filter
-	ConnectorID  *string  `json:"connector_id,omitempty"` // Optional: Connector ID filter
-}
-
-type retrieveVariablesResp struct {
-	baseResponse
-	Data *RetrieveVariablesResp `json:"data"`
+	ConnectorUID string   `query:"connector_uid" json:"-"`    // Required: Unique identifier for the connector
+	Keywords     []string `query:"keywords" sep:"," json:"-"` // Required: List of variable keywords to retrieve
+	AppID        *string  `query:"app_id" json:"-"`           // Optional: Application ID filter
+	BotID        *string  `query:"bot_id" json:"-"`           // Optional: Bot ID filter
+	ConnectorID  *string  `query:"connector_id" json:"-"`     // Optional: Connector ID filter
 }
 
 type RetrieveVariablesResp struct {
 	baseModel
 	Items []*VariableValue `json:"items"`
-}
-
-// Retrieve retrieves variables matching the specified criteria.
-func (s *variables) Retrieve(ctx context.Context, req *RetrieveVariablesReq) (*RetrieveVariablesResp, error) {
-	if req == nil {
-		return nil, errors.New("invalid req")
-	}
-	method := http.MethodGet
-	path := "/v1/variables"
-	baseOpts := []RequestOption{
-		withHTTPQuery("connector_uid", req.ConnectorUID),
-		withHTTPQuery("keywords", strings.Join(req.Keywords, ",")),
-	}
-	if req.AppID != nil {
-		baseOpts = append(baseOpts, withHTTPQuery("app_id", *req.AppID))
-	}
-	if req.BotID != nil {
-		baseOpts = append(baseOpts, withHTTPQuery("bot_id", *req.BotID))
-	}
-	if req.ConnectorID != nil {
-		baseOpts = append(baseOpts, withHTTPQuery("connector_id", *req.ConnectorID))
-	}
-
-	resp := &retrieveVariablesResp{}
-	err := s.core.Request(ctx, method, path, nil, resp, baseOpts...)
-	if err != nil {
-		return nil, err
-	}
-	result := &RetrieveVariablesResp{
-		baseModel: baseModel{
-			httpResponse: resp.HTTPResponse,
-		},
-		Items: resp.Data.Items,
-	}
-	return result, nil
 }
 
 // UpdateVariablesReq represents the request body for updating variables.
@@ -90,30 +64,24 @@ type UpdateVariablesReq struct {
 	ConnectorID  *string         `json:"connector_id,omitempty"` // Optional: Connector ID filter
 }
 
+type UpdateVariablesResp struct {
+	baseModel
+}
+
+type retrieveVariablesResp struct {
+	baseResponse
+	Data *RetrieveVariablesResp `json:"data"`
+}
+
 type updateVariablesResp struct {
 	baseResponse
 	Data *UpdateVariablesResp `json:"data"`
 }
 
-type UpdateVariablesResp struct {
-	baseModel
+type variables struct {
+	core *core
 }
 
-// Update updates variables with the provided data.
-func (s *variables) Update(ctx context.Context, req *UpdateVariablesReq) (*UpdateVariablesResp, error) {
-	if req == nil {
-		return nil, errors.New("invalid req")
-	}
-	method := http.MethodPut
-	uri := "/v1/variables"
-	resp := &updateVariablesResp{}
-	err := s.core.Request(ctx, method, uri, req, resp)
-	if err != nil {
-		return nil, err
-	}
-	if resp.Data == nil {
-		resp.Data = new(UpdateVariablesResp)
-	}
-	resp.Data.setHTTPResponse(resp.HTTPResponse)
-	return resp.Data, nil
+func newVariables(core *core) *variables {
+	return &variables{core: core}
 }

@@ -2,32 +2,19 @@ package coze
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 )
 
-// templates provides access to template-related operations
-type templates struct {
-	core *core
-}
-
-// newTemplates creates a new Templates client
-func newTemplates(core *core) *templates {
-	return &templates{core: core}
-}
-
 // Duplicate creates a copy of an existing template
-func (c *templates) Duplicate(ctx context.Context, templateID string, req *DuplicateTemplateReq) (*TemplateDuplicateResp, error) {
-	url := fmt.Sprintf("/v1/templates/%s/duplicate", templateID)
-
-	var resp templateDuplicateResp
-	err := c.core.Request(ctx, http.MethodPost, url, req, &resp)
-	if err != nil {
-		return nil, err
+func (r *templates) Duplicate(ctx context.Context, req *DuplicateTemplateReq) (*TemplateDuplicateResp, error) {
+	request := &RawRequestReq{
+		Method: http.MethodPost,
+		URL:    "/v1/templates/:template_id/duplicate",
+		Body:   req,
 	}
-	result := resp.Data
-	result.setHTTPResponse(resp.HTTPResponse)
-	return result, nil
+	response := new(templateDuplicateResp)
+	err := r.core.rawRequest(ctx, request, response)
+	return response.Data, err
 }
 
 // TemplateEntityType represents the type of template entity
@@ -45,14 +32,23 @@ type TemplateDuplicateResp struct {
 	EntityType TemplateEntityType `json:"entity_type"`
 }
 
+// DuplicateTemplateReq represents the request to duplicate a template
+type DuplicateTemplateReq struct {
+	TemplateID  string  `path:"template_id" json:"-"`
+	WorkspaceID string  `json:"workspace_id,omitempty"`
+	Name        *string `json:"name,omitempty"`
+}
+
 // templateDuplicateResp represents response for creating document
 type templateDuplicateResp struct {
 	baseResponse
 	Data *TemplateDuplicateResp `json:"data"`
 }
 
-// DuplicateTemplateReq represents the request to duplicate a template
-type DuplicateTemplateReq struct {
-	WorkspaceID string  `json:"workspace_id"`
-	Name        *string `json:"name,omitempty"`
+type templates struct {
+	core *core
+}
+
+func newTemplates(core *core) *templates {
+	return &templates{core: core}
 }

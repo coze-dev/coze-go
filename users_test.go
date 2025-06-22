@@ -2,37 +2,42 @@ package coze
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-func TestUsersClient_Me(t *testing.T) {
-	mockTransport := &mockTransport{
-		roundTripFunc: func(req *http.Request) (*http.Response, error) {
-			expectedUser := &meResp{
-				User: &User{
-					UserID:    "test_user_id",
-					UserName:  "test_user",
-					NickName:  "Test User",
-					AvatarURL: "https://example.com/avatar.jpg",
-				},
-			}
-			return mockResponse(http.StatusOK, expectedUser)
-		},
-	}
+func Test_Users(t *testing.T) {
+	as := assert.New(t)
 
-	client := NewCozeAPI(NewTokenAuth("test_token"),
-		WithBaseURL(ComBaseURL),
-		WithHttpClient(&http.Client{Transport: mockTransport}),
-	)
+	t.Run("failed", func(t *testing.T) {
+		users := newUsers(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			return nil, errors.New("http error")
+		})))
+		_, err := users.Me(context.Background())
+		as.NotNil(err)
+		as.Contains(err.Error(), "http error")
+	})
 
-	user, err := client.Users.Me(context.Background())
-	require.NoError(t, err)
-	assert.Equal(t, "test_user_id", user.UserID)
-	assert.Equal(t, "test_user", user.UserName)
-	assert.Equal(t, "Test User", user.NickName)
-	assert.Equal(t, "https://example.com/avatar.jpg", user.AvatarURL)
+	t.Run("me", func(t *testing.T) {
+		mockUser := &User{
+			UserID:    randomString(10),
+			UserName:  randomString(10),
+			NickName:  randomString(10),
+			AvatarURL: randomString(10),
+		}
+		users := newUsers(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			return mockResponse(http.StatusOK, &meResp{
+				User: mockUser,
+			})
+		})))
+		user, err := users.Me(context.Background())
+		as.Nil(err)
+		as.Equal(mockUser.UserID, user.UserID)
+		as.Equal(mockUser.UserName, user.UserName)
+		as.Equal(mockUser.NickName, user.NickName)
+		as.Equal(mockUser.AvatarURL, user.AvatarURL)
+	})
 }
