@@ -3,7 +3,6 @@ package coze
 import (
 	"context"
 	"net/http"
-	"strconv"
 )
 
 func (r *conversations) List(ctx context.Context, req *ListConversationsReq) (NumberPaged[Conversation], error) {
@@ -13,14 +12,18 @@ func (r *conversations) List(ctx context.Context, req *ListConversationsReq) (Nu
 	if req.PageNum == 0 {
 		req.PageNum = 1
 	}
-	return NewNumberPaged[Conversation](
+	return NewNumberPaged(
 		func(request *pageRequest) (*pageResponse[Conversation], error) {
-			uri := "/v1/conversations"
-			resp := &listConversationsResp{}
-			err := r.client.Request(ctx, http.MethodGet, uri, nil, resp,
-				withHTTPQuery("bot_id", req.BotID),
-				withHTTPQuery("page_num", strconv.Itoa(request.PageNum)),
-				withHTTPQuery("page_size", strconv.Itoa(request.PageSize)))
+			resp := new(listConversationsResp)
+			err := r.client.rawRequest(ctx, &RawRequestReq{
+				Method: http.MethodGet,
+				URL:    "/v1/conversations",
+				Body: &ListConversationsReq{
+					BotID:    req.BotID,
+					PageNum:  request.PageNum,
+					PageSize: request.PageSize,
+				},
+			}, resp)
 			if err != nil {
 				return nil, err
 			}
@@ -94,13 +97,13 @@ type Conversation struct {
 // ListConversationsReq represents request for listing conversations
 type ListConversationsReq struct {
 	// The ID of the bot.
-	BotID string `json:"bot_id"`
+	BotID string `query:"bot_id" json:"-"`
 
 	// The page number.
-	PageNum int `json:"page_num,omitempty"`
+	PageNum int `query:"page_num" json:"-"`
 
 	// The page size.
-	PageSize int `json:"page_size,omitempty"`
+	PageSize int `query:"page_size" json:"-"`
 }
 
 // ListConversationsResp represents response for listing conversations
