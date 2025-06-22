@@ -33,7 +33,7 @@ func (r *core) rawRequest(ctx context.Context, req *RawRequestReq, resp interfac
 	if err != nil {
 		// 这里日志不需要区分 level, 输出 [error] 日志
 		r.Log(ctx, LogLevelError, "[coze] %s %s parse_req failed, err=%s", req.Method, req.URL, err)
-		setbaseRespInterface(resp, nil)
+		setBaseRespInterface(resp, nil)
 		return err
 	}
 
@@ -50,7 +50,7 @@ func (r *core) rawRequest(ctx context.Context, req *RawRequestReq, resp interfac
 	// 3. do request
 	httpResponse, respContent, err := r.doRequest(ctx, rawHttpReq, resp)
 	logID, statusCode := getResponseLogID(httpResponse)
-	setbaseRespInterface(resp, httpResponse)
+	setBaseRespInterface(resp, httpResponse)
 	if err != nil {
 		switch r.logLevel {
 		case LogLevelDebug:
@@ -60,7 +60,7 @@ func (r *core) rawRequest(ctx context.Context, req *RawRequestReq, resp interfac
 			// [其他]: 简单 error 日志
 			r.Log(ctx, LogLevelError, "[coze] %s %s failed, log_id=%s, status=%d, err=%s", rawHttpReq.Method, rawHttpReq.URL, logID, statusCode, err)
 		}
-		setbaseRespInterface(resp, nil)
+		setBaseRespInterface(resp, nil)
 		return err
 	}
 	code, msg := getCodeMsg(resp)
@@ -487,81 +487,8 @@ func findBaseModelInValueBFS(v reflect.Value) *baseModel {
 
 	return nil
 }
-func formatRequestBody(body interface{}) interface{} {
-	if body == nil {
-		return nil
-	}
-	vt := reflect.TypeOf(body)
-	for vt.Kind() == reflect.Ptr {
-		vt = vt.Elem()
-	}
-	if vt.Kind() != reflect.Struct {
-		return body
-	}
 
-	queries := url.Values{}
-	res := map[string]interface{}{}
-
-	_ = rangeStruct(body, func(fieldVV reflect.Value, fieldVT reflect.StructField) error {
-		key, val := formatRequestBodyKey(fieldVV, fieldVT, &queries)
-		if key != "" {
-			res[key] = val
-		}
-		return nil
-	})
-
-	for k, v := range queries {
-		if len(v) == 1 {
-			res[k] = v[0]
-		} else if len(v) > 1 {
-			res[k] = v
-		}
-	}
-	return res
-}
-
-func formatRequestBodyKey(fieldVV reflect.Value, fieldVT reflect.StructField, queries *url.Values) (string, interface{}) {
-	if path := fieldVT.Tag.Get("path"); path != "" {
-		return path, reflectToString(fieldVV)
-	} else if queryKey := fieldVT.Tag.Get("query"); queryKey != "" {
-		value := reflectToQueryString(fieldVV)
-		sep := fieldVT.Tag.Get("join_sep")
-		if sep != "" {
-			queries.Add(queryKey, strings.Join(value, sep))
-		} else {
-			for _, v := range value {
-				queries.Add(queryKey, v)
-			}
-		}
-		return "", nil
-	} else if header := fieldVT.Tag.Get("header"); header != "" {
-		switch header {
-		case "range":
-			if fieldVV.Kind() != reflect.Array || fieldVV.Len() != 2 || fieldVV.Index(0).Kind() != reflect.Int64 {
-				return "", nil
-			}
-			from := fieldVV.Index(0).Int()
-			to := fieldVV.Index(1).Int()
-			if from != 0 || to != 0 {
-				return "range", fmt.Sprintf("bytes=%d-%d", from, to)
-			}
-		}
-	} else if j := fieldVT.Tag.Get("json"); j != "" {
-		if strings.HasSuffix(j, ",omitempty") {
-			j = j[:len(j)-10]
-		}
-		if _, ok := fieldVV.Interface().(io.Reader); ok {
-			return j, "<FILE>"
-		}
-		for fieldVV.Kind() == reflect.Ptr {
-			fieldVV = fieldVV.Elem()
-		}
-		return j, formatRequestBody(fieldVV.Interface())
-	}
-	return "", nil
-}
-
-func setbaseRespInterface(resp any, httpResponse *http.Response) {
+func setBaseRespInterface(resp any, httpResponse *http.Response) {
 	if resp == nil {
 		return
 	}
@@ -569,12 +496,6 @@ func setbaseRespInterface(resp any, httpResponse *http.Response) {
 	if v, ok := resp.(baseRespInterface); ok {
 		v.SetHTTPResponse(h)
 	}
-	// if v, ok := resp.(iBaseModel); ok {
-	// 	v.setHTTPResponse(h)
-	// }
-	// if v, ok := resp.(iBaseModelGetter); ok && v != nil && v.getBaseModel() != nil {
-	// 	v.getBaseModel().setHTTPResponse(h)
-	// }
 	if v := getBaseModelPointer(resp); v != nil {
 		v.setHTTPResponse(h)
 	}
