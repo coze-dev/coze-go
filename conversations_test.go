@@ -9,6 +9,15 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func newCoreWithTransport(transport http.RoundTripper) *core {
+	return newCore(&clientOption{
+		baseURL:  ComBaseURL,
+		client:   &http.Client{Transport: transport},
+		logLevel: LogLevelInfo,
+		auth:     NewTokenAuth("token"),
+	})
+}
+
 func TestConversations(t *testing.T) {
 	// Test List method
 	t.Run("List conversations success", func(t *testing.T) {
@@ -50,7 +59,7 @@ func TestConversations(t *testing.T) {
 			},
 		}
 
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
+		core := newCoreWithTransport(mockTransport)
 		conversations := newConversations(core)
 
 		paged, err := conversations.List(context.Background(), &ListConversationsReq{
@@ -101,7 +110,7 @@ func TestConversations(t *testing.T) {
 			},
 		}
 
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
+		core := newCoreWithTransport(mockTransport)
 		conversations := newConversations(core)
 
 		resp, err := conversations.Create(context.Background(), &CreateConversationsReq{
@@ -152,7 +161,7 @@ func TestConversations(t *testing.T) {
 			},
 		}
 
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
+		core := newCoreWithTransport(mockTransport)
 		conversations := newConversations(core)
 
 		resp, err := conversations.Retrieve(context.Background(), &RetrieveConversationsReq{
@@ -185,7 +194,7 @@ func TestConversations(t *testing.T) {
 			},
 		}
 
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
+		core := newCoreWithTransport(mockTransport)
 		conversations := newConversations(core)
 
 		resp, err := conversations.Clear(context.Background(), &ClearConversationsReq{
@@ -216,7 +225,7 @@ func TestConversations(t *testing.T) {
 			},
 		}
 
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
+		core := newCoreWithTransport(mockTransport)
 		conversations := newConversations(core)
 
 		paged, err := conversations.List(context.Background(), &ListConversationsReq{
