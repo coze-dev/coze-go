@@ -19,7 +19,7 @@ func (r *files) Upload(ctx context.Context, req *UploadFilesReq) (*UploadFilesRe
 }
 
 func (r *files) Retrieve(ctx context.Context, req *RetrieveFilesReq) (*RetrieveFilesResp, error) {
-	method := http.MethodGet
+	method := http.MethodPost
 	uri := "/v1/files/retrieve"
 	resp := &retrieveFilesResp{}
 	err := r.core.Request(ctx, method, uri, nil, resp, withHTTPQuery("file_id", req.FileID))
