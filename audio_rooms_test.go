@@ -2,132 +2,111 @@ package coze
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAudioRooms(t *testing.T) {
-	// Test Create method
-	t.Run("Create audio room success", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// Verify request method and path
+	as := assert.New(t)
+	t.Run("create", func(t *testing.T) {
+		t.Run("with all fields", func(t *testing.T) {
+			createRoomResp := &CreateAudioRoomsResp{
+				RoomID: randomString(10),
+				AppID:  randomString(10),
+				Token:  randomString(10),
+				UID:    randomString(10),
+			}
+			rooms := newRooms(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 				assert.Equal(t, http.MethodPost, req.Method)
 				assert.Equal(t, "/v1/audio/rooms", req.URL.Path)
-
-				// Return mock response
 				return mockResponse(http.StatusOK, &createAudioRoomsResp{
-					Data: &CreateAudioRoomsResp{
-						RoomID: "room1",
-						AppID:  "app1",
-						Token:  "token1",
-						UID:    "uid1",
-					},
+					Data: createRoomResp,
 				})
-			},
-		}
-
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
-		rooms := newRooms(core)
-
-		// Test with all optional fields
-		resp, err := rooms.Create(context.Background(), &CreateAudioRoomsReq{
-			BotID:          "bot1",
-			ConversationID: "conv1",
-			VoiceID:        "voice1",
-			WorkflowID:     "workflow1",
-			Config: &RoomConfig{
-				AudioConfig: &RoomAudioConfig{
-					Codec: AudioCodecOPUS,
+			})))
+			resp, err := rooms.Create(context.Background(), &CreateAudioRoomsReq{
+				BotID:          randomString(10),
+				ConversationID: randomString(10),
+				VoiceID:        randomString(10),
+				WorkflowID:     randomString(10),
+				Config: &RoomConfig{
+					AudioConfig: &RoomAudioConfig{
+						Codec: AudioCodecOPUS,
+					},
+					VideoConfig: &RoomVideoConfig{
+						Codec:           VideoCodecH264,
+						StreamVideoType: StreamVideoTypeMain,
+					},
+					PrologueContent: randomString(10),
 				},
-				VideoConfig: &RoomVideoConfig{
-					Codec:           VideoCodecH264,
-					StreamVideoType: StreamVideoTypeMain,
-				},
-				PrologueContent: "Hello Coze",
-			},
+			})
+			as.Nil(err)
+			as.NotNil(resp)
+			as.NotEmpty(resp.Response().LogID())
+			as.Equal(createRoomResp.RoomID, resp.RoomID)
+			as.Equal(createRoomResp.AppID, resp.AppID)
+			as.Equal(createRoomResp.Token, resp.Token)
+			as.Equal(createRoomResp.UID, resp.UID)
+
 		})
 
-		require.NoError(t, err)
-		assert.Equal(t, "test_log_id", resp.LogID())
-		assert.Equal(t, "room1", resp.RoomID)
-		assert.Equal(t, "app1", resp.AppID)
-		assert.Equal(t, "token1", resp.Token)
-		assert.Equal(t, "uid1", resp.UID)
-	})
-
-	// Test Create method with minimal fields
-	t.Run("Create audio room with minimal fields", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// Return mock response
+		t.Run("minimal fields", func(t *testing.T) {
+			createRoomResp := &CreateAudioRoomsResp{
+				RoomID: randomString(10),
+				AppID:  randomString(10),
+				Token:  randomString(10),
+				UID:    randomString(10),
+			}
+			rooms := newRooms(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+				assert.Equal(t, http.MethodPost, req.Method)
+				assert.Equal(t, "/v1/audio/rooms", req.URL.Path)
 				return mockResponse(http.StatusOK, &createAudioRoomsResp{
-					Data: &CreateAudioRoomsResp{
-						RoomID: "room1",
-						AppID:  "app1",
-						Token:  "token1",
-						UID:    "uid1",
-					},
+					Data: createRoomResp,
 				})
-			},
-		}
-
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
-		rooms := newRooms(core)
-
-		// Test with only required fields
-		resp, err := rooms.Create(context.Background(), &CreateAudioRoomsReq{
-			BotID: "bot1",
+			})))
+			resp, err := rooms.Create(context.Background(), &CreateAudioRoomsReq{
+				BotID: randomString(10),
+			})
+			as.Nil(err)
+			as.NotNil(resp)
+			as.NotEmpty(resp.Response().LogID())
+			as.Equal(createRoomResp.RoomID, resp.RoomID)
+			as.Equal(createRoomResp.AppID, resp.AppID)
+			as.Equal(createRoomResp.Token, resp.Token)
+			as.Equal(createRoomResp.UID, resp.UID)
 		})
 
-		require.NoError(t, err)
-		assert.Equal(t, "test_log_id", resp.LogID())
-		assert.Equal(t, "room1", resp.RoomID)
-	})
+		t.Run("failed", func(t *testing.T) {
+			rooms := newRooms(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+				return nil, fmt.Errorf("test error")
+			})))
 
-	// Test Create method with error
-	t.Run("Create audio room with error", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// Return error response
-				return mockResponse(http.StatusBadRequest, &baseResponse{})
-			},
-		}
-
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
-		rooms := newRooms(core)
-
-		resp, err := rooms.Create(context.Background(), &CreateAudioRoomsReq{
-			BotID: "invalid_bot",
+			_, err := rooms.Create(context.Background(), &CreateAudioRoomsReq{
+				BotID: randomString(10),
+			})
+			as.NotNil(err)
+			as.Contains(err.Error(), "test error")
 		})
-
-		require.Error(t, err)
-		assert.Nil(t, resp)
 	})
 }
 
-func TestAudioCodec(t *testing.T) {
-	t.Run("AudioCodec constants", func(t *testing.T) {
+func TestAudioConst(t *testing.T) {
+	as := assert.New(t)
+	t.Run("AudioCodec", func(t *testing.T) {
 		assert.Equal(t, AudioCodec("AACLC"), AudioCodecAACLC)
-		assert.Equal(t, AudioCodec("G711A"), AudioCodecG711A)
-		assert.Equal(t, AudioCodec("OPUS"), AudioCodecOPUS)
-		assert.Equal(t, AudioCodec("G722"), AudioCodecG722)
+		as.Equal(AudioCodec("G711A"), AudioCodecG711A)
+		as.Equal(AudioCodec("OPUS"), AudioCodecOPUS)
+		as.Equal(AudioCodec("G722"), AudioCodecG722)
 	})
-}
 
-func TestVideoCodec(t *testing.T) {
-	t.Run("VideoCodec constants", func(t *testing.T) {
-		assert.Equal(t, VideoCodec("H264"), VideoCodecH264)
-		assert.Equal(t, VideoCodec("BYTEVC1"), VideoCodecBYTEVC1)
+	t.Run("VideoCodec", func(t *testing.T) {
+		as.Equal(VideoCodec("H264"), VideoCodecH264)
+		as.Equal(VideoCodec("BYTEVC1"), VideoCodecBYTEVC1)
 	})
-}
-
-func TestStreamVideoType(t *testing.T) {
-	t.Run("StreamVideoType constants", func(t *testing.T) {
-		assert.Equal(t, StreamVideoType("main"), StreamVideoTypeMain)
-		assert.Equal(t, StreamVideoType("screen"), StreamVideoTypeScreen)
+	t.Run("StreamVideoType", func(t *testing.T) {
+		as.Equal(StreamVideoType("main"), StreamVideoTypeMain)
+		as.Equal(StreamVideoType("screen"), StreamVideoTypeScreen)
 	})
 }

@@ -6,22 +6,14 @@ import (
 )
 
 func (r *audioRooms) Create(ctx context.Context, req *CreateAudioRoomsReq) (*CreateAudioRoomsResp, error) {
-	method := http.MethodPost
-	uri := "/v1/audio/rooms"
-	resp := &createAudioRoomsResp{}
-	if err := r.core.Request(ctx, method, uri, req, resp); err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodPost,
+		URL:    "/v1/audio/rooms",
+		Body:   req,
 	}
-	resp.Data.setHTTPResponse(resp.HTTPResponse)
-	return resp.Data, nil
-}
-
-type audioRooms struct {
-	core *core
-}
-
-func newRooms(core *core) *audioRooms {
-	return &audioRooms{core: core}
+	response := new(createAudioRoomsResp)
+	err := r.core.rawRequest(ctx, request, response)
+	return response.Data, err
 }
 
 // AudioCodec represents the audio codec
@@ -78,12 +70,6 @@ type RoomAudioConfig struct {
 	Codec AudioCodec `json:"codec"`
 }
 
-// createAudioRoomsResp represents the response for creating an audio room
-type createAudioRoomsResp struct {
-	baseResponse
-	Data *CreateAudioRoomsResp `json:"data"`
-}
-
 // CreateAudioRoomsResp represents the response for creating an audio room
 type CreateAudioRoomsResp struct {
 	baseModel
@@ -91,4 +77,17 @@ type CreateAudioRoomsResp struct {
 	AppID  string `json:"app_id"`
 	Token  string `json:"token"`
 	UID    string `json:"uid"`
+}
+
+type createAudioRoomsResp struct {
+	baseResponse
+	Data *CreateAudioRoomsResp `json:"data"`
+}
+
+type audioRooms struct {
+	core *core
+}
+
+func newRooms(core *core) *audioRooms {
+	return &audioRooms{core: core}
 }
