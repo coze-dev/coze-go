@@ -5,20 +5,6 @@ import (
 	"net/http"
 )
 
-func (r *conversationsMessages) Create(ctx context.Context, req *CreateMessageReq) (*CreateMessageResp, error) {
-	method := http.MethodPost
-	uri := "/v1/conversation/message/create"
-	resp := &createMessageResp{}
-
-	err := r.core.Request(ctx, method, uri, req, resp,
-		withHTTPQuery("conversation_id", req.ConversationID))
-	if err != nil {
-		return nil, err
-	}
-	resp.Message.setHTTPResponse(resp.HTTPResponse)
-	return resp.Message, nil
-}
-
 func (r *conversationsMessages) List(ctx context.Context, req *ListConversationsMessagesReq) (LastIDPaged[Message], error) {
 	if req.Limit == 0 {
 		req.Limit = 20
@@ -52,19 +38,29 @@ func (r *conversationsMessages) List(ctx context.Context, req *ListConversations
 		}, req.Limit, req.AfterID)
 }
 
-func (r *conversationsMessages) Retrieve(ctx context.Context, req *RetrieveConversationsMessagesReq) (*RetrieveConversationsMessagesResp, error) {
-	method := http.MethodGet
-	uri := "/v1/conversation/message/retrieve"
-	resp := &retrieveConversationsMessagesResp{}
-	err := r.core.Request(ctx, method, uri, nil, resp,
-		withHTTPQuery("conversation_id", req.ConversationID),
-		withHTTPQuery("message_id", req.MessageID),
-	)
-	if err != nil {
-		return nil, err
+// Create 创建消息
+//
+// https://www.coze.cn/open/docs/developer_guides/create_message
+func (r *conversationsMessages) Create(ctx context.Context, req *CreateMessageReq) (*CreateMessageResp, error) {
+	request := &RawRequestReq{
+		Method: http.MethodPost,
+		URL:    "/v1/conversation/message/create",
+		Body:   req,
 	}
-	resp.Message.setHTTPResponse(resp.HTTPResponse)
-	return resp.Message, nil
+	response := new(createMessageResp)
+	err := r.core.rawRequest(ctx, request, response)
+	return response.Message, err
+}
+
+func (r *conversationsMessages) Retrieve(ctx context.Context, req *RetrieveConversationsMessagesReq) (*RetrieveConversationsMessagesResp, error) {
+	request := &RawRequestReq{
+		Method: http.MethodGet,
+		URL:    "/v1/conversation/message/retrieve",
+		Body:   req,
+	}
+	response := new(retrieveConversationsMessagesResp)
+	err := r.core.rawRequest(ctx, request, response)
+	return response.Message, err
 }
 
 func (r *conversationsMessages) Update(ctx context.Context, req *UpdateConversationMessagesReq) (*UpdateConversationMessagesResp, error) {
@@ -112,7 +108,7 @@ func newConversationMessage(core *core) *conversationsMessages {
 // CreateMessageReq represents request for creating message
 type CreateMessageReq struct {
 	// The ID of the conversation.
-	ConversationID string `json:"-"`
+	ConversationID string `query:"conversation_id" json:"-"`
 
 	// The entity that sent this message.
 	Role MessageRole `json:"role"`
@@ -159,8 +155,8 @@ type ListConversationsMessagesReq struct {
 
 // RetrieveConversationsMessagesReq represents request for retrieving message
 type RetrieveConversationsMessagesReq struct {
-	ConversationID string `json:"conversation_id"`
-	MessageID      string `json:"message_id"`
+	ConversationID string `query:"conversation_id" json:"-"`
+	MessageID      string `query:"message_id" json:"-"`
 }
 
 // UpdateConversationMessagesReq represents request for updating message
