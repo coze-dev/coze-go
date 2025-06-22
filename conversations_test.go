@@ -2,6 +2,9 @@ package coze
 
 import (
 	"context"
+	"crypto/rand"
+	"encoding/hex"
+	"fmt"
 	"net/http"
 	"testing"
 
@@ -18,42 +21,110 @@ func newCoreWithTransport(transport http.RoundTripper) *core {
 	})
 }
 
+func randomString(length int) string {
+	b := make([]byte, length)
+	_, _ = rand.Read(b)
+	return hex.EncodeToString(b)
+}
+
 func TestConversations(t *testing.T) {
-	// Test List method
-	t.Run("List conversations success", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// Verify request method and path
-				assert.Equal(t, http.MethodGet, req.Method)
-				assert.Equal(t, "/v1/conversations", req.URL.Path)
+	as := assert.New(t)
 
-				// Verify query parameters
-				assert.Equal(t, "test_bot_id", req.URL.Query().Get("bot_id"))
-				assert.Equal(t, "1", req.URL.Query().Get("page_num"))
-				assert.Equal(t, "20", req.URL.Query().Get("page_size"))
+	t.Run("list success", func(t *testing.T) {
+		botID := randomString(10)
+		conversationIDs := []string{randomString(10), randomString(10)}
+		sectionIDs := []string{randomString(10), randomString(10)}
+		mockTransport := newMockTransport(func(req *http.Request) (*http.Response, error) {
+			as.Equal(http.MethodGet, req.Method)
+			as.Equal("/v1/conversations", req.URL.Path)
 
-				// Return mock response
-				return mockResponse(http.StatusOK, &listConversationsResp{
-					Data: &ListConversationsResp{
-						HasMore: true,
-						Conversations: []*Conversation{
-							{
-								ID:            "conv1",
-								CreatedAt:     1234567890,
-								LastSectionID: "section1",
-								MetaData: map[string]string{
-									"key1": "value1",
-								},
-							},
-							{
-								ID:            "conv2",
-								CreatedAt:     1234567891,
-								LastSectionID: "section2",
-								MetaData: map[string]string{
-									"key2": "value2",
-								},
+			as.Equal(botID, req.URL.Query().Get("bot_id"))
+			as.Equal("1", req.URL.Query().Get("page_num"))
+			as.Equal("20", req.URL.Query().Get("page_size"))
+
+			return mockResponse(http.StatusOK, &listConversationsResp{
+				Data: &ListConversationsResp{
+					HasMore: true,
+					Conversations: []*Conversation{
+						{
+							ID:            conversationIDs[0],
+							CreatedAt:     1234567890,
+							LastSectionID: sectionIDs[0],
+							MetaData: map[string]string{
+								"key1": "value1",
 							},
 						},
+						{
+							ID:            conversationIDs[1],
+							CreatedAt:     1234567891,
+							LastSectionID: sectionIDs[1],
+							MetaData: map[string]string{
+								"key2": "value2",
+							},
+						},
+					},
+				},
+			})
+		})
+
+		core := newCoreWithTransport(mockTransport)
+		conversations := newConversations(core)
+
+		paged, err := conversations.List(context.Background(), &ListConversationsReq{
+			BotID:    botID,
+			PageNum:  1,
+			PageSize: 20,
+		})
+
+		as.Nil(err)
+		as.True(paged.HasMore())
+		items := paged.Items()
+		require.Len(t, items, 2)
+
+		// Verify first conversation
+		as.Equal(conversationIDs[0], items[0].ID)
+		as.Equal(1234567890, items[0].CreatedAt)
+		as.Equal(sectionIDs[0], items[0].LastSectionID)
+		as.Equal("value1", items[0].MetaData["key1"])
+
+		// Verify second conversation
+		as.Equal(conversationIDs[1], items[1].ID)
+		as.Equal(1234567891, items[1].CreatedAt)
+		as.Equal(sectionIDs[1], items[1].LastSectionID)
+		as.Equal("value2", items[1].MetaData["key2"])
+	})
+
+	t.Run("list failed: http error", func(t *testing.T) {
+		botID := randomString(10)
+		mockTransport := newMockTransport(func(req *http.Request) (*http.Response, error) {
+			as.Equal(http.MethodGet, req.Method)
+			as.Equal("/v1/conversations", req.URL.Path)
+
+			return nil, fmt.Errorf("http error")
+		})
+
+		core := newCoreWithTransport(mockTransport)
+		conversations := newConversations(core)
+
+		_, err := conversations.List(context.Background(), &ListConversationsReq{
+			BotID:    botID,
+			PageNum:  1,
+			PageSize: 20,
+		})
+		as.NotNil(t, err)
+		as.Contains(err.Error(), "http error")
+	})
+
+	t.Run("list with default pagination", func(t *testing.T) {
+		mockTransport := &mockTransport{
+			roundTripFunc: func(req *http.Request) (*http.Response, error) {
+				as.Equal("1", req.URL.Query().Get("page_num"))
+				as.Equal("20", req.URL.Query().Get("page_size"))
+
+				return mockResponse(http.StatusOK, &listConversationsResp{
+					Data: &ListConversationsResp{
+						HasMore:       false,
+						Conversations: []*Conversation{},
 					},
 				})
 			},
@@ -63,38 +134,19 @@ func TestConversations(t *testing.T) {
 		conversations := newConversations(core)
 
 		paged, err := conversations.List(context.Background(), &ListConversationsReq{
-			BotID:    "test_bot_id",
-			PageNum:  1,
-			PageSize: 20,
+			BotID: "test_bot_id",
 		})
-
-		require.NoError(t, err)
-		assert.True(t, paged.HasMore())
-		items := paged.Items()
-		require.Len(t, items, 2)
-
-		// Verify first conversation
-		assert.Equal(t, "conv1", items[0].ID)
-		assert.Equal(t, 1234567890, items[0].CreatedAt)
-		assert.Equal(t, "section1", items[0].LastSectionID)
-		assert.Equal(t, "value1", items[0].MetaData["key1"])
-
-		// Verify second conversation
-		assert.Equal(t, "conv2", items[1].ID)
-		assert.Equal(t, 1234567891, items[1].CreatedAt)
-		assert.Equal(t, "section2", items[1].LastSectionID)
-		assert.Equal(t, "value2", items[1].MetaData["key2"])
+		as.Nil(err)
+		as.False(paged.HasMore())
+		as.Empty(paged.Items())
 	})
 
-	// Test Create method
-	t.Run("Create conversation success", func(t *testing.T) {
+	t.Run("create success", func(t *testing.T) {
 		mockTransport := &mockTransport{
 			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// Verify request method and path
-				assert.Equal(t, http.MethodPost, req.Method)
-				assert.Equal(t, "/v1/conversation/create", req.URL.Path)
+				as.Equal(http.MethodPost, req.Method)
+				as.Equal("/v1/conversation/create", req.URL.Path)
 
-				// Return mock response
 				return mockResponse(http.StatusOK, &createConversationsResp{
 					Conversation: &CreateConversationsResp{
 						Conversation: Conversation{
@@ -126,26 +178,22 @@ func TestConversations(t *testing.T) {
 			BotID: "test_bot_id",
 		})
 
-		require.NoError(t, err)
-		assert.Equal(t, "test_log_id", resp.LogID())
-		assert.Equal(t, "conv1", resp.ID)
-		assert.Equal(t, 1234567890, resp.CreatedAt)
-		assert.Equal(t, "section1", resp.LastSectionID)
-		assert.Equal(t, "value1", resp.MetaData["key1"])
+		as.Nil(err)
+		as.Equal("test_log_id", resp.LogID())
+		as.Equal("conv1", resp.ID)
+		as.Equal(1234567890, resp.CreatedAt)
+		as.Equal("section1", resp.LastSectionID)
+		as.Equal("value1", resp.MetaData["key1"])
 	})
 
-	// Test Retrieve method
-	t.Run("Retrieve conversation success", func(t *testing.T) {
+	t.Run("retrieve success", func(t *testing.T) {
 		mockTransport := &mockTransport{
 			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// Verify request method and path
-				assert.Equal(t, http.MethodGet, req.Method)
-				assert.Equal(t, "/v1/conversation/retrieve", req.URL.Path)
+				as.Equal(http.MethodGet, req.Method)
+				as.Equal("/v1/conversation/retrieve", req.URL.Path)
 
-				// Verify query parameters
-				assert.Equal(t, "conv1", req.URL.Query().Get("conversation_id"))
+				as.Equal("conv1", req.URL.Query().Get("conversation_id"))
 
-				// Return mock response
 				return mockResponse(http.StatusOK, &retrieveConversationsResp{
 					Conversation: &RetrieveConversationsResp{
 						Conversation: Conversation{
@@ -168,21 +216,20 @@ func TestConversations(t *testing.T) {
 			ConversationID: "conv1",
 		})
 
-		require.NoError(t, err)
-		assert.Equal(t, "test_log_id", resp.LogID())
-		assert.Equal(t, "conv1", resp.ID)
-		assert.Equal(t, 1234567890, resp.CreatedAt)
-		assert.Equal(t, "section1", resp.LastSectionID)
-		assert.Equal(t, "value1", resp.MetaData["key1"])
+		as.Nil(err)
+		as.Equal("test_log_id", resp.LogID())
+		as.Equal("conv1", resp.ID)
+		as.Equal(1234567890, resp.CreatedAt)
+		as.Equal("section1", resp.LastSectionID)
+		as.Equal("value1", resp.MetaData["key1"])
 	})
 
-	// Test Clear method
-	t.Run("Clear conversation success", func(t *testing.T) {
+	t.Run("clear success", func(t *testing.T) {
 		mockTransport := &mockTransport{
 			roundTripFunc: func(req *http.Request) (*http.Response, error) {
 				// Verify request method and path
-				assert.Equal(t, http.MethodPost, req.Method)
-				assert.Equal(t, "/v1/conversations/conv1/clear", req.URL.Path)
+				as.Equal(http.MethodPost, req.Method)
+				as.Equal("/v1/conversations/conv1/clear", req.URL.Path)
 
 				// Return mock response
 				return mockResponse(http.StatusOK, &clearConversationsResp{
@@ -201,39 +248,9 @@ func TestConversations(t *testing.T) {
 			ConversationID: "conv1",
 		})
 
-		require.NoError(t, err)
-		assert.Equal(t, "test_log_id", resp.LogID())
-		assert.Equal(t, "conv1", resp.ConversationID)
-		assert.Equal(t, "new_section", resp.ID)
-	})
-
-	// Test List method with default pagination
-	t.Run("List conversations with default pagination", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// Verify default pagination parameters
-				assert.Equal(t, "1", req.URL.Query().Get("page_num"))
-				assert.Equal(t, "20", req.URL.Query().Get("page_size"))
-
-				// Return mock response
-				return mockResponse(http.StatusOK, &listConversationsResp{
-					Data: &ListConversationsResp{
-						HasMore:       false,
-						Conversations: []*Conversation{},
-					},
-				})
-			},
-		}
-
-		core := newCoreWithTransport(mockTransport)
-		conversations := newConversations(core)
-
-		paged, err := conversations.List(context.Background(), &ListConversationsReq{
-			BotID: "test_bot_id",
-		})
-
-		require.NoError(t, err)
-		assert.False(t, paged.HasMore())
-		assert.Empty(t, paged.Items())
+		as.Nil(err)
+		as.Equal("test_log_id", resp.LogID())
+		as.Equal("conv1", resp.ConversationID)
+		as.Equal("new_section", resp.ID)
 	})
 }

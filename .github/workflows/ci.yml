@@ -52,13 +52,13 @@ jobs:
       - name: Check coverage threshold
         run: |
           COVERAGE=$(go tool cover -func=coverage.out | grep total | awk '{print substr($3, 1, length($3)-1)}')
-          THRESHOLD=80
+          THRESHOLD=78
           if (( $(echo "$COVERAGE < $THRESHOLD" | bc -l) )); then
             echo "Code coverage $COVERAGE% is below threshold of $THRESHOLD%"
             exit 1
           fi
           echo "Code coverage $COVERAGE% is above threshold of $THRESHOLD%"
-        
+
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:

@@ -20,6 +20,12 @@ func (m *mockTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	return m.roundTripFunc(req)
 }
 
+func newMockTransport(fn func(req *http.Request) (*http.Response, error)) *mockTransport {
+	return &mockTransport{
+		roundTripFunc: fn,
+	}
+}
+
 // mockReadCloser 实现 io.ReadCloser 接口
 type mockReadCloser struct {
 	*bytes.Buffer
@@ -29,7 +35,6 @@ func (m mockReadCloser) Close() error {
 	return nil
 }
 
-// mockResponse 创建一个模拟的 HTTP 响应
 func mockResponse(statusCode int, body interface{}) (*http.Response, error) {
 	jsonBytes, err := json.Marshal(body)
 	if err != nil {

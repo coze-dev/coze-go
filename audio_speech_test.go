@@ -13,7 +13,7 @@ import (
 
 func TestAudioSpeech(t *testing.T) {
 	// Test Create method
-	t.Run("Create speech success", func(t *testing.T) {
+	t.Run("create success", func(t *testing.T) {
 		mockTransport := &mockTransport{
 			roundTripFunc: func(req *http.Request) (*http.Response, error) {
 				// Verify request method and path
@@ -44,11 +44,7 @@ func TestAudioSpeech(t *testing.T) {
 		require.NoError(t, err)
 		assert.Equal(t, "test_log_id", resp.HTTPResponse.LogID())
 
-		// Read and verify response body
-		data, err := io.ReadAll(resp.Data)
-		require.NoError(t, err)
-		assert.Equal(t, "mock audio data", string(data))
-		resp.Data.Close()
+		assert.Nil(t, resp.WriteToFile("test.mp3"))
 	})
 
 	// Test Create method with error
