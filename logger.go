@@ -119,3 +119,13 @@ func setLogger(l Logger) {
 func setLevel(level LogLevel) {
 	logger.level = level
 }
+
+func (r *core) Log(ctx context.Context, level LogLevel, msg string, args ...interface{}) {
+	if level >= r.logLevel {
+		if r.logger != nil {
+			r.logger.Log(ctx, level, msg, args...)
+		} else {
+			logger.Log(ctx, level, msg, args...)
+		}
+	}
+}

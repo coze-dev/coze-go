@@ -80,6 +80,9 @@ func (r *baseModel) LogID() string {
 }
 
 func newHTTPResponse(resp *http.Response) *httpResponse {
+	if resp == nil {
+		return &httpResponse{}
+	}
 	return &httpResponse{
 		Status:        resp.StatusCode,
 		Header:        resp.Header,

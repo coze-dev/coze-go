@@ -28,3 +28,4 @@ go.work.sum
 /output
 coverage.out
 integrations/
+debug/

@@ -2,7 +2,6 @@ package coze
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"strconv"
 )
@@ -33,49 +32,46 @@ func (r *conversations) List(ctx context.Context, req *ListConversationsReq) (Nu
 		}, req.PageSize, req.PageNum)
 }
 
+// Create 创建会话
+//
+// docs: https://www.coze.cn/open/docs/developer_guides/create_conversation
 func (r *conversations) Create(ctx context.Context, req *CreateConversationsReq) (*CreateConversationsResp, error) {
-	uri := "/v1/conversation/create"
-	resp := &createConversationsResp{}
-	err := r.client.Request(ctx, http.MethodPost, uri, req, resp)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodPost,
+		URL:    "/v1/conversation/create",
+		Body:   req,
 	}
-	resp.Conversation.setHTTPResponse(resp.HTTPResponse)
-	return resp.Conversation, nil
+	response := new(createConversationsResp)
+	err := r.client.rawRequest(ctx, request, response)
+	return response.Conversation, err
 }
 
+// Retrieve 查看会话信息
+//
+// docs: https://www.coze.cn/open/docs/developer_guides/retrieve_conversation
 func (r *conversations) Retrieve(ctx context.Context, req *RetrieveConversationsReq) (*RetrieveConversationsResp, error) {
-	uri := "/v1/conversation/retrieve"
-	resp := &retrieveConversationsResp{}
-	err := r.client.Request(ctx, http.MethodGet, uri, nil, resp, withHTTPQuery("conversation_id", req.ConversationID))
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodGet,
+		URL:    "/v1/conversation/retrieve",
+		Body:   req,
 	}
-	resp.Conversation.setHTTPResponse(resp.HTTPResponse)
-	return resp.Conversation, nil
+	response := new(retrieveConversationsResp)
+	err := r.client.rawRequest(ctx, request, response)
+	return response.Conversation, err
 }
 
+// Clear 清除上下文
+//
+// docs: https://www.coze.cn/open/docs/developer_guides/clear_conversation_context
 func (r *conversations) Clear(ctx context.Context, req *ClearConversationsReq) (*ClearConversationsResp, error) {
-	uri := fmt.Sprintf("/v1/conversations/%s/clear", req.ConversationID)
-	resp := &clearConversationsResp{}
-	err := r.client.Request(ctx, http.MethodPost, uri, nil, resp)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodPost,
+		URL:    "/v1/conversations/:conversation_id/clear",
+		Body:   req,
 	}
-	resp.Data.setHTTPResponse(resp.HTTPResponse)
-	return resp.Data, nil
-}
-
-type conversations struct {
-	client   *core
-	Messages *conversationsMessages
-}
-
-func newConversations(core *core) *conversations {
-	return &conversations{
-		client:   core,
-		Messages: newConversationMessage(core),
-	}
+	response := new(clearConversationsResp)
+	err := r.client.rawRequest(ctx, request, response)
+	return response.Data, err
 }
 
 // Conversation represents conversation information
@@ -95,6 +91,25 @@ type Conversation struct {
 	LastSectionID string `json:"last_section_id"`
 }
 
+// ListConversationsReq represents request for listing conversations
+type ListConversationsReq struct {
+	// The ID of the bot.
+	BotID string `json:"bot_id"`
+
+	// The page number.
+	PageNum int `json:"page_num,omitempty"`
+
+	// The page size.
+	PageSize int `json:"page_size,omitempty"`
+}
+
+// ListConversationsResp represents response for listing conversations
+type ListConversationsResp struct {
+	baseModel
+	HasMore       bool            `json:"has_more"`
+	Conversations []*Conversation `json:"conversations"`
+}
+
 // CreateConversationsReq represents request for creating conversation
 type CreateConversationsReq struct {
 	// Messages in the conversation. For more information, see EnterMessage object.
@@ -111,27 +126,31 @@ type CreateConversationsReq struct {
 	ConnectorID string `json:"connector_id"`
 }
 
-// ListConversationsReq represents request for listing conversations
-type ListConversationsReq struct {
-	// The ID of the bot.
-	BotID string `json:"bot_id"`
-
-	// The page number.
-	PageNum int `json:"page_num,omitempty"`
-
-	// The page size.
-	PageSize int `json:"page_size,omitempty"`
+type CreateConversationsResp struct {
+	baseModel
+	Conversation
 }
 
 // RetrieveConversationsReq represents request for retrieving conversation
 type RetrieveConversationsReq struct {
 	// The ID of the conversation.
-	ConversationID string `json:"conversation_id"`
+	ConversationID string `query:"conversation_id" json:"-"`
+}
+
+type RetrieveConversationsResp struct {
+	baseModel
+	Conversation
 }
 
 // ClearConversationsReq represents request for clearing conversation
 type ClearConversationsReq struct {
 	// The ID of the conversation.
+	ConversationID string `path:"conversation_id" json:"-"`
+}
+
+type ClearConversationsResp struct {
+	baseModel
+	ID             string `json:"id"`
 	ConversationID string `json:"conversation_id"`
 }
 
@@ -141,22 +160,10 @@ type createConversationsResp struct {
 	Conversation *CreateConversationsResp `json:"data"`
 }
 
-type CreateConversationsResp struct {
-	baseModel
-	Conversation
-}
-
 // listConversationsResp represents response for listing conversations
 type listConversationsResp struct {
 	baseResponse
 	Data *ListConversationsResp `json:"data"`
-}
-
-// ListConversationsResp represents response for listing conversations
-type ListConversationsResp struct {
-	baseModel
-	HasMore       bool            `json:"has_more"`
-	Conversations []*Conversation `json:"conversations"`
 }
 
 // RetrieveConversationsResp represents response for retrieving conversation
@@ -165,19 +172,20 @@ type retrieveConversationsResp struct {
 	Conversation *RetrieveConversationsResp `json:"data"`
 }
 
-type RetrieveConversationsResp struct {
-	baseModel
-	Conversation
-}
-
 // ClearConversationsResp represents response for clearing conversation
 type clearConversationsResp struct {
 	baseResponse
 	Data *ClearConversationsResp `json:"data"`
 }
 
-type ClearConversationsResp struct {
-	baseModel
-	ID             string `json:"id"`
-	ConversationID string `json:"conversation_id"`
+type conversations struct {
+	client   *core
+	Messages *conversationsMessages
+}
+
+func newConversations(core *core) *conversations {
+	return &conversations{
+		client:   core,
+		Messages: newConversationMessage(core),
+	}
 }

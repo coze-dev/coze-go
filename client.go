@@ -24,6 +24,7 @@ type clientOption struct {
 	baseURL     string
 	client      HTTPClient
 	logLevel    LogLevel
+	logger      Logger
 	auth        Auth
 	enableLogID bool
 }
@@ -53,6 +54,7 @@ func WithLogLevel(level LogLevel) CozeAPIOption {
 
 func WithLogger(logger Logger) CozeAPIOption {
 	return func(opt *clientOption) {
+		opt.logger = logger
 		setLogger(logger)
 	}
 }
