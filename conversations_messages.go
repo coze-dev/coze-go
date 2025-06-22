@@ -52,6 +52,9 @@ func (r *conversationsMessages) Create(ctx context.Context, req *CreateMessageRe
 	return response.Message, err
 }
 
+// Retrieve 查看消息详情
+//
+// docs: https://www.coze.cn/open/docs/developer_guides/retrieve_message
 func (r *conversationsMessages) Retrieve(ctx context.Context, req *RetrieveConversationsMessagesReq) (*RetrieveConversationsMessagesResp, error) {
 	request := &RawRequestReq{
 		Method: http.MethodGet,
@@ -63,38 +66,32 @@ func (r *conversationsMessages) Retrieve(ctx context.Context, req *RetrieveConve
 	return response.Message, err
 }
 
+// Update 修改消息
+//
+// docs: https://www.coze.cn/open/docs/developer_guides/modify_message
 func (r *conversationsMessages) Update(ctx context.Context, req *UpdateConversationMessagesReq) (*UpdateConversationMessagesResp, error) {
-	method := http.MethodPost
-	uri := "/v1/conversation/message/modify"
-	resp := &updateConversationMessagesResp{}
-	conversationID := req.ConversationID
-	messageID := req.MessageID
-	req.ConversationID = ""
-	req.MessageID = ""
-	err := r.core.Request(ctx, method, uri, req, resp,
-		withHTTPQuery("conversation_id", conversationID),
-		withHTTPQuery("message_id", messageID),
-	)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodPost,
+		URL:    "/v1/conversation/message/modify",
+		Body:   req,
 	}
-	resp.Message.setHTTPResponse(resp.HTTPResponse)
-	return resp.Message, nil
+	response := new(updateConversationMessagesResp)
+	err := r.core.rawRequest(ctx, request, response)
+	return response.Message, err
 }
 
+// Delete 删除消息
+//
+// docs: https://www.coze.cn/open/docs/developer_guides/delete_message
 func (r *conversationsMessages) Delete(ctx context.Context, req *DeleteConversationsMessagesReq) (*DeleteConversationsMessagesResp, error) {
-	method := http.MethodPost
-	uri := "/v1/conversation/message/delete"
-	resp := &deleteConversationsMessagesResp{}
-	err := r.core.Request(ctx, method, uri, nil, resp,
-		withHTTPQuery("conversation_id", req.ConversationID),
-		withHTTPQuery("message_id", req.MessageID),
-	)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodPost,
+		URL:    "/v1/conversation/message/delete",
+		Body:   req,
 	}
-	resp.Message.setHTTPResponse(resp.HTTPResponse)
-	return resp.Message, nil
+	response := new(deleteConversationsMessagesResp)
+	err := r.core.rawRequest(ctx, request, response)
+	return response.Message, err
 }
 
 type conversationsMessages struct {
@@ -162,10 +159,10 @@ type RetrieveConversationsMessagesReq struct {
 // UpdateConversationMessagesReq represents request for updating message
 type UpdateConversationMessagesReq struct {
 	// The ID of the conversation.
-	ConversationID string `json:"conversation_id"`
+	ConversationID string `query:"conversation_id" json:"-"`
 
 	// The ID of the message.
-	MessageID string `json:"message_id"`
+	MessageID string `query:"message_id" json:"-"`
 
 	// The content of the message, supporting pure text, multimodal (mixed input of text, images, files),
 	// cards, and various types of content.
@@ -180,10 +177,10 @@ type UpdateConversationMessagesReq struct {
 // DeleteConversationsMessagesReq represents request for deleting message
 type DeleteConversationsMessagesReq struct {
 	// The ID of the conversation.
-	ConversationID string `json:"conversation_id"`
+	ConversationID string `query:"conversation_id" json:"-"`
 
 	// message id
-	MessageID string `json:"message_id"`
+	MessageID string `query:"message_id" json:"-"`
 }
 
 // createMessageResp represents response for creating message

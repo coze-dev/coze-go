@@ -56,6 +56,7 @@ func TestConversationsMessages(t *testing.T) {
 		as.Equal("value1", resp.MetaData["key1"])
 	})
 
+	// Test List method
 	t.Run("list success", func(t *testing.T) {
 		conversationID := randomString(10)
 		mockTransport := newMockTransport(func(req *http.Request) (*http.Response, error) {
@@ -72,14 +73,14 @@ func TestConversationsMessages(t *testing.T) {
 					Messages: []*Message{
 						{
 							ID:             "msg1",
-							ConversationID: "test_conversation_id",
+							ConversationID: conversationID,
 							Role:           "user",
 							Content:        "Hello",
 							ContentType:    MessageContentTypeText,
 						},
 						{
 							ID:             "msg2",
-							ConversationID: "test_conversation_id",
+							ConversationID: conversationID,
 							Role:           "assistant",
 							Content:        "Hi there!",
 							ContentType:    MessageContentTypeText,
