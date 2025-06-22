@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"mime"
 	"mime/multipart"
 	"net/http"
@@ -140,7 +139,7 @@ func (r *core) doRequest(ctx context.Context, rawHttpReq *rawHttpRequest, realRe
 		defer resp.Body.Close()
 	}
 
-	bs, err := ioutil.ReadAll(resp.Body)
+	bs, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return resp, "", err
 	}
@@ -231,9 +230,7 @@ func (r *rawHttpRequest) parseRawRequestReqBody(body interface{}, isFile bool) e
 				}
 			}
 		} else if j := fieldVT.Tag.Get("json"); j != "" {
-			if strings.HasSuffix(j, ",omitempty") {
-				j = j[:len(j)-10]
-			}
+			j = strings.TrimSuffix(j, ",omitempty")
 			if isFile {
 				fileKey = j
 				if r, ok := fieldVV.Interface().(io.Reader); ok {
@@ -419,7 +416,7 @@ func rangeStruct(v interface{}, f func(fieldVV reflect.Value, fieldVT reflect.St
 	return nil
 }
 
-// 反射函数：从任意类型中提取baseModel的指针（广度优先）
+// 从任意类型中提取 baseModel 的指针（广度优先）
 func getBaseModelPointer(input any) *baseModel {
 	if input == nil {
 		return nil
@@ -428,57 +425,42 @@ func getBaseModelPointer(input any) *baseModel {
 	return findBaseModelInValueBFS(reflect.ValueOf(input))
 }
 
-// 广度优先查找baseModel
 func findBaseModelInValueBFS(v reflect.Value) *baseModel {
-	// 创建一个队列用于广度优先搜索
-	queue := []reflect.Value{v}
+	queue := []reflect.Value{v} // queue
 
 	for len(queue) > 0 {
-		// 从队列头部取出一个值
-		current := queue[0]
+		current := queue[0] // pop
 		queue = queue[1:]
 
-		// 如果是指针，解引用
 		for current.Kind() == reflect.Ptr {
 			if current.IsNil() {
 				break
 			}
 			current = current.Elem()
 		}
-
-		// 如果不是结构体，跳过
 		if current.Kind() != reflect.Struct {
 			continue
 		}
 
 		t := current.Type()
-
-		// 首先检查当前结构体的所有字段，寻找baseModel
 		for i := 0; i < current.NumField(); i++ {
 			field := current.Field(i)
 			fieldType := t.Field(i)
 
-			// 检查是否是baseModel类型的嵌入字段
 			if fieldType.Type.Name() == "baseModel" && fieldType.Anonymous {
-				// 使用unsafe获取baseModel字段的地址
 				if field.CanAddr() {
-					// 直接通过unsafe.Pointer转换获取地址
+					// MUST SUCCESS
 					ptr := unsafe.Pointer(field.UnsafeAddr())
 					return (*baseModel)(ptr)
 				}
 			}
 		}
 
-		// 然后将所有子字段添加到队列中（用于下一层搜索）
 		for i := 0; i < current.NumField(); i++ {
 			field := current.Field(i)
-
-			// 如果字段是指针类型且不为nil，添加到队列
 			if field.Kind() == reflect.Ptr && !field.IsNil() {
 				queue = append(queue, field)
 			}
-
-			// 如果字段是结构体类型，添加到队列
 			if field.Kind() == reflect.Struct {
 				queue = append(queue, field)
 			}
