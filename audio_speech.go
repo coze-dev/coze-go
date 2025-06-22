@@ -8,24 +8,14 @@ import (
 )
 
 func (r *audioSpeech) Create(ctx context.Context, req *CreateAudioSpeechReq) (*CreateAudioSpeechResp, error) {
-	uri := "/v1/audio/speech"
-	resp, err := r.core.RawRequest(ctx, http.MethodPost, uri, req)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodPost,
+		URL:    "/v1/audio/speech",
+		Body:   req,
 	}
-	res := &CreateAudioSpeechResp{
-		Data: resp.Body,
-	}
-	res.SetHTTPResponse(newHTTPResponse(resp))
-	return res, nil
-}
-
-type audioSpeech struct {
-	core *core
-}
-
-func newSpeech(core *core) *audioSpeech {
-	return &audioSpeech{core: core}
+	response := new(createAudioSpeechResp)
+	err := r.core.rawRequest(ctx, request, response)
+	return response.Data, err
 }
 
 // CreateAudioSpeechReq represents the request for creating speech
@@ -39,9 +29,20 @@ type CreateAudioSpeechReq struct {
 
 // CreateAudioSpeechResp represents the response for creating speech
 type CreateAudioSpeechResp struct {
-	baseResponse
-	// TODO 没有 json tag？
+	baseModel
 	Data io.ReadCloser
+}
+
+type createAudioSpeechResp struct {
+	baseResponse
+	Data *CreateAudioSpeechResp
+}
+
+func (r *createAudioSpeechResp) SetReader(file io.ReadCloser) {
+	if r.Data == nil {
+		r.Data = &CreateAudioSpeechResp{}
+	}
+	r.Data.Data = file
 }
 
 func (c *CreateAudioSpeechResp) WriteToFile(path string) error {
@@ -54,4 +55,12 @@ func (c *CreateAudioSpeechResp) WriteToFile(path string) error {
 
 	_, err = io.Copy(file, c.Data)
 	return err
+}
+
+type audioSpeech struct {
+	core *core
+}
+
+func newSpeech(core *core) *audioSpeech {
+	return &audioSpeech{core: core}
 }

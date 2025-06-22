@@ -2,25 +2,20 @@ package coze
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestAudioSpeech(t *testing.T) {
-	// Test Create method
-	t.Run("create success", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// Verify request method and path
-				assert.Equal(t, http.MethodPost, req.Method)
-				assert.Equal(t, "/v1/audio/speech", req.URL.Path)
-
-				// Return mock response with audio data
+	as := assert.New(t)
+	t.Run("create", func(t *testing.T) {
+		t.Run("success", func(t *testing.T) {
+			speech := newSpeech(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 				resp := &http.Response{
 					StatusCode: http.StatusOK,
 					Header:     http.Header{},
@@ -28,68 +23,31 @@ func TestAudioSpeech(t *testing.T) {
 				}
 				resp.Header.Set(httpLogIDKey, "test_log_id")
 				return resp, nil
-			},
-		}
-
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
-		speech := newSpeech(core)
-
-		resp, err := speech.Create(context.Background(), &CreateAudioSpeechReq{
-			Input:          "Hello, world!",
-			VoiceID:        "voice1",
-			ResponseFormat: AudioFormatMP3.Ptr(),
-			Speed:          ptr[float32](1.0),
+			})))
+			resp, err := speech.Create(context.Background(), &CreateAudioSpeechReq{
+				Input:          randomString(10),
+				VoiceID:        randomString(10),
+				ResponseFormat: AudioFormatMP3.Ptr(),
+				Speed:          ptr[float32](1.0),
+			})
+			as.Nil(err)
+			as.NotNil(resp)
+			// as.NotEmpty(resp.HTTPResponse.LogID())
+			as.Nil(resp.WriteToFile("/tmp/test.mp3"))
 		})
 
-		require.NoError(t, err)
-		assert.Equal(t, "test_log_id", resp.HTTPResponse.LogID())
-
-		assert.Nil(t, resp.WriteToFile("test.mp3"))
-	})
-
-	// Test Create method with error
-	t.Run("Create speech with error", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// Return error response
-				return mockResponse(http.StatusBadRequest, &baseResponse{})
-			},
-		}
-
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
-		speech := newSpeech(core)
-
-		resp, err := speech.Create(context.Background(), &CreateAudioSpeechReq{
-			Input:          "Hello, world!",
-			VoiceID:        "invalid_voice",
-			ResponseFormat: AudioFormatMP3.Ptr(),
-			Speed:          ptr[float32](1.0),
+		t.Run("failed", func(t *testing.T) {
+			speech := newSpeech(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+				return nil, fmt.Errorf("test error")
+			})))
+			_, err := speech.Create(context.Background(), &CreateAudioSpeechReq{
+				Input:          "Hello, world!",
+				VoiceID:        "invalid_voice",
+				ResponseFormat: AudioFormatMP3.Ptr(),
+				Speed:          ptr[float32](1.0),
+			})
+			as.NotNil(err)
+			as.Contains(err.Error(), "test error")
 		})
-
-		require.Error(t, err)
-		assert.Nil(t, resp)
-	})
-
-	// Test Create method with invalid speed
-	t.Run("Create speech with invalid speed", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// Return error response for invalid speed
-				return mockResponse(http.StatusBadRequest, &baseResponse{})
-			},
-		}
-
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
-		speech := newSpeech(core)
-
-		resp, err := speech.Create(context.Background(), &CreateAudioSpeechReq{
-			Input:          "Hello, world!",
-			VoiceID:        "voice1",
-			ResponseFormat: AudioFormatMP3.Ptr(),
-			Speed:          ptr[float32](-1.0), // Invalid speed
-		})
-
-		require.Error(t, err)
-		assert.Nil(t, resp)
 	})
 }

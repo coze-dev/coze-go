@@ -129,54 +129,115 @@ func (r *core) doRequest(ctx context.Context, rawHttpReq *rawHttpRequest, realRe
 		return resp, "", err
 	}
 
+	contentType := resp.Header.Get("Content-Type")
 	_, media, _ := mime.ParseMediaType(resp.Header.Get("Content-Disposition"))
 	respFilename := ""
 	if media != nil {
 		respFilename = media["filename"]
 	}
 
+	switch {
+	case strings.Contains(contentType, "application/json") && respFilename == "":
+		respContent, err := r.parseJsonResponse(resp, realResponse)
+		return resp, respContent, err
+	default:
+		respContent, err := r.parseFileResponse(resp, realResponse, respFilename)
+		return resp, respContent, err
+	}
+
+	// if resp.Body != nil {
+	// 	defer resp.Body.Close()
+	// }
+
+	// bs, err := io.ReadAll(resp.Body)
+	// if err != nil {
+	// 	return resp, "", err
+	// }
+
+	// var respContent string
+	// if respFilename == "" {
+	// 	respContent = string(bs)
+	// } else {
+	// 	respContent = fmt.Sprintf("<FILE: %d>", len(bs))
+	// }
+
+	// if realResponse != nil {
+	// 	if resp != nil && resp.StatusCode == http.StatusOK {
+	// 		isSpecResp := false
+	// 		if setter, ok := realResponse.(readerSetter); ok {
+	// 			isSpecResp = true
+	// 			setter.SetReader(bytes.NewReader(bs))
+	// 		}
+	// 		if setter, ok := realResponse.(filenameSetter); ok {
+	// 			isSpecResp = true
+	// 			setter.SetFilename(respFilename)
+	// 		}
+	// 		if isSpecResp {
+	// 			return resp, respContent, nil
+	// 		}
+	// 	}
+
+	// 	if len(bs) == 0 && resp.StatusCode >= http.StatusBadRequest {
+	// 		return resp, respContent, fmt.Errorf("request fail: %s", resp.Status)
+	// 	}
+
+	// 	if err = json.Unmarshal(bs, realResponse); err != nil {
+	// 		return resp, respContent, fmt.Errorf("invalid json: %s, err: %s", bs, err)
+	// 	}
+	// }
+
+	// return resp, respContent, nil
+}
+
+func (r *core) parseJsonResponse(resp *http.Response, realResponse any) (string, error) {
 	if resp.Body != nil {
 		defer resp.Body.Close()
 	}
 
 	bs, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return resp, "", err
+		return "", err
 	}
 
-	var respContent string
-	if respFilename == "" {
-		respContent = string(bs)
-	} else {
-		respContent = fmt.Sprintf("<FILE: %d>", len(bs))
+	respContent := string(bs)
+	if realResponse != nil {
+		if len(bs) == 0 && resp.StatusCode >= http.StatusBadRequest {
+			return respContent, fmt.Errorf("request fail: %s", resp.Status)
+		}
+
+		if err = json.Unmarshal(bs, realResponse); err != nil {
+			return respContent, fmt.Errorf("invalid json: %s, err: %s", bs, err)
+		}
 	}
+
+	return respContent, nil
+}
+
+func (r *core) parseFileResponse(resp *http.Response, realResponse any, respFilename string) (string, error) {
+	respContent := fmt.Sprintf("<FILE>")
 
 	if realResponse != nil {
 		if resp != nil && resp.StatusCode == http.StatusOK {
 			isSpecResp := false
 			if setter, ok := realResponse.(readerSetter); ok {
 				isSpecResp = true
-				setter.SetReader(bytes.NewReader(bs))
+				setter.SetReader(resp.Body)
 			}
 			if setter, ok := realResponse.(filenameSetter); ok {
 				isSpecResp = true
 				setter.SetFilename(respFilename)
 			}
 			if isSpecResp {
-				return resp, respContent, nil
+				return respContent, nil
 			}
 		}
 
-		if len(bs) == 0 && resp.StatusCode >= http.StatusBadRequest {
-			return resp, respContent, fmt.Errorf("request fail: %s", resp.Status)
-		}
-
-		if err = json.Unmarshal(bs, realResponse); err != nil {
-			return resp, respContent, fmt.Errorf("invalid json: %s, err: %s", bs, err)
+		if resp.StatusCode >= http.StatusBadRequest {
+			return respContent, fmt.Errorf("request fail: %s", resp.Status)
 		}
 	}
 
-	return resp, respContent, nil
+	return respContent, nil
 }
 
 func (r *rawHttpRequest) parseHeader(ctx context.Context, ins *core, req *RawRequestReq) error {
@@ -303,7 +364,7 @@ func newFileUploadRequest(params map[string]string, filekey string, reader io.Re
 }
 
 type readerSetter interface {
-	SetReader(file io.Reader)
+	SetReader(file io.ReadCloser)
 }
 
 type filenameSetter interface {
@@ -511,9 +572,7 @@ func setBaseRespInterface(resp any, httpResponse *http.Response) {
 	if v, ok := resp.(baseRespInterface); ok {
 		v.SetHTTPResponse(h)
 	}
-	v := getBaseModelPointer(resp)
-	fmt.Println("find base model pointer", v)
-	if v != nil {
+	if v := getBaseModelPointer(resp); v != nil {
 		v.setHTTPResponse(h)
 	}
 }
