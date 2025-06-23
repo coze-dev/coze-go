@@ -197,10 +197,10 @@ func (r *core) parseStreamResponse(resp *http.Response, realResponse any) (strin
 }
 
 func (r *core) parseFileResponse(resp *http.Response, realResponse any, respFilename string) (string, error) {
-	respContent := fmt.Sprintf("<FILE>")
+	respContent := "<FILE>"
 
 	if realResponse != nil {
-		if resp != nil && resp.StatusCode == http.StatusOK {
+		if resp.StatusCode == http.StatusOK {
 			isSpecResp := false
 			if setter, ok := realResponse.(readerSetter); ok {
 				isSpecResp = true
