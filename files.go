@@ -7,35 +7,26 @@ import (
 )
 
 func (r *files) Upload(ctx context.Context, req *UploadFilesReq) (*UploadFilesResp, error) {
-	path := "/v1/files/upload"
-	resp := &uploadFilesResp{}
-	err := r.core.UploadFile(ctx, path, req.File, req.File.Name(), nil, resp)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodPost,
+		URL:    "/v1/files/upload",
+		Body:   req,
+		IsFile: true,
 	}
-
-	resp.FileInfo.setHTTPResponse(resp.HTTPResponse)
-	return resp.FileInfo, nil
+	response := new(uploadFilesResp)
+	err := r.core.rawRequest(ctx, request, response)
+	return response.Data, err
 }
 
 func (r *files) Retrieve(ctx context.Context, req *RetrieveFilesReq) (*RetrieveFilesResp, error) {
-	method := http.MethodPost
-	uri := "/v1/files/retrieve"
-	resp := &retrieveFilesResp{}
-	err := r.core.Request(ctx, method, uri, nil, resp, withHTTPQuery("file_id", req.FileID))
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodGet,
+		URL:    "/v1/files/retrieve",
+		Body:   req,
 	}
-	resp.FileInfo.setHTTPResponse(resp.HTTPResponse)
-	return resp.FileInfo, nil
-}
-
-type files struct {
-	core *core
-}
-
-func newFiles(core *core) *files {
-	return &files{core: core}
+	response := new(retrieveFilesResp)
+	err := r.core.rawRequest(ctx, request, response)
+	return response.Data, err
 }
 
 // FileInfo represents information about a file
@@ -68,7 +59,7 @@ func (r *implFileInterface) Name() string {
 }
 
 type UploadFilesReq struct {
-	File FileTypes
+	File FileTypes `json:"file"`
 }
 
 func NewUploadFile(reader io.Reader, fileName string) FileTypes {
@@ -80,13 +71,7 @@ func NewUploadFile(reader io.Reader, fileName string) FileTypes {
 
 // RetrieveFilesReq represents request for retrieving file
 type RetrieveFilesReq struct {
-	FileID string `json:"file_id"`
-}
-
-// uploadFilesResp represents response for uploading file
-type uploadFilesResp struct {
-	baseResponse
-	FileInfo *UploadFilesResp `json:"data"`
+	FileID string `query:"file_id" json:"-"`
 }
 
 // UploadFilesResp represents response for uploading file
@@ -95,14 +80,26 @@ type UploadFilesResp struct {
 	FileInfo
 }
 
-// retrieveFilesResp represents response for retrieving file
-type retrieveFilesResp struct {
-	baseResponse
-	FileInfo *RetrieveFilesResp `json:"data"`
-}
-
 // RetrieveFilesResp represents response for retrieving file
 type RetrieveFilesResp struct {
 	baseModel
 	FileInfo
+}
+
+type uploadFilesResp struct {
+	baseResponse
+	Data *UploadFilesResp `json:"data"`
+}
+
+type retrieveFilesResp struct {
+	baseResponse
+	Data *RetrieveFilesResp `json:"data"`
+}
+
+type files struct {
+	core *core
+}
+
+func newFiles(core *core) *files {
+	return &files{core: core}
 }

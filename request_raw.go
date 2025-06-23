@@ -267,7 +267,10 @@ func (r *rawHttpRequest) parseRawRequestReqBody(body interface{}, isFile bool) e
 			if isFile {
 				j = strings.TrimSuffix(j, ",omitempty")
 				fileKey = j
-				if r, ok := fieldVV.Interface().(io.Reader); ok {
+				if r, ok := fieldVV.Interface().(FileTypes); ok {
+					reader = r
+					fileName = r.Name()
+				} else if r, ok := fieldVV.Interface().(io.Reader); ok {
 					reader = r
 				} else if j == "filename" {
 					fileName = reflectToString(fieldVV)

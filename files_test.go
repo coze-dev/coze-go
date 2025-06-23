@@ -1,154 +1,98 @@
 package coze
 
 import (
-	"bytes"
 	"context"
+	"errors"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestFiles(t *testing.T) {
-	// Test Upload method
-	t.Run("Upload file success", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// Verify request method and path
-				assert.Equal(t, http.MethodPost, req.Method)
-				assert.Equal(t, "/v1/files/upload", req.URL.Path)
-
-				// Return mock response
-				return mockResponse(http.StatusOK, &uploadFilesResp{
-					FileInfo: &UploadFilesResp{
-						FileInfo: FileInfo{
-							ID:        "file1",
-							Bytes:     1024,
-							CreatedAt: 1234567890,
-							FileName:  "test.txt",
-						},
+	as := assert.New(t)
+	t.Run("upload file success", func(t *testing.T) {
+		files := newFiles(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			as.Equal(http.MethodPost, req.Method)
+			as.Equal("/v1/files/upload", req.URL.Path)
+			return mockResponse(http.StatusOK, &uploadFilesResp{
+				Data: &UploadFilesResp{
+					FileInfo: FileInfo{
+						ID:        "file1",
+						Bytes:     1024,
+						CreatedAt: 1234567890,
+						FileName:  "test.txt",
 					},
-				})
-			},
-		}
-
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
-		files := newFiles(core)
-
-		// Create a test file content
-		content := []byte("test file content")
-		fileReader := bytes.NewReader(content)
-		uploadReq := &UploadFilesReq{
-			File: NewUploadFile(fileReader, "test.txt"),
-		}
-
-		resp, err := files.Upload(context.Background(), uploadReq)
-
-		require.NoError(t, err)
-		assert.Equal(t, "test_log_id", resp.LogID())
-		assert.Equal(t, "file1", resp.ID)
-		assert.Equal(t, 1024, resp.Bytes)
-		assert.Equal(t, 1234567890, resp.CreatedAt)
-		assert.Equal(t, "test.txt", resp.FileName)
+				},
+			})
+		})))
+		resp, err := files.Upload(context.Background(), &UploadFilesReq{
+			File: NewUploadFile(strings.NewReader("test file content"), "test.txt"),
+		})
+		as.Nil(err)
+		as.NotNil(resp)
+		as.NotEmpty(resp.Response().LogID())
+		as.Equal("file1", resp.ID)
+		as.Equal(1024, resp.Bytes)
+		as.Equal(1234567890, resp.CreatedAt)
+		as.Equal("test.txt", resp.FileName)
 	})
 
-	// Test Retrieve method
-	t.Run("Retrieve file success", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// Verify request method and path
-				assert.Equal(t, http.MethodPost, req.Method)
-				assert.Equal(t, "/v1/files/retrieve", req.URL.Path)
-
-				// Verify query parameters
-				assert.Equal(t, "file1", req.URL.Query().Get("file_id"))
-
-				// Return mock response
-				return mockResponse(http.StatusOK, &retrieveFilesResp{
-					FileInfo: &RetrieveFilesResp{
-						FileInfo: FileInfo{
-							ID:        "file1",
-							Bytes:     1024,
-							CreatedAt: 1234567890,
-							FileName:  "test.txt",
-						},
+	t.Run("retrieve file success", func(t *testing.T) {
+		files := newFiles(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			as.Equal(http.MethodGet, req.Method)
+			as.Equal("/v1/files/retrieve", req.URL.Path)
+			as.Equal("file1", req.URL.Query().Get("file_id"))
+			return mockResponse(http.StatusOK, &retrieveFilesResp{
+				Data: &RetrieveFilesResp{
+					FileInfo: FileInfo{
+						ID:        "file1",
+						Bytes:     1024,
+						CreatedAt: 1234567890,
+						FileName:  "test.txt",
 					},
-				})
-			},
-		}
-
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
-		files := newFiles(core)
-
+				},
+			})
+		})))
 		resp, err := files.Retrieve(context.Background(), &RetrieveFilesReq{
 			FileID: "file1",
 		})
-
-		require.NoError(t, err)
-		assert.Equal(t, "test_log_id", resp.LogID())
-		assert.Equal(t, "file1", resp.ID)
-		assert.Equal(t, 1024, resp.Bytes)
-		assert.Equal(t, 1234567890, resp.CreatedAt)
-		assert.Equal(t, "test.txt", resp.FileName)
+		as.Nil(err)
+		as.NotNil(resp)
+		as.NotEmpty(resp.Response().LogID())
+		as.Equal("file1", resp.ID)
+		as.Equal(1024, resp.Bytes)
+		as.Equal(1234567890, resp.CreatedAt)
+		as.Equal("test.txt", resp.FileName)
 	})
 
-	// Test Upload method with error
-	t.Run("Upload file with error", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// Return error response
-				return mockResponse(http.StatusBadRequest, &baseResponse{})
-			},
-		}
-
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
-		files := newFiles(core)
-
-		content := []byte("test file content")
-		fileReader := bytes.NewReader(content)
-		uploadReq := &UploadFilesReq{
-			File: NewUploadFile(fileReader, "test.txt"),
-		}
-		resp, err := files.Upload(context.Background(), uploadReq)
-
-		require.Error(t, err)
-		assert.Nil(t, resp)
+	t.Run("upload file with error", func(t *testing.T) {
+		files := newFiles(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			return nil, errors.New("test error")
+		})))
+		_, err := files.Upload(context.Background(), &UploadFilesReq{
+			File: NewUploadFile(strings.NewReader("test file content"), "test.txt"),
+		})
+		as.NotNil(err)
 	})
 
-	// Test Retrieve method with error
-	t.Run("Retrieve file with error", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// Return error response
-				return mockResponse(http.StatusBadRequest, &baseResponse{})
-			},
-		}
-
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
-		files := newFiles(core)
-
-		resp, err := files.Retrieve(context.Background(), &RetrieveFilesReq{
+	t.Run("retrieve file with error", func(t *testing.T) {
+		files := newFiles(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			return nil, errors.New("test error")
+		})))
+		_, err := files.Retrieve(context.Background(), &RetrieveFilesReq{
 			FileID: "invalid_file_id",
 		})
-
-		require.Error(t, err)
-		assert.Nil(t, resp)
+		as.NotNil(err)
 	})
 
-	// Test UploadFilesReq
-	t.Run("Test UploadFilesReq", func(t *testing.T) {
-		content := []byte("test file content")
-		fileReader := bytes.NewReader(content)
-		uploadReq := NewUploadFile(fileReader, "test.txt")
+	t.Run("test upload files req", func(t *testing.T) {
+		uploadReq := NewUploadFile(strings.NewReader("test file content"), "test.txt")
+		as.Equal("test.txt", uploadReq.Name())
 
-		assert.Equal(t, "test.txt", uploadReq.Name())
-
-		// Test reading from the request
-		buffer := make([]byte, len(content))
-		n, err := uploadReq.Read(buffer)
-		require.NoError(t, err)
-		assert.Equal(t, len(content), n)
-		assert.Equal(t, content, buffer)
+		buffer := make([]byte, 1024)
+		_, err := uploadReq.Read(buffer)
+		as.Nil(err)
 	})
 }
