@@ -39,10 +39,7 @@ func TestWorkspaces(t *testing.T) {
 				},
 			})
 		})))
-		paged, err := workspaces.List(context.Background(), &ListWorkspaceReq{
-			PageNum:  1,
-			PageSize: 20,
-		})
+		paged, err := workspaces.List(context.Background(), &ListWorkspaceReq{})
 		as.Nil(err)
 		as.NotNil(paged)
 		// as.NotEmpty(paged.LogID()) // todo
