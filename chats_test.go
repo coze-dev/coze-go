@@ -15,7 +15,7 @@ func mockStreamResponse(data string) (*http.Response, error) {
 		StatusCode: http.StatusOK,
 		Body:       io.NopCloser(strings.NewReader(data)),
 		Header: http.Header{
-			"X-Log-Id":     []string{"test_log_id"},
+			httpLogIDKey:   []string{"test_log_id"},
 			"Content-Type": []string{"text/event-stream"},
 		},
 	}, nil

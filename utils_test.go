@@ -51,6 +51,11 @@ func Test_Ptr(t *testing.T) {
 	as.Equal(false, ptrValue(ptr(false)))
 	var s *string
 	as.Equal("", ptrValue(s))
+
+	as.Nil(ptrNotZero(""))
+	as.Nil(ptrNotZero(0))
+	as.Nil(ptrNotZero(0.0))
+	as.Nil(ptrNotZero(false))
 }
 
 func Test_GenerateRandomString(t *testing.T) {

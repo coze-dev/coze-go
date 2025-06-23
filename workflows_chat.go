@@ -1,36 +1,19 @@
 package coze
 
 import (
-	"bufio"
 	"context"
 	"net/http"
 )
 
-type workflowsChat struct {
-	client *core
-}
-
 func (r *workflowsChat) Stream(ctx context.Context, req *WorkflowsChatStreamReq) (Stream[ChatEvent], error) {
-	method := http.MethodPost
-	uri := "/v1/workflows/chat"
-	resp, err := r.client.StreamRequest(ctx, method, uri, req)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodPost,
+		URL:    "/v1/workflows/chat",
+		Body:   req,
 	}
-
-	return &streamReader[ChatEvent]{
-		ctx:          ctx,
-		response:     resp,
-		reader:       bufio.NewReader(resp.Body),
-		processor:    parseChatEvent,
-		httpResponse: newHTTPResponse(resp),
-	}, nil
-}
-
-func newWorkflowsChat(core *core) *workflowsChat {
-	return &workflowsChat{
-		client: core,
-	}
+	response := new(createChatsResp)
+	err := r.client.rawRequest(ctx, request, response)
+	return newStream(ctx, r.client, response.HTTPResponse, parseChatEvent), err
 }
 
 // WorkflowsChatStreamReq 表示工作流聊天流式请求
@@ -42,4 +25,14 @@ type WorkflowsChatStreamReq struct {
 	BotID              *string           `json:"bot_id,omitempty"`          // 机器人ID
 	ConversationID     *string           `json:"conversation_id,omitempty"` // 会话ID
 	Ext                map[string]string `json:"ext,omitempty"`             // 扩展信息
+}
+
+type workflowsChat struct {
+	client *core
+}
+
+func newWorkflowsChat(core *core) *workflowsChat {
+	return &workflowsChat{
+		client: core,
+	}
 }
