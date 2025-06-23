@@ -2,33 +2,18 @@ package coze
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 )
 
 func (r *workflowRunsHistories) Retrieve(ctx context.Context, req *RetrieveWorkflowsRunsHistoriesReq) (*RetrieveWorkflowRunsHistoriesResp, error) {
-	method := http.MethodGet
-	uri := fmt.Sprintf("/v1/workflows/%s/run_histories/%s", req.WorkflowID, req.ExecuteID)
-	resp := &retrieveWorkflowRunsHistoriesResp{}
-	err := r.core.Request(ctx, method, uri, nil, resp)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodGet,
+		URL:    "/v1/workflows/:workflow_id/run_histories/:execute_id",
+		Body:   req,
 	}
-	resp.RetrieveWorkflowRunsHistoriesResp.setHTTPResponse(resp.HTTPResponse)
-	return resp.RetrieveWorkflowRunsHistoriesResp, nil
-}
-
-type workflowRunsHistories struct {
-	core *core
-
-	ExecuteNodes *workflowsRunsHistoriesExecuteNodes
-}
-
-func newWorkflowRunsHistories(core *core) *workflowRunsHistories {
-	return &workflowRunsHistories{
-		core:         core,
-		ExecuteNodes: newWorkflowsRunsHistoriesExecuteNodes(core),
-	}
+	response := new(retrieveWorkflowRunsHistoriesResp)
+	err := r.core.rawRequest(ctx, request, response)
+	return response.RetrieveWorkflowRunsHistoriesResp, err
 }
 
 // WorkflowRunMode represents how the workflow runs
@@ -62,17 +47,10 @@ const (
 // RetrieveWorkflowsRunsHistoriesReq represents request for retrieving workflow runs history
 type RetrieveWorkflowsRunsHistoriesReq struct {
 	// The ID of the workflow.
-	ExecuteID string `json:"execute_id"`
+	ExecuteID string `path:"execute_id" json:"-"`
 
 	// The ID of the workflow async execute.
-	WorkflowID string `json:"workflow_id"`
-}
-
-// runWorkflowsResp represents response for running workflow
-type runWorkflowsResp struct {
-	baseResponse
-	*RunWorkflowsResp
-	HTTPResponse *http.Response `json:"-"`
+	WorkflowID string `path:"workflow_id" json:"-"`
 }
 
 // RunWorkflowsResp represents response for running workflow
@@ -87,12 +65,6 @@ type RunWorkflowsResp struct {
 	DebugURL string `json:"debug_url,omitempty"`
 	Token    int    `json:"token,omitempty"`
 	Cost     string `json:"cost,omitempty"`
-}
-
-// retrieveWorkflowRunsHistoriesResp represents response for retrieving workflow runs history
-type retrieveWorkflowRunsHistoriesResp struct {
-	baseResponse
-	*RetrieveWorkflowRunsHistoriesResp
 }
 
 // RetrieveWorkflowRunsHistoriesResp represents response for retrieving workflow runs history
@@ -168,4 +140,28 @@ type WorkflowRunHistoryNodeExecuteStatus struct {
 	SubExecuteID *string `json:"sub_execute_id"`
 	// The UUID of the node execution.
 	NodeExecuteUUID string `json:"node_execute_uuid"`
+}
+
+type runWorkflowsResp struct {
+	baseResponse
+	*RunWorkflowsResp
+	HTTPResponse *http.Response `json:"-"`
+}
+
+type retrieveWorkflowRunsHistoriesResp struct {
+	baseResponse
+	*RetrieveWorkflowRunsHistoriesResp
+}
+
+type workflowRunsHistories struct {
+	core *core
+
+	ExecuteNodes *workflowsRunsHistoriesExecuteNodes
+}
+
+func newWorkflowRunsHistories(core *core) *workflowRunsHistories {
+	return &workflowRunsHistories{
+		core:         core,
+		ExecuteNodes: newWorkflowsRunsHistoriesExecuteNodes(core),
+	}
 }
