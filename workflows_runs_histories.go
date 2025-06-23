@@ -164,7 +164,7 @@ type NodeExecuteStatus struct {
 	// The update time of the node.
 	UpdateTime int `json:"update_time"`
 	// The ID of the sub-execute.
-	SubExecuteID string `json:"sub_execute_id"`
+	SubExecuteID *string `json:"sub_execute_id"`
 	// The UUID of the node execution.
 	NodeExecuteUUID string `json:"node_execute_uuid"`
 }
