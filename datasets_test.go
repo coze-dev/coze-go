@@ -63,6 +63,8 @@ func TestDataset(t *testing.T) {
 		})))
 		req := NewListDatasetsReq("space_123")
 		req.Name = "dataset"
+		req.PageNum = 0  // 提高覆盖率
+		req.PageSize = 0 // 提高覆盖率
 		req.FormatType = DocumentFormatTypeDocument
 
 		paged, err := datasets.List(context.Background(), req)
