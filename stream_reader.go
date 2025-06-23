@@ -12,8 +12,7 @@ type streamable interface {
 	ChatEvent | WorkflowEvent | NopEvent
 }
 
-type NopEvent struct {
-}
+type NopEvent struct{}
 
 type Stream[T streamable] interface {
 	Responser

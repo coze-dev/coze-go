@@ -49,7 +49,6 @@ func TestAudioRooms(t *testing.T) {
 			as.Equal(createRoomResp.AppID, resp.AppID)
 			as.Equal(createRoomResp.Token, resp.Token)
 			as.Equal(createRoomResp.UID, resp.UID)
-
 		})
 
 		t.Run("minimal fields", func(t *testing.T) {
