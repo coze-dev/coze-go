@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"strings"
 	"time"
@@ -59,57 +58,6 @@ func (r *core) Request(ctx context.Context, method, path string, body any, insta
 	resp, err := r.RawRequest(ctx, method, path, body, opts...)
 	if err != nil {
 		return err
-	}
-
-	return packInstance(ctx, instance, resp)
-}
-
-// UploadFile 上传文件
-func (c *core) UploadFile(ctx context.Context, path string, reader io.Reader, fileName string, fields map[string]string, instance any, opts ...RequestOption) error {
-	body := &bytes.Buffer{}
-	writer := multipart.NewWriter(body)
-
-	part, err := writer.CreateFormFile("file", fileName)
-	if err != nil {
-		return fmt.Errorf("create form file: %w", err)
-	}
-
-	if _, err = io.Copy(part, reader); err != nil {
-		return fmt.Errorf("copy file content: %w", err)
-	}
-
-	// 添加其他字段
-	for key, value := range fields {
-		if err := writer.WriteField(key, value); err != nil {
-			return fmt.Errorf("write field %s: %w", key, err)
-		}
-	}
-
-	if err := writer.Close(); err != nil {
-		return fmt.Errorf("close multipart writer: %w", err)
-	}
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost, fmt.Sprintf("%s%s", c.baseURL, path), body)
-	if err != nil {
-		return fmt.Errorf("create request: %w", err)
-	}
-
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-
-	// 应用请求选项
-	for _, opt := range opts {
-		if err := opt(req); err != nil {
-			return fmt.Errorf("apply option: %w", err)
-		}
-	}
-
-	if err := c.setCommonHeaders(req); err != nil {
-		return err
-	}
-
-	resp, err := c.client.Do(req)
-	if err != nil {
-		return fmt.Errorf("do request: %w", err)
 	}
 
 	return packInstance(ctx, instance, resp)

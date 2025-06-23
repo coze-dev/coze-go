@@ -305,7 +305,6 @@ type getAccessTokenParams struct {
 }
 
 func (c *OAuthClient) getAccessToken(ctx context.Context, params getAccessTokenParams) (*OAuthToken, error) {
-	// If Request is provided, use it directly
 	result := &OAuthToken{}
 	var req *getAccessTokenReq
 	if params.Request != nil {

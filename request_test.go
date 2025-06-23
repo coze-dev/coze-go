@@ -7,7 +7,6 @@ import (
 	"errors"
 	"io"
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -135,112 +134,6 @@ func TestClient_Request_Error(t *testing.T) {
 		assert.True(t, ok)
 		assert.Equal(t, "invalid_token", authErr.Code.String())
 		assert.Equal(t, "Token is invalid", authErr.ErrorMessage)
-	})
-}
-
-func TestClient_UploadFile_Success(t *testing.T) {
-	// 准备测试数据
-	expectedResp := &TestResponse{
-		Data: struct {
-			Name string `json:"name"`
-		}{
-			Name: "uploaded.txt",
-		},
-	}
-	respBody, _ := json.Marshal(expectedResp)
-
-	mockResp := &http.Response{
-		StatusCode: http.StatusOK,
-		Body:       io.NopCloser(bytes.NewReader(respBody)),
-		Header:     make(http.Header),
-	}
-	mockResp.Header.Set(httpLogIDKey, "test-log-id")
-
-	core := newCore(&clientOption{baseURL: "https://api.test.com", client: &mockHTTP{
-		Response: mockResp,
-		Error:    nil,
-	}})
-
-	// 创建测试文件内容
-	fileContent := "test file content"
-	fields := map[string]string{
-		"field1": "value1",
-		"field2": "value2",
-	}
-
-	var actualResp TestResponse
-	err := core.UploadFile(
-		context.Background(),
-		"/upload",
-		strings.NewReader(fileContent),
-		"test.txt",
-		fields,
-		&actualResp,
-		withHTTPHeader("test", "header-value"),
-	)
-
-	assert.NoError(t, err)
-	assert.Equal(t, expectedResp.Code, actualResp.Code)
-	assert.Equal(t, expectedResp.Data.Name, actualResp.Data.Name)
-	assert.Equal(t, "test-log-id", actualResp.HTTPResponse.LogID())
-}
-
-func TestClient_UploadFile_Error(t *testing.T) {
-	// 测试上传错误
-	t.Run("Upload Error", func(t *testing.T) {
-		core := newCore(&clientOption{baseURL: "https://api.test.com", client: &mockHTTP{
-			Response: nil,
-			Error:    errors.New("upload failed"),
-		}})
-
-		var resp TestResponse
-		err := core.UploadFile(
-			context.Background(),
-			"/upload",
-			strings.NewReader("test"),
-			"test.txt",
-			nil,
-			&resp,
-		)
-
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "upload failed")
-	})
-
-	// 测试业务错误
-	t.Run("Business Error", func(t *testing.T) {
-		errorResp := &TestResponse{}
-		errorResp.Code = 1002
-		errorResp.Msg = "upload business error"
-		respBody, _ := json.Marshal(errorResp)
-
-		mockResp := &http.Response{
-			StatusCode: http.StatusOK,
-			Body:       io.NopCloser(bytes.NewReader(respBody)),
-			Header:     make(http.Header),
-		}
-		mockResp.Header.Set(httpLogIDKey, "test-log-id")
-
-		core := newCore(&clientOption{baseURL: "https://api.test.com", client: &mockHTTP{
-			Response: mockResp,
-			Error:    nil,
-		}})
-
-		var resp TestResponse
-		err := core.UploadFile(
-			context.Background(),
-			"/upload",
-			strings.NewReader("test"),
-			"test.txt",
-			nil,
-			&resp,
-		)
-
-		assert.Error(t, err)
-		cozeErr, ok := err.(*Error)
-		assert.True(t, ok)
-		assert.Equal(t, 1002, cozeErr.Code)
-		assert.Equal(t, "upload business error", cozeErr.Message)
 	})
 }
 
