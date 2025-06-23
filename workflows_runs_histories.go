@@ -152,7 +152,7 @@ type WorkflowRunHistory struct {
 }
 
 // NodeExecuteStatus represents the status of a node execution
-type NodeExecuteStatus struct {
+type WorkflowRunHistoryNodeExecuteStatus struct {
 	// The ID of the node.
 	NodeID string `json:"node_id"`
 	// Whether the node is finished.
