@@ -25,12 +25,12 @@ type HTTPClient interface {
 
 // RawRequestReq ...
 type RawRequestReq struct {
-	Method   string      // http request method, such as GET, POST
-	URL      string      // http request url
-	Body     interface{} // http request body, query, path and other parameter information
-	IsFile   bool        // send body data as a file
-	AuthType int         // 0: token, 1: no-token, 2: jwt(not-jwt-token)
-	Headers  map[string]string
+	Method      string      // http request method, such as GET, POST
+	URL         string      // http request url
+	Body        interface{} // http request body, query, path and other parameter information
+	IsFile      bool        // send body data as a file
+	NoNeedToken bool
+	Headers     map[string]string
 }
 
 func (r *core) rawRequest(ctx context.Context, req *RawRequestReq, resp interface{}) (err error) {
@@ -243,7 +243,7 @@ func (r *rawHttpRequest) parseHeader(ctx context.Context, ins *core, req *RawReq
 
 	// auth
 	switch {
-	case req.AuthType == 0 && ins.auth != nil:
+	case !req.NoNeedToken && ins.auth != nil:
 		token, err := ins.auth.Token(ctx)
 		if err != nil {
 			return err

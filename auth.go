@@ -327,10 +327,10 @@ func (c *OAuthClient) getAccessToken(ctx context.Context, params getAccessTokenP
 	request := params.getReq(c.clientID)
 	response := &OAuthToken{}
 	if err := c.core.rawRequest(ctx, &RawRequestReq{
-		Method:   http.MethodPost,
-		URL:      request.getAPIPath(),
-		Body:     request,
-		AuthType: 1,
+		Method:      http.MethodPost,
+		URL:         request.getAPIPath(),
+		Body:        request,
+		NoNeedToken: true,
 		Headers: map[string]string{
 			authorizeHeader: fmt.Sprintf("Bearer %s", params.Secret),
 		},
@@ -508,7 +508,7 @@ func (c *DeviceOAuthClient) doGetDeviceCode(ctx context.Context, workspaceID *st
 		Body: DeviceAuthReq{
 			ClientID: c.clientID,
 		},
-		AuthType: 1,
+		NoNeedToken: true,
 	}, response)
 	if err != nil {
 		return nil, err
@@ -571,10 +571,10 @@ func (c *DeviceOAuthClient) GetAccessToken(ctx context.Context, dReq *GetDeviceO
 func (c *DeviceOAuthClient) doGetAccessToken(ctx context.Context, req *getAccessTokenReq) (*OAuthToken, error) {
 	response := &getOAuthTokenResp{}
 	if err := c.core.rawRequest(ctx, &RawRequestReq{
-		Method:   http.MethodPost,
-		URL:      getTokenPath,
-		Body:     req,
-		AuthType: 1,
+		Method:      http.MethodPost,
+		URL:         getTokenPath,
+		Body:        req,
+		NoNeedToken: true,
 	}, response); err != nil {
 		return nil, err
 	}
