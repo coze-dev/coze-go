@@ -137,7 +137,7 @@ type WorkflowRunHistory struct {
 	Output string `json:"output"`
 
 	// The status of each output node execution.
-	NodeExecuteStatus map[string]*NodeExecuteStatus `json:"node_execute_status"`
+	NodeExecuteStatus map[string]*WorkflowRunHistoryNodeExecuteStatus `json:"node_execute_status"`
 
 	// Status code. 0 represents a successful API call. Other values indicate that the call has
 	// failed. You can determine the detailed reason for the error through the error_message field.
