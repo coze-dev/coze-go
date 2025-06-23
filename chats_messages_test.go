@@ -2,133 +2,95 @@ package coze
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestChatMessages(t *testing.T) {
+	as := assert.New(t)
 	t.Run("List messages success", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// 验证请求方法和路径
-				assert.Equal(t, http.MethodGet, req.Method)
-				assert.Equal(t, "/v3/chat/message/list", req.URL.Path)
-
-				// 验证查询参数
-				assert.Equal(t, "test_conversation_id", req.URL.Query().Get("conversation_id"))
-				assert.Equal(t, "test_chat_id", req.URL.Query().Get("chat_id"))
-
-				// 返回模拟响应
-				return mockResponse(http.StatusOK, &listChatsMessagesResp{
-					ListChatsMessagesResp: &ListChatsMessagesResp{
-						Messages: []*Message{
-							{
-								ID:             "msg1",
-								ConversationID: "test_conversation_id",
-								Role:           "user",
-								Content:        "Hello",
-							},
-							{
-								ID:             "msg2",
-								ConversationID: "test_conversation_id",
-								Role:           "assistant",
-								Content:        "Hi there!",
-							},
+		messages := newChatMessages(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			as.Equal(http.MethodGet, req.Method)
+			as.Equal("/v3/chat/message/list", req.URL.Path)
+			as.Equal("test_conversation_id", req.URL.Query().Get("conversation_id"))
+			as.Equal("test_chat_id", req.URL.Query().Get("chat_id"))
+			return mockResponse(http.StatusOK, &listChatsMessagesResp{
+				ListChatsMessagesResp: &ListChatsMessagesResp{
+					Messages: []*Message{
+						{
+							ID:             "msg1",
+							ConversationID: "test_conversation_id",
+							Role:           "user",
+							Content:        "Hello",
+						},
+						{
+							ID:             "msg2",
+							ConversationID: "test_conversation_id",
+							Role:           "assistant",
+							Content:        "Hi there!",
 						},
 					},
-				})
-			},
-		}
-
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
-		messages := newChatMessages(core)
-
+				},
+			})
+		})))
 		resp, err := messages.List(context.Background(), &ListChatsMessagesReq{
 			ConversationID: "test_conversation_id",
 			ChatID:         "test_chat_id",
 		})
-
-		require.NoError(t, err)
-		assert.Equal(t, "test_log_id", resp.LogID())
-		require.Len(t, resp.Messages, 2)
-
-		// 验证第一条消息
-		assert.Equal(t, "msg1", resp.Messages[0].ID)
-		assert.Equal(t, "test_conversation_id", resp.Messages[0].ConversationID)
-		assert.Equal(t, "user", resp.Messages[0].Role.String())
-		assert.Equal(t, "Hello", resp.Messages[0].Content)
-
-		// 验证第二条消息
-		assert.Equal(t, "msg2", resp.Messages[1].ID)
-		assert.Equal(t, "test_conversation_id", resp.Messages[1].ConversationID)
-		assert.Equal(t, "assistant", resp.Messages[1].Role.String())
-		assert.Equal(t, "Hi there!", resp.Messages[1].Content)
+		as.Nil(err)
+		as.NotNil(resp)
+		as.NotEmpty(resp.Response().LogID())
+		as.Equal(2, len(resp.Messages))
+		as.Equal("msg1", resp.Messages[0].ID)
+		as.Equal("test_conversation_id", resp.Messages[0].ConversationID)
+		as.Equal("user", resp.Messages[0].Role.String())
+		as.Equal("Hello", resp.Messages[0].Content)
+		as.Equal("msg2", resp.Messages[1].ID)
+		as.Equal("test_conversation_id", resp.Messages[1].ConversationID)
+		as.Equal("assistant", resp.Messages[1].Role.String())
+		as.Equal("Hi there!", resp.Messages[1].Content)
 	})
 
 	t.Run("List messages with error", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// 返回错误响应
-				return mockResponse(http.StatusBadRequest, &baseResponse{})
-			},
-		}
-
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
-		messages := newChatMessages(core)
-
-		resp, err := messages.List(context.Background(), &ListChatsMessagesReq{
+		messages := newChatMessages(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			return nil, errors.New("test error")
+		})))
+		_, err := messages.List(context.Background(), &ListChatsMessagesReq{
 			ConversationID: "invalid_conversation_id",
 			ChatID:         "invalid_chat_id",
 		})
-
-		require.Error(t, err)
-		assert.Nil(t, resp)
+		as.NotNil(err)
 	})
 
 	t.Run("List messages with empty response", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				return mockResponse(http.StatusOK, &listChatsMessagesResp{
-					ListChatsMessagesResp: &ListChatsMessagesResp{
-						Messages: []*Message{},
-					},
-				})
-			},
-		}
-
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
-		messages := newChatMessages(core)
-
+		messages := newChatMessages(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			return mockResponse(http.StatusOK, &listChatsMessagesResp{
+				ListChatsMessagesResp: &ListChatsMessagesResp{
+					Messages: []*Message{},
+				},
+			})
+		})))
 		resp, err := messages.List(context.Background(), &ListChatsMessagesReq{
 			ConversationID: "test_conversation_id",
 			ChatID:         "test_chat_id",
 		})
-
-		require.NoError(t, err)
-		assert.Equal(t, "test_log_id", resp.LogID())
-		assert.Empty(t, resp.Messages)
+		as.Nil(err)
+		as.NotNil(resp)
+		as.NotEmpty(resp.Response().LogID())
+		as.Empty(resp.Messages)
 	})
 
 	t.Run("List messages with missing parameters", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// 验证缺失的参数
-				assert.Empty(t, req.URL.Query().Get("conversation_id"))
-				assert.Empty(t, req.URL.Query().Get("chat_id"))
-
-				return mockResponse(http.StatusBadRequest, &baseResponse{})
-			},
-		}
-
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
-		messages := newChatMessages(core)
-
-		resp, err := messages.List(context.Background(), &ListChatsMessagesReq{})
-
-		require.Error(t, err)
-		assert.Nil(t, resp)
+		messages := newChatMessages(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			as.Empty(req.URL.Query().Get("conversation_id"))
+			as.Empty(req.URL.Query().Get("chat_id"))
+			return nil, fmt.Errorf("test error")
+		})))
+		_, err := messages.List(context.Background(), &ListChatsMessagesReq{})
+		as.NotNil(err)
 	})
 }

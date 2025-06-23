@@ -6,23 +6,35 @@ import (
 )
 
 func (r *chatMessages) List(ctx context.Context, req *ListChatsMessagesReq) (*ListChatsMessagesResp, error) {
-	method := http.MethodGet
-	uri := "/v3/chat/message/list"
-	resp := &listChatsMessagesResp{}
-	err := r.core.Request(ctx, method, uri, nil, resp,
-		withHTTPQuery("conversation_id", req.ConversationID),
-		withHTTPQuery("chat_id", req.ChatID),
-	)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodGet,
+		URL:    "/v3/chat/message/list",
+		Body:   req,
 	}
-	result := &ListChatsMessagesResp{
-		baseModel: baseModel{
-			httpResponse: resp.HTTPResponse,
-		},
-		Messages: resp.Messages,
-	}
-	return result, nil
+	response := new(listChatsMessagesResp)
+	err := r.core.rawRequest(ctx, request, response)
+	return response.ListChatsMessagesResp, err
+}
+
+// ListChatsMessagesReq represents the request to list messages
+type ListChatsMessagesReq struct {
+	// The Conversation ID can be viewed in the 'conversation_id' field of the Response when
+	// initiating a conversation through the Chat API.
+	ConversationID string `query:"conversation_id" json:"-"`
+
+	// The Chat ID can be viewed in the 'id' field of the Response when initiating a chat through the
+	// Chat API. If it is a streaming response, check the 'id' field in the chat event of the Response.
+	ChatID string `query:"chat_id" json:"-"`
+}
+
+type ListChatsMessagesResp struct {
+	baseModel
+	Messages []*Message `json:"data"`
+}
+
+type listChatsMessagesResp struct {
+	baseResponse
+	*ListChatsMessagesResp
 }
 
 type chatMessages struct {
@@ -31,26 +43,4 @@ type chatMessages struct {
 
 func newChatMessages(core *core) *chatMessages {
 	return &chatMessages{core: core}
-}
-
-// ListChatsMessagesReq represents the request to list messages
-type ListChatsMessagesReq struct {
-	// The Conversation ID can be viewed in the 'conversation_id' field of the Response when
-	// initiating a conversation through the Chat API.
-	ConversationID string `json:"conversation_id"`
-
-	// The Chat ID can be viewed in the 'id' field of the Response when initiating a chat through the
-	// Chat API. If it is a streaming response, check the 'id' field in the chat event of the Response.
-	ChatID string `json:"chat_id"`
-}
-
-// ListChatsMessagesResp represents the response to list messages
-type listChatsMessagesResp struct {
-	baseResponse
-	*ListChatsMessagesResp
-}
-
-type ListChatsMessagesResp struct {
-	baseModel
-	Messages []*Message `json:"data"`
 }
