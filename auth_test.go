@@ -48,6 +48,7 @@ func mockResponse(statusCode int, body interface{}) (*http.Response, error) {
 		Header:     make(http.Header),
 	}
 	mockResp.Header.Set(httpLogIDKey, "test_log_id")
+	mockResp.Header.Set("content-type", "application/json")
 	return mockResp, nil
 }
 

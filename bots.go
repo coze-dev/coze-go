@@ -3,56 +3,50 @@ package coze
 import (
 	"context"
 	"net/http"
-	"strconv"
 )
 
 func (r *bots) Create(ctx context.Context, req *CreateBotsReq) (*CreateBotsResp, error) {
-	method := http.MethodPost
-	uri := "/v1/bot/create"
-	resp := &createBotsResp{}
-	err := r.core.Request(ctx, method, uri, req, resp)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodPost,
+		URL:    "/v1/bot/create",
+		Body:   req,
 	}
-	resp.Data.setHTTPResponse(resp.HTTPResponse)
-	return resp.Data, nil
+	response := new(createBotsResp)
+	err := r.core.rawRequest(ctx, request, response)
+	return response.Data, err
 }
 
 func (r *bots) Update(ctx context.Context, req *UpdateBotsReq) (*UpdateBotsResp, error) {
-	method := http.MethodPost
-	uri := "/v1/bot/update"
-	resp := &updateBotsResp{}
-	err := r.core.Request(ctx, method, uri, req, resp)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodPost,
+		URL:    "/v1/bot/update",
+		Body:   req,
 	}
-	result := &UpdateBotsResp{}
-	result.setHTTPResponse(resp.HTTPResponse)
-	return result, nil
+	response := new(updateBotsResp)
+	err := r.core.rawRequest(ctx, request, response)
+	return response.Data, err
 }
 
 func (r *bots) Publish(ctx context.Context, req *PublishBotsReq) (*PublishBotsResp, error) {
-	method := http.MethodPost
-	uri := "/v1/bot/publish"
-	resp := &publishBotsResp{}
-	err := r.core.Request(ctx, method, uri, req, resp)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodPost,
+		URL:    "/v1/bot/publish",
+		Body:   req,
 	}
-	resp.Data.httpResponse = resp.HTTPResponse
-	return resp.Data, nil
+	response := new(publishBotsResp)
+	err := r.core.rawRequest(ctx, request, response)
+	return response.Data, err
 }
 
 func (r *bots) Retrieve(ctx context.Context, req *RetrieveBotsReq) (*RetrieveBotsResp, error) {
-	method := http.MethodGet
-	uri := "/v1/bot/get_online_info"
-	resp := &retrieveBotsResp{}
-	err := r.core.Request(ctx, method, uri, nil, resp, withHTTPQuery("bot_id", req.BotID))
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodGet,
+		URL:    "/v1/bot/get_online_info",
+		Body:   req,
 	}
-	resp.Bot.httpResponse = resp.HTTPResponse
-	return resp.Bot, nil
+	response := new(retrieveBotsResp)
+	err := r.core.rawRequest(ctx, request, response)
+	return response.Data, err
 }
 
 func (r *bots) List(ctx context.Context, req *ListBotsReq) (NumberPaged[SimpleBot], error) {
@@ -64,30 +58,26 @@ func (r *bots) List(ctx context.Context, req *ListBotsReq) (NumberPaged[SimpleBo
 	}
 	return NewNumberPaged[SimpleBot](
 		func(request *pageRequest) (*pageResponse[SimpleBot], error) {
-			uri := "/v1/space/published_bots_list"
-			resp := &listBotsResp{}
-			err := r.core.Request(ctx, http.MethodGet, uri, nil, resp,
-				withHTTPQuery("space_id", req.SpaceID),
-				withHTTPQuery("page_index", strconv.Itoa(request.PageNum)),
-				withHTTPQuery("page_size", strconv.Itoa(request.PageSize)))
+			response := new(listBotsResp)
+			err := r.core.rawRequest(ctx, &RawRequestReq{
+				Method: http.MethodGet,
+				URL:    "/v1/space/published_bots_list",
+				Body: &ListBotsReq{
+					SpaceID:  req.SpaceID,
+					PageNum:  request.PageNum,
+					PageSize: request.PageSize,
+				},
+			}, response)
 			if err != nil {
 				return nil, err
 			}
 			return &pageResponse[SimpleBot]{
-				Total:   resp.Data.Total,
-				HasMore: len(resp.Data.Bots) >= request.PageSize,
-				Data:    resp.Data.Bots,
-				LogID:   resp.HTTPResponse.LogID(),
+				Total:   response.Data.Total,
+				HasMore: len(response.Data.Bots) >= request.PageSize,
+				Data:    response.Data.Bots,
+				LogID:   response.HTTPResponse.LogID(),
 			}, nil
 		}, req.PageSize, req.PageNum)
-}
-
-type bots struct {
-	core *core
-}
-
-func newBots(core *core) *bots {
-	return &bots{core: core}
 }
 
 // BotMode represents the bot mode
@@ -195,12 +185,6 @@ type CreateBotsReq struct {
 	WorkflowIDList  *WorkflowIDList     `json:"workflow_id_list"`  // WorkflowIDList information
 }
 
-// CreateBotsResp 创建机器人响应
-type createBotsResp struct {
-	baseResponse
-	Data *CreateBotsResp `json:"data"`
-}
-
 type CreateBotsResp struct {
 	baseModel
 	BotID string `json:"bot_id"`
@@ -212,12 +196,6 @@ type PublishBotsReq struct {
 	ConnectorIDs []string `json:"connector_ids"` // Connector ID list
 }
 
-// PublishBotsResp 发布机器人响应
-type publishBotsResp struct {
-	baseResponse
-	Data *PublishBotsResp `json:"data"`
-}
-
 type PublishBotsResp struct {
 	baseModel
 	BotID      string `json:"bot_id"`
@@ -226,29 +204,20 @@ type PublishBotsResp struct {
 
 // ListBotsReq represents the request structure for listing bots
 type ListBotsReq struct {
-	SpaceID  string `json:"space_id"`  // Space ID
-	PageNum  int    `json:"page_num"`  // Page number
-	PageSize int    `json:"page_size"` // Page size
-}
-
-// listBotsResp response structure for listing bots
-type listBotsResp struct {
-	baseResponse
-	Data struct {
-		Bots  []*SimpleBot `json:"space_bots"`
-		Total int          `json:"total"`
-	} `json:"data"`
+	SpaceID  string `query:"space_id" json:"-"`  // Space ID
+	PageNum  int    `query:"page_num" json:"-"`  // Page number
+	PageSize int    `query:"page_size" json:"-"` // Page size
 }
 
 // RetrieveBotsReq represents the request structure for retrieving a bot
 type RetrieveBotsReq struct {
-	BotID string `json:"bot_id"` // Bot ID
+	BotID string `query:"bot_id" json:"-"` // Bot ID
 }
 
 // RetrieveBotsResp response structure for retrieving a bot
 type retrieveBotsResp struct {
 	baseResponse
-	Bot *RetrieveBotsResp `json:"data"`
+	Data *RetrieveBotsResp `json:"data"`
 }
 
 type RetrieveBotsResp struct {
@@ -269,11 +238,37 @@ type UpdateBotsReq struct {
 	WorkflowIDList  *WorkflowIDList     `json:"workflow_id_list"`  // WorkflowIDList information
 }
 
-// UpdateBotsResp 更新机器人响应
-type updateBotsResp struct {
-	baseResponse
-}
-
 type UpdateBotsResp struct {
 	baseModel
+}
+
+type createBotsResp struct {
+	baseResponse
+	Data *CreateBotsResp `json:"data"`
+}
+
+type publishBotsResp struct {
+	baseResponse
+	Data *PublishBotsResp `json:"data"`
+}
+
+type updateBotsResp struct {
+	baseResponse
+	Data *UpdateBotsResp `json:"data"`
+}
+
+type listBotsResp struct {
+	baseResponse
+	Data struct {
+		Bots  []*SimpleBot `json:"space_bots"`
+		Total int          `json:"total"`
+	} `json:"data"`
+}
+
+type bots struct {
+	core *core
+}
+
+func newBots(core *core) *bots {
+	return &bots{core: core}
 }

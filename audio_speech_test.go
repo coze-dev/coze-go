@@ -32,8 +32,30 @@ func TestAudioSpeech(t *testing.T) {
 			})
 			as.Nil(err)
 			as.NotNil(resp)
-			// as.NotEmpty(resp.HTTPResponse.LogID())
+			as.NotEmpty(resp.Response().LogID())
 			as.Nil(resp.WriteToFile("/tmp/test.mp3"))
+		})
+
+		t.Run("write failed", func(t *testing.T) {
+			speech := newSpeech(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+				resp := &http.Response{
+					StatusCode: http.StatusOK,
+					Header:     http.Header{},
+					Body:       io.NopCloser(strings.NewReader("mock audio data")),
+				}
+				resp.Header.Set(httpLogIDKey, "test_log_id")
+				return resp, nil
+			})))
+			resp, err := speech.Create(context.Background(), &CreateAudioSpeechReq{
+				Input:          randomString(10),
+				VoiceID:        randomString(10),
+				ResponseFormat: AudioFormatMP3.Ptr(),
+				Speed:          ptr[float32](1.0),
+			})
+			as.Nil(err)
+			as.NotNil(resp)
+			as.NotEmpty(resp.Response().LogID())
+			as.NotNil(resp.WriteToFile(""))
 		})
 
 		t.Run("failed", func(t *testing.T) {

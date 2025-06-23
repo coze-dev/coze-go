@@ -17,6 +17,7 @@ func newCoreWithTransport(transport http.RoundTripper) *core {
 		baseURL:     CnBaseURL,
 		client:      &http.Client{Transport: transport},
 		logLevel:    LogLevelDebug,
+		logger:      newStdLogger(),
 		auth:        NewTokenAuth("token"),
 		enableLogID: true,
 	})

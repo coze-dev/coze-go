@@ -269,6 +269,7 @@ func (r *rawHttpRequest) parseHeader(ctx context.Context, ins *core, req *RawReq
 func (r *rawHttpRequest) parseRawRequestReqBody(body interface{}, isFile bool) error {
 	var reader io.Reader
 	fileKey := ""
+	fileName := ""
 	query := url.Values{}
 	isNeedBody := false
 	fileData := map[string]string{}
@@ -291,6 +292,8 @@ func (r *rawHttpRequest) parseRawRequestReqBody(body interface{}, isFile bool) e
 				fileKey = j
 				if r, ok := fieldVV.Interface().(io.Reader); ok {
 					reader = r
+				} else if j == "filename" {
+					fileName = reflectToString(fieldVV)
 				} else {
 					fileData[j] = reflectToString(fieldVV)
 				}
@@ -314,7 +317,7 @@ func (r *rawHttpRequest) parseRawRequestReqBody(body interface{}, isFile bool) e
 	}
 
 	if isFile {
-		contentType, bod, err := newFileUploadRequest(fileData, fileKey, reader)
+		contentType, bod, err := newFileUploadRequest(fileData, fileKey, fileName, reader)
 		if err != nil {
 			return err
 		}
@@ -339,10 +342,10 @@ type rawHttpRequest struct {
 	Timeout time.Duration
 }
 
-func newFileUploadRequest(params map[string]string, filekey string, reader io.Reader) (string, io.Reader, error) {
+func newFileUploadRequest(params map[string]string, filekey, fileName string, reader io.Reader) (string, io.Reader, error) {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile(filekey, "unknown-file")
+	part, err := writer.CreateFormFile(filekey, fileName)
 	if err != nil {
 		return "", nil, err
 	}

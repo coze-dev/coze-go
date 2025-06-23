@@ -55,8 +55,8 @@ func withHTTPQuery(key, value string) RequestOption {
 }
 
 // Request send http request
-func (c *core) Request(ctx context.Context, method, path string, body any, instance any, opts ...RequestOption) error {
-	resp, err := c.RawRequest(ctx, method, path, body, opts...)
+func (r *core) Request(ctx context.Context, method, path string, body any, instance any, opts ...RequestOption) error {
+	resp, err := r.RawRequest(ctx, method, path, body, opts...)
 	if err != nil {
 		return err
 	}

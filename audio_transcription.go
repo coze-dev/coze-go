@@ -3,24 +3,33 @@ package coze
 import (
 	"context"
 	"io"
+	"net/http"
 )
 
 func (r *audioTranscriptions) Create(ctx context.Context, req *AudioSpeechTranscriptionsReq) (*CreateAudioTranscriptionsResp, error) {
-	uri := "/v1/audio/transcriptions"
-	resp := &CreateAudioTranscriptionsResp{}
-	if err := r.core.UploadFile(ctx, uri, req.Audio, req.Filename, nil, resp); err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodPost,
+		URL:    "/v1/audio/transcriptions",
+		Body:   req,
+		IsFile: true,
 	}
-	return resp, nil
+	response := new(createAudioTranscriptionsResp)
+	err := r.core.rawRequest(ctx, request, response)
+	return response.CreateAudioTranscriptionsResp, err
 }
 
 type AudioSpeechTranscriptionsReq struct {
 	Filename string    `json:"filename"`
-	Audio    io.Reader `json:"audio"`
+	Audio    io.Reader `json:"file"`
+}
+
+type createAudioTranscriptionsResp struct {
+	baseResponse
+	*CreateAudioTranscriptionsResp
 }
 
 type CreateAudioTranscriptionsResp struct {
-	baseResponse
+	baseModel
 	Data AudioTranscriptionsData `json:"data"`
 }
 
