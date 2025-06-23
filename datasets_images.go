@@ -2,9 +2,7 @@ package coze
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"strconv"
 )
 
 type datasetsImages struct {
@@ -18,16 +16,14 @@ func newDatasetsImages(core *core) *datasetsImages {
 }
 
 func (r *datasetsImages) Update(ctx context.Context, req *UpdateDatasetImageReq) (*UpdateDatasetImageResp, error) {
-	method := http.MethodPut
-	uri := fmt.Sprintf("/v1/datasets/%s/images/%s", req.DatasetID, req.DocumentID)
-	resp := &updateImageResp{}
-	err := r.client.Request(ctx, method, uri, req, resp)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodPut,
+		URL:    "/v1/datasets/:dataset_id/images/:document_id",
+		Body:   req,
 	}
-	result := &UpdateDatasetImageResp{}
-	result.setHTTPResponse(resp.HTTPResponse)
-	return result, nil
+	response := new(updateImageResp)
+	err := r.client.rawRequest(ctx, request, response)
+	return response.Data, err
 }
 
 func (r *datasetsImages) List(ctx context.Context, req *ListDatasetsImagesReq) (NumberPaged[Image], error) {
@@ -37,31 +33,21 @@ func (r *datasetsImages) List(ctx context.Context, req *ListDatasetsImagesReq) (
 	if req.PageNum == 0 {
 		req.PageNum = 1
 	}
-
 	return NewNumberPaged[Image](
 		func(request *pageRequest) (*pageResponse[Image], error) {
-			uri := fmt.Sprintf("/v1/datasets/%s/images", req.DatasetID)
-			resp := &listImagesResp{}
-			var queries []RequestOption
-			if req.Keyword != nil {
-				queries = append(queries, withHTTPQuery("keyword", *req.Keyword))
-			}
-			if req.HasCaption != nil {
-				queries = append(queries, withHTTPQuery("has_caption", strconv.FormatBool(*req.HasCaption)))
-			}
-			queries = append(queries,
-				withHTTPQuery("page_num", strconv.Itoa(request.PageNum)),
-				withHTTPQuery("page_size", strconv.Itoa(request.PageSize)),
-			)
-			err := r.client.Request(ctx, http.MethodGet, uri, nil, resp, queries...)
-			if err != nil {
+			response := new(listImagesResp)
+			if err := r.client.rawRequest(ctx, &RawRequestReq{
+				Method: http.MethodGet,
+				URL:    "/v1/datasets/:dataset_id/images",
+				Body:   req.toReq(request),
+			}, response); err != nil {
 				return nil, err
 			}
 			return &pageResponse[Image]{
-				Total:   resp.Data.TotalCount,
-				HasMore: len(resp.Data.ImagesInfos) >= request.PageSize,
-				Data:    resp.Data.ImagesInfos,
-				LogID:   resp.HTTPResponse.LogID(),
+				Total:   response.Data.TotalCount,
+				HasMore: len(response.Data.ImagesInfos) >= request.PageSize,
+				Data:    response.Data.ImagesInfos,
+				LogID:   response.HTTPResponse.LogID(),
 			}, nil
 		}, req.PageSize, req.PageNum)
 }
@@ -130,15 +116,9 @@ type Image struct {
 
 // UpdateDatasetImageReq 表示更新图片的请求
 type UpdateDatasetImageReq struct {
-	DatasetID  string  `json:"-"`
-	DocumentID string  `json:"-"`
+	DatasetID  string  `path:"dataset_id" json:"-"`
+	DocumentID string  `path:"document_id" json:"-"`
 	Caption    *string `json:"caption"` // 图片描述
-}
-
-// UpdateImageResp 表示更新图片的响应
-type updateImageResp struct {
-	baseResponse
-	Data *UpdateDatasetImageResp `json:"data"`
 }
 
 type UpdateDatasetImageResp struct {
@@ -147,21 +127,35 @@ type UpdateDatasetImageResp struct {
 
 // ListDatasetsImagesReq 表示列出图片的请求
 type ListDatasetsImagesReq struct {
-	DatasetID  string  `json:"-"`
-	Keyword    *string `json:"keyword,omitempty"`
-	HasCaption *bool   `json:"has_caption,omitempty"`
-	PageNum    int     `json:"page_num"`
-	PageSize   int     `json:"page_size"`
-}
-
-// ListImagesResp 表示列出图片的响应
-type listImagesResp struct {
-	baseResponse
-	Data *ListImagesResp `json:"data"`
+	DatasetID  string  `path:"dataset_id" json:"-"`
+	Keyword    *string `query:"keyword" json:"-"`
+	HasCaption *bool   `query:"has_caption" json:"-"`
+	PageNum    int     `query:"page_num" json:"-"`
+	PageSize   int     `query:"page_size" json:"-"`
 }
 
 type ListImagesResp struct {
 	baseModel
 	ImagesInfos []*Image `json:"photo_infos"`
 	TotalCount  int      `json:"total_count"`
+}
+
+type updateImageResp struct {
+	baseResponse
+	Data *UpdateDatasetImageResp `json:"data"`
+}
+
+type listImagesResp struct {
+	baseResponse
+	Data *ListImagesResp `json:"data"`
+}
+
+func (r ListDatasetsImagesReq) toReq(request *pageRequest) *ListDatasetsImagesReq {
+	return &ListDatasetsImagesReq{
+		DatasetID:  r.DatasetID,
+		Keyword:    r.Keyword,
+		HasCaption: r.HasCaption,
+		PageNum:    request.PageNum,
+		PageSize:   request.PageSize,
+	}
 }

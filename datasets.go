@@ -7,20 +7,6 @@ import (
 	"strconv"
 )
 
-type datasets struct {
-	client    *core
-	Documents *datasetsDocuments
-	Images    *datasetsImages
-}
-
-func newDatasets(core *core) *datasets {
-	return &datasets{
-		client:    core,
-		Documents: newDatasetsDocuments(core),
-		Images:    newDatasetsImages(core),
-	}
-}
-
 func (r *datasets) Create(ctx context.Context, req *CreateDatasetsReq) (*CreateDatasetResp, error) {
 	method := http.MethodPost
 	uri := "/v1/datasets"
@@ -256,4 +242,18 @@ type processDocumentsResp struct {
 type ProcessDocumentsResp struct {
 	baseModel
 	Data []*DocumentProgress `json:"data"`
+}
+
+type datasets struct {
+	client    *core
+	Documents *datasetsDocuments
+	Images    *datasetsImages
+}
+
+func newDatasets(core *core) *datasets {
+	return &datasets{
+		client:    core,
+		Documents: newDatasetsDocuments(core),
+		Images:    newDatasetsImages(core),
+	}
 }
