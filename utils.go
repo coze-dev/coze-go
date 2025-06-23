@@ -18,6 +18,14 @@ func ptr[T any](s T) *T {
 	return &s
 }
 
+func ptrNotZero[T comparable](s T) *T {
+	var zero T
+	if s == zero {
+		return nil
+	}
+	return &s
+}
+
 func generateRandomString(length int) (string, error) {
 	bytes := make([]byte, length/2)
 	if _, err := rand.Read(bytes); err != nil {

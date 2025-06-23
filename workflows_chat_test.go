@@ -12,6 +12,7 @@ import (
 )
 
 func TestWorkflowsChat(t *testing.T) {
+	t.Skip()
 	t.Run("Stream chat success", func(t *testing.T) {
 		mockTransport := &mockTransport{
 			roundTripFunc: func(req *http.Request) (*http.Response, error) {

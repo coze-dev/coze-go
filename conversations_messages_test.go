@@ -8,12 +8,12 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestConversationsMessages(t *testing.T) {
+func TestConversationMessage(t *testing.T) {
 	as := assert.New(t)
 
 	t.Run("create success", func(t *testing.T) {
 		conversationID := randomString(10)
-		mockTransport := newMockTransport(func(req *http.Request) (*http.Response, error) {
+		messages := newConversationMessage(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 			as.Equal(http.MethodPost, req.Method)
 			as.Equal("/v1/conversation/message/create", req.URL.Path)
 			as.Equal(conversationID, req.URL.Query().Get("conversation_id"))
@@ -32,11 +32,7 @@ func TestConversationsMessages(t *testing.T) {
 					},
 				},
 			})
-		})
-
-		core := newCoreWithTransport(mockTransport)
-		messages := newConversationMessage(core)
-
+		})))
 		resp, err := messages.Create(context.Background(), &CreateMessageReq{
 			ConversationID: conversationID,
 			Role:           "user",
@@ -46,7 +42,6 @@ func TestConversationsMessages(t *testing.T) {
 				"key1": "value1",
 			},
 		})
-
 		as.Nil(err)
 		as.Equal("test_log_id", resp.LogID())
 		as.Equal(conversationID, resp.ConversationID)
@@ -56,15 +51,13 @@ func TestConversationsMessages(t *testing.T) {
 		as.Equal("value1", resp.MetaData["key1"])
 	})
 
-	// Test List method
 	t.Run("list success", func(t *testing.T) {
 		conversationID := randomString(10)
-		mockTransport := newMockTransport(func(req *http.Request) (*http.Response, error) {
+		messages := newConversationMessage(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 			as.Equal(http.MethodPost, req.Method)
 			as.Equal("/v1/conversation/message/list", req.URL.Path)
 			as.Equal(conversationID, req.URL.Query().Get("conversation_id"))
 
-			// Return mock response
 			return mockResponse(http.StatusOK, &listConversationsMessagesResp{
 				ListConversationsMessagesResp: &ListConversationsMessagesResp{
 					HasMore: true,
@@ -88,16 +81,11 @@ func TestConversationsMessages(t *testing.T) {
 					},
 				},
 			})
-		})
-
-		core := newCoreWithTransport(mockTransport)
-		messages := newConversationMessage(core)
-
+		})))
 		paged, err := messages.List(context.Background(), &ListConversationsMessagesReq{
 			ConversationID: conversationID,
 			Limit:          20,
 		})
-
 		as.Nil(err)
 		as.True(paged.HasMore())
 		items := paged.Items()
@@ -116,7 +104,7 @@ func TestConversationsMessages(t *testing.T) {
 
 	t.Run("retrieve success", func(t *testing.T) {
 		conversationID := randomString(10)
-		mockTransport := newMockTransport(func(req *http.Request) (*http.Response, error) {
+		messages := newConversationMessage(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 			as.Equal(http.MethodGet, req.Method)
 			as.Equal("/v1/conversation/message/retrieve", req.URL.Path)
 			as.Equal(conversationID, req.URL.Query().Get("conversation_id"))
@@ -133,11 +121,7 @@ func TestConversationsMessages(t *testing.T) {
 					},
 				},
 			})
-		})
-
-		core := newCoreWithTransport(mockTransport)
-		messages := newConversationMessage(core)
-
+		})))
 		resp, err := messages.Retrieve(context.Background(), &RetrieveConversationsMessagesReq{
 			ConversationID: conversationID,
 			MessageID:      "msg1",
@@ -153,7 +137,7 @@ func TestConversationsMessages(t *testing.T) {
 
 	t.Run("update success", func(t *testing.T) {
 		conversationID := randomString(10)
-		mockTransport := newMockTransport(func(req *http.Request) (*http.Response, error) {
+		messages := newConversationMessage(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 			as.Equal(http.MethodPost, req.Method)
 			as.Equal("/v1/conversation/message/modify", req.URL.Path)
 			as.Equal(conversationID, req.URL.Query().Get("conversation_id"))
@@ -173,10 +157,7 @@ func TestConversationsMessages(t *testing.T) {
 					},
 				},
 			})
-		})
-
-		core := newCoreWithTransport(mockTransport)
-		messages := newConversationMessage(core)
+		})))
 		resp, err := messages.Update(context.Background(), &UpdateConversationMessagesReq{
 			ConversationID: conversationID,
 			MessageID:      "msg1",
@@ -198,7 +179,7 @@ func TestConversationsMessages(t *testing.T) {
 
 	t.Run("delete success", func(t *testing.T) {
 		conversationID := randomString(10)
-		mockTransport := newMockTransport(func(req *http.Request) (*http.Response, error) {
+		messages := newConversationMessage(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 			as.Equal(http.MethodPost, req.Method)
 			as.Equal("/v1/conversation/message/delete", req.URL.Path)
 			as.Equal(conversationID, req.URL.Query().Get("conversation_id"))
@@ -213,11 +194,7 @@ func TestConversationsMessages(t *testing.T) {
 					},
 				},
 			})
-		})
-
-		core := newCoreWithTransport(mockTransport)
-		messages := newConversationMessage(core)
-
+		})))
 		resp, err := messages.Delete(context.Background(), &DeleteConversationsMessagesReq{
 			ConversationID: conversationID,
 			MessageID:      "msg1",
@@ -230,18 +207,14 @@ func TestConversationsMessages(t *testing.T) {
 
 	t.Run("list with default limit", func(t *testing.T) {
 		conversationID := randomString(10)
-		mockTransport := newMockTransport(func(req *http.Request) (*http.Response, error) {
+		messages := newConversationMessage(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 			return mockResponse(http.StatusOK, &listConversationsMessagesResp{
 				ListConversationsMessagesResp: &ListConversationsMessagesResp{
 					HasMore:  false,
 					Messages: []*Message{},
 				},
 			})
-		})
-
-		core := newCoreWithTransport(mockTransport)
-		messages := newConversationMessage(core)
-
+		})))
 		paged, err := messages.List(context.Background(), &ListConversationsMessagesReq{
 			ConversationID: conversationID,
 		})
@@ -252,8 +225,7 @@ func TestConversationsMessages(t *testing.T) {
 
 	t.Run("create message with object context", func(t *testing.T) {
 		conversationID := randomString(10)
-		mockTransport := newMockTransport(func(req *http.Request) (*http.Response, error) {
-			// Return mock response
+		messages := newConversationMessage(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 			return mockResponse(http.StatusOK, &createMessageResp{
 				Message: &CreateMessageResp{
 					Message: Message{
@@ -264,11 +236,7 @@ func TestConversationsMessages(t *testing.T) {
 					},
 				},
 			})
-		})
-
-		core := newCoreWithTransport(mockTransport)
-		messages := newConversationMessage(core)
-
+		})))
 		createReq := &CreateMessageReq{
 			ConversationID: conversationID,
 			Role:           "user",

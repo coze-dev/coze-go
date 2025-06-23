@@ -5,35 +5,29 @@ import (
 	"net/http"
 )
 
+// List 查看消息列表
+//
+// docs: https://www.coze.cn/open/docs/developer_guides/list_message
 func (r *conversationsMessages) List(ctx context.Context, req *ListConversationsMessagesReq) (LastIDPaged[Message], error) {
 	if req.Limit == 0 {
 		req.Limit = 20
 	}
-	return NewLastIDPaged[Message](
+	return NewLastIDPaged(
 		func(request *pageRequest) (*pageResponse[Message], error) {
-			uri := "/v1/conversation/message/list"
-			resp := &listConversationsMessagesResp{}
-			doReq := &ListConversationsMessagesReq{
-				Order:    req.Order,
-				ChatID:   req.ChatID,
-				BotID:    req.BotID,
-				BeforeID: req.BeforeID,
-				Limit:    request.PageSize,
-			}
-			if request.PageToken != "" {
-				doReq.AfterID = ptr(request.PageToken)
-			}
-			err := r.core.Request(ctx, http.MethodPost, uri, doReq, resp,
-				withHTTPQuery("conversation_id", req.ConversationID))
-			if err != nil {
+			response := new(listConversationsMessagesResp)
+			if err := r.core.rawRequest(ctx, &RawRequestReq{
+				Method: http.MethodPost,
+				URL:    "/v1/conversation/message/list",
+				Body:   req.toReq(request),
+			}, response); err != nil {
 				return nil, err
 			}
 			return &pageResponse[Message]{
-				HasMore: resp.HasMore,
-				Data:    resp.Messages,
-				LastID:  resp.FirstID,
-				NextID:  resp.LastID,
-				LogID:   resp.HTTPResponse.LogID(),
+				HasMore: response.HasMore,
+				Data:    response.Messages,
+				LastID:  response.FirstID,
+				NextID:  response.LastID,
+				LogID:   response.HTTPResponse.LogID(),
 			}, nil
 		}, req.Limit, req.AfterID)
 }
@@ -130,7 +124,7 @@ func (c *CreateMessageReq) SetObjectContext(objs []*MessageObjectString) {
 // ListConversationsMessagesReq represents request for listing messages
 type ListConversationsMessagesReq struct {
 	// The ID of the conversation.
-	ConversationID string `json:"-"`
+	ConversationID string `query:"conversation_id" json:"-"`
 
 	// The sorting method for the message list.
 	Order *string `json:"order,omitempty"`
@@ -148,6 +142,18 @@ type ListConversationsMessagesReq struct {
 	Limit int `json:"limit,omitempty"`
 
 	BotID *string `json:"bot_id,omitempty"`
+}
+
+func (r ListConversationsMessagesReq) toReq(page *pageRequest) *ListConversationsMessagesReq {
+	return &ListConversationsMessagesReq{
+		ConversationID: r.ConversationID,
+		Order:          r.Order,
+		ChatID:         r.ChatID,
+		BotID:          r.BotID,
+		BeforeID:       r.BeforeID,
+		AfterID:        ptrNotZero(page.PageToken),
+		Limit:          page.PageSize,
+	}
 }
 
 // RetrieveConversationsMessagesReq represents request for retrieving message

@@ -92,6 +92,13 @@ func TestNewCozeAPI(t *testing.T) {
 		assert.Equal(t, customURL, api.baseURL)
 		assert.NotNil(t, api)
 	})
+
+	t.Run("with logid", func(t *testing.T) {
+		auth := &mockAuth{token: "test_token"}
+		api := NewCozeAPI(auth, WithEnableLogID(true))
+
+		assert.NotNil(t, api)
+	})
 }
 
 func TestAuthTransport(t *testing.T) {

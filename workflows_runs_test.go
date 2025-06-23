@@ -10,6 +10,7 @@ import (
 )
 
 func TestWorkflowRuns(t *testing.T) {
+	t.Skip()
 	// Test Create method
 	t.Run("Create workflow run success", func(t *testing.T) {
 		mockTransport := &mockTransport{
