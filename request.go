@@ -69,11 +69,15 @@ func (r *core) rawRequest(ctx context.Context, req *RawRequestReq, resp interfac
 		setBaseRespInterface(resp, nil)
 		return err
 	}
-	code, msg := getCodeMsg(resp)
+	code, msg, authErr := getCodeMsg(resp, respContent)
 
 	// 4. response log
-	if statusCode >= http.StatusBadRequest || code != 0 {
-		r.Log(ctx, LogLevelError, "[coze] %s %s failed, log_id=%s, status=%d, code=%d, msg=%s", rawHttpReq.Method, rawHttpReq.URL, logID, statusCode, code, msg)
+	if statusCode >= http.StatusBadRequest || code != 0 || (authErr != nil && authErr.ErrorCode != "") {
+		if authErr != nil && authErr.ErrorCode != "" {
+			r.Log(ctx, LogLevelError, "[coze] %s %s failed, log_id=%s, status=%d, error=%s, code=%s, msg=%s", rawHttpReq.Method, rawHttpReq.URL, logID, statusCode, authErr.Error, authErr.ErrorCode, authErr.ErrorMessage)
+		} else {
+			r.Log(ctx, LogLevelError, "[coze] %s %s failed, log_id=%s, status=%d, code=%d, msg=%s", rawHttpReq.Method, rawHttpReq.URL, logID, statusCode, code, msg)
+		}
 	} else {
 		switch r.logLevel {
 		case LogLevelDebug:
@@ -86,7 +90,9 @@ func (r *core) rawRequest(ctx context.Context, req *RawRequestReq, resp interfac
 	}
 
 	// 5. response
-	if code != 0 {
+	if authErr != nil && authErr.ErrorCode != "" {
+		return NewAuthError(authErr, statusCode, logID)
+	} else if code != 0 {
 		return NewError(int(code), msg, logID)
 	}
 
@@ -359,16 +365,21 @@ type filenameSetter interface {
 	SetFilename(filename string)
 }
 
-func getCodeMsg(v interface{}) (code int64, msg string) {
+func getCodeMsg(v interface{}, respContent string) (code int64, msg string, authErr *authErrorFormat) {
+	var authErrIns authErrorFormat
+	if _ = json.Unmarshal([]byte(respContent), &authErrIns); authErrIns.ErrorCode != "" {
+		return 0, "", &authErrIns
+	}
+
 	if v == nil {
-		return 0, ""
+		return 0, "", nil
 	}
 	vv := reflect.ValueOf(v)
 	if vv.Kind() == reflect.Ptr {
 		vv = vv.Elem()
 	}
 	if vv.Kind() != reflect.Struct {
-		return 0, ""
+		return 0, "", nil
 	}
 	codeField := vv.FieldByName("Code")
 	if codeField.IsValid() {

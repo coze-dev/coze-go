@@ -508,6 +508,7 @@ func (c *DeviceOAuthClient) doGetDeviceCode(ctx context.Context, workspaceID *st
 		Body: DeviceAuthReq{
 			ClientID: c.clientID,
 		},
+		AuthType: 1,
 	}, response)
 	if err != nil {
 		return nil, err
@@ -570,9 +571,10 @@ func (c *DeviceOAuthClient) GetAccessToken(ctx context.Context, dReq *GetDeviceO
 func (c *DeviceOAuthClient) doGetAccessToken(ctx context.Context, req *getAccessTokenReq) (*OAuthToken, error) {
 	response := &getOAuthTokenResp{}
 	if err := c.core.rawRequest(ctx, &RawRequestReq{
-		Method: http.MethodPost,
-		URL:    getTokenPath,
-		Body:   req,
+		Method:   http.MethodPost,
+		URL:      getTokenPath,
+		Body:     req,
+		AuthType: 1,
 	}, response); err != nil {
 		return nil, err
 	}
