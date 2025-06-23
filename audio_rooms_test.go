@@ -20,8 +20,8 @@ func TestAudioRooms(t *testing.T) {
 				UID:    randomString(10),
 			}
 			rooms := newRooms(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
-				assert.Equal(t, http.MethodPost, req.Method)
-				assert.Equal(t, "/v1/audio/rooms", req.URL.Path)
+				as.Equal(http.MethodPost, req.Method)
+				as.Equal("/v1/audio/rooms", req.URL.Path)
 				return mockResponse(http.StatusOK, &createAudioRoomsResp{
 					Data: createRoomResp,
 				})
@@ -59,8 +59,8 @@ func TestAudioRooms(t *testing.T) {
 				UID:    randomString(10),
 			}
 			rooms := newRooms(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
-				assert.Equal(t, http.MethodPost, req.Method)
-				assert.Equal(t, "/v1/audio/rooms", req.URL.Path)
+				as.Equal(http.MethodPost, req.Method)
+				as.Equal("/v1/audio/rooms", req.URL.Path)
 				return mockResponse(http.StatusOK, &createAudioRoomsResp{
 					Data: createRoomResp,
 				})
@@ -94,7 +94,7 @@ func TestAudioRooms(t *testing.T) {
 func TestAudioConst(t *testing.T) {
 	as := assert.New(t)
 	t.Run("AudioCodec", func(t *testing.T) {
-		assert.Equal(t, AudioCodec("AACLC"), AudioCodecAACLC)
+		as.Equal(AudioCodec("AACLC"), AudioCodecAACLC)
 		as.Equal(AudioCodec("G711A"), AudioCodecG711A)
 		as.Equal(AudioCodec("OPUS"), AudioCodecOPUS)
 		as.Equal(AudioCodec("G722"), AudioCodecG722)

@@ -108,6 +108,7 @@ func (m *mockDataSource) getTokenPageData(request *pageRequest) (*pageResponse[T
 }
 
 func TestNumberPaged(t *testing.T) {
+	as := assert.New(t)
 	// 创建模拟数据源
 	total := 25
 	mockSource := newMockDataSource(total) // 总共25条数据
@@ -115,8 +116,8 @@ func TestNumberPaged(t *testing.T) {
 
 	// 创建基于页码的分页器
 	pager, err := NewNumberPaged[TestData](mockSource.getNumberPageData, pageSize, 0)
-	assert.NoError(t, err)
-	assert.NotNil(t, pager)
+	as.Nil(err)
+	as.NotNil(pager)
 
 	// 测试迭代器
 	t.Run("Iterator", func(t *testing.T) {
@@ -124,13 +125,13 @@ func TestNumberPaged(t *testing.T) {
 		for pager.Next() {
 			count++
 			item := pager.Current()
-			assert.Equal(t, count, item.ID)
-			assert.Equal(t, fmt.Sprintf("test-%d", count), item.Name)
+			as.Equal(count, item.ID)
+			as.Equal(fmt.Sprintf("test-%d", count), item.Name)
 		}
-		assert.Equal(t, total, count)
-		assert.False(t, pager.HasMore())
-		assert.Equal(t, 25, pager.Total())
-		assert.NoError(t, pager.Err())
+		as.Equal(total, count)
+		as.False(pager.HasMore())
+		as.Equal(25, pager.Total())
+		as.Nil(pager.Err())
 	})
 
 	t.Run("manual fetch next page", func(t *testing.T) {
@@ -139,38 +140,39 @@ func TestNumberPaged(t *testing.T) {
 		currentPage := 1
 		for hasMore {
 			pager, err := NewNumberPaged[TestData](mockSource.getNumberPageData, pageSize, currentPage)
-			assert.Nil(t, err)
+			as.Nil(err)
 			hasMore = pager.HasMore()
 			count += len(pager.Items())
 			currentPage++
 		}
-		assert.Equal(t, total, count)
-		assert.False(t, pager.HasMore())
-		assert.Equal(t, total, pager.Total())
-		assert.NoError(t, pager.Err())
+		as.Equal(total, count)
+		as.False(pager.HasMore())
+		as.Equal(total, pager.Total())
+		as.Nil(pager.Err())
 	})
 }
 
 func TestTokenPaged(t *testing.T) {
+	as := assert.New(t)
 	total := 25
 	mockSource := newMockDataSource(total) // 总共25条数据
 	pageSize := 10
 
 	pager, err := NewLastIDPaged[TestData](mockSource.getTokenPageData, pageSize, nil)
-	assert.NoError(t, err)
-	assert.NotNil(t, pager)
+	as.Nil(err)
+	as.NotNil(pager)
 
 	t.Run("iterator", func(t *testing.T) {
 		count := 0
 		for pager.Next() {
 			count++
 			item := pager.Current()
-			assert.Equal(t, count, item.ID)
-			assert.Equal(t, fmt.Sprintf("test-%d", count), item.Name)
+			as.Equal(count, item.ID)
+			as.Equal(fmt.Sprintf("test-%d", count), item.Name)
 		}
-		assert.Equal(t, total, count)
-		assert.False(t, pager.HasMore())
-		assert.NoError(t, pager.Err())
+		as.Equal(total, count)
+		as.False(pager.HasMore())
+		as.Nil(pager.Err())
 	})
 
 	t.Run("manual fetch next page", func(t *testing.T) {
@@ -188,13 +190,14 @@ func TestTokenPaged(t *testing.T) {
 				}
 			}
 		}
-		assert.Equal(t, total, count)
-		assert.False(t, pager.HasMore())
-		assert.NoError(t, pager.Err())
+		as.Equal(total, count)
+		as.False(pager.HasMore())
+		as.Nil(pager.Err())
 	})
 }
 
 func TestPagerError(t *testing.T) {
+	as := assert.New(t)
 	// 测试错误情况
 	errorFetcher := func(request *pageRequest) (*pageResponse[TestData], error) {
 		return nil, fmt.Errorf("mock error")
@@ -203,61 +206,63 @@ func TestPagerError(t *testing.T) {
 	// 测试基于页码的分页器错误处理
 	t.Run("NumberPaged Error", func(t *testing.T) {
 		pager, err := NewNumberPaged[TestData](errorFetcher, 10, 1)
-		assert.Error(t, err)
-		assert.Nil(t, pager)
+		as.Error(err)
+		as.Nil(pager)
 	})
 
 	// 测试基于令牌的分页器错误处理
 	t.Run("TokenPaged Error", func(t *testing.T) {
 		pager, err := NewLastIDPaged[TestData](errorFetcher, 10, nil)
-		assert.Error(t, err)
-		assert.Nil(t, pager)
+		as.Error(err)
+		as.Nil(pager)
 	})
 }
 
 func TestEmptyPage(t *testing.T) {
+	as := assert.New(t)
 	// 创建空数据源
 	emptySource := newMockDataSource(0)
 
 	// 测试基于页码的空分页
 	t.Run("Empty NumberPaged", func(t *testing.T) {
 		pager, err := NewNumberPaged[TestData](emptySource.getNumberPageData, 10, 1)
-		assert.NoError(t, err)
-		assert.NotNil(t, pager)
-		assert.False(t, pager.Next())
-		assert.Equal(t, 0, pager.Total())
-		assert.False(t, pager.HasMore())
-		assert.NoError(t, pager.Err())
+		as.Nil(err)
+		as.NotNil(pager)
+		as.False(pager.Next())
+		as.Equal(0, pager.Total())
+		as.False(pager.HasMore())
+		as.Nil(pager.Err())
 	})
 
 	// 测试基于令牌的空分页
 	t.Run("Empty TokenPaged", func(t *testing.T) {
 		pager, err := NewLastIDPaged[TestData](emptySource.getTokenPageData, 10, nil)
-		assert.NoError(t, err)
-		assert.NotNil(t, pager)
-		assert.False(t, pager.Next())
-		assert.False(t, pager.HasMore())
-		assert.NoError(t, pager.Err())
+		as.Nil(err)
+		as.NotNil(pager)
+		as.False(pager.Next())
+		as.False(pager.HasMore())
+		as.Nil(pager.Err())
 	})
 }
 
 func TestInvalidPageSize(t *testing.T) {
+	as := assert.New(t)
 	mockSource := newMockDataSource(25)
 
 	// 测试基于页码的无效页大小
 	t.Run("Invalid PageSize NumberPaged", func(t *testing.T) {
 		pager, err := NewNumberPaged[TestData](mockSource.getNumberPageData, 0, 1)
-		assert.NoError(t, err)
-		assert.NotNil(t, pager)
-		assert.True(t, pager.Next())
-		assert.Equal(t, 25, pager.Total())
+		as.Nil(err)
+		as.NotNil(pager)
+		as.True(pager.Next())
+		as.Equal(25, pager.Total())
 	})
 
 	// 测试基于令牌的无效页大小
 	t.Run("Invalid PageSize TokenPaged", func(t *testing.T) {
 		pager, err := NewLastIDPaged[TestData](mockSource.getTokenPageData, 0, nil)
-		assert.NoError(t, err)
-		assert.NotNil(t, pager)
-		assert.True(t, pager.Next())
+		as.Nil(err)
+		as.NotNil(pager)
+		as.True(pager.Next())
 	})
 }

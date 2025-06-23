@@ -11,17 +11,19 @@ import (
 )
 
 func TestTokenAuth(t *testing.T) {
+	as := assert.New(t)
 	t.Run("Token returns fixed access token", func(t *testing.T) {
 		expectedToken := "test_access_token"
 		auth := NewTokenAuth(expectedToken)
 
 		token, err := auth.Token(context.Background())
 		require.NoError(t, err)
-		assert.Equal(t, expectedToken, token)
+		as.Equal(expectedToken, token)
 	})
 }
 
 func TestJWTAuth(t *testing.T) {
+	as := assert.New(t)
 	const testPrivateKey = `-----BEGIN PRIVATE KEY-----
 MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCj1Mlf7zfg/kx4
 DHogPkN7gTkAYi7FM6TktFZFHDm8Zs1KiL6WrpU+UTqBiHHhlMVB3RiaJxWH40ia
@@ -62,9 +64,9 @@ qI39/arl6ZhTeQMv7TrpQ6Q=
 		auth := NewJWTAuth(client, nil)
 		jwtAuth, ok := auth.(*jwtOAuthImpl)
 		require.True(t, ok)
-		assert.Equal(t, 900, jwtAuth.TTL)
-		assert.Nil(t, jwtAuth.SessionName)
-		assert.Nil(t, jwtAuth.Scope)
+		as.Equal(900, jwtAuth.TTL)
+		as.Nil(jwtAuth.SessionName)
+		as.Nil(jwtAuth.Scope)
 	})
 
 	t.Run("NewJWTAuth with custom options", func(t *testing.T) {
@@ -85,138 +87,124 @@ qI39/arl6ZhTeQMv7TrpQ6Q=
 
 		jwtAuth, ok := auth.(*jwtOAuthImpl)
 		require.True(t, ok)
-		assert.Equal(t, 1800, jwtAuth.TTL)
-		assert.Equal(t, &sessionName, jwtAuth.SessionName)
-		assert.Equal(t, scope, jwtAuth.Scope)
+		as.Equal(1800, jwtAuth.TTL)
+		as.Equal(&sessionName, jwtAuth.SessionName)
+		as.Equal(scope, jwtAuth.Scope)
 	})
 
 	t.Run("Token returns cached token when not expired", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				return mockResponse(http.StatusOK, &OAuthToken{
-					AccessToken: "test_access_token",
-					ExpiresIn:   3600,
-				})
-			},
-		}
-
 		client, err := NewJWTOAuthClient(NewJWTOAuthClientParam{
 			ClientID:      "test_client_id",
 			PublicKey:     "test_public_key",
 			PrivateKeyPEM: testPrivateKey,
 		}, WithAuthBaseURL(ComBaseURL),
-			WithAuthHttpClient(&http.Client{Transport: mockTransport}))
-		require.NoError(t, err)
+			WithAuthHttpClient(newHTTPClientWithTransport(func(req *http.Request) (*http.Response, error) {
+				return mockResponse(http.StatusUnauthorized, &authErrorFormat{
+					ErrorCode:    "unauthorized",
+					ErrorMessage: "Invalid core credentials",
+				})
+			})))
+		as.Nil(err)
+		as.NotNil(client)
 
 		auth := NewJWTAuth(client, nil)
 
 		// 第一次调用，获取新 token
 		token1, err := auth.Token(context.Background())
-		require.NoError(t, err)
-		assert.Equal(t, "test_access_token", token1)
+		as.Nil(err)
+		as.Equal("test_access_token", token1)
 
 		// 第二次调用，使用缓存的 token
 		token2, err := auth.Token(context.Background())
-		require.NoError(t, err)
-		assert.Equal(t, token1, token2)
+		as.Nil(err)
+		as.Equal(token1, token2)
 	})
 
 	t.Run("Token refreshes when expired", func(t *testing.T) {
 		callCount := 0
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
+		client, err := NewJWTOAuthClient(NewJWTOAuthClientParam{
+			ClientID:      "test_client_id",
+			PublicKey:     "test_public_key",
+			PrivateKeyPEM: testPrivateKey,
+		}, WithAuthBaseURL(ComBaseURL),
+			WithAuthHttpClient(newHTTPClientWithTransport(func(req *http.Request) (*http.Response, error) {
 				callCount++
 				return mockResponse(http.StatusOK, &OAuthToken{
 					AccessToken: "test_access_token_" + string(rune(callCount+'0')),
 					ExpiresIn:   1, // 设置为1秒后过期
 				})
-			},
-		}
-
-		client, err := NewJWTOAuthClient(NewJWTOAuthClientParam{
-			ClientID:      "test_client_id",
-			PublicKey:     "test_public_key",
-			PrivateKeyPEM: testPrivateKey,
-		}, WithAuthBaseURL(ComBaseURL),
-			WithAuthHttpClient(&http.Client{Transport: mockTransport}))
-		require.NoError(t, err)
+			})))
+		as.Nil(err)
+		as.NotNil(client)
 
 		auth := NewJWTAuth(client, nil)
 
 		// 第一次调用，获取新 token
 		token1, err := auth.Token(context.Background())
-		require.NoError(t, err)
-		assert.Equal(t, "test_access_token_1", token1)
+		as.Nil(err)
+		as.Equal("test_access_token_1", token1)
 
 		// 等待 token 过期
 		time.Sleep(2 * time.Second)
 
 		// 第二次调用，token 已过期，获取新 token
 		token2, err := auth.Token(context.Background())
-		require.NoError(t, err)
-		assert.Equal(t, "test_access_token_2", token2)
-		assert.NotEqual(t, token1, token2)
+		as.Nil(err)
+		as.Equal("test_access_token_2", token2)
+		as.NotEqual(token1, token2)
 	})
 
 	t.Run("Token handles error", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
+		client, err := NewJWTOAuthClient(NewJWTOAuthClientParam{
+			ClientID:      "test_client_id",
+			PublicKey:     "test_public_key",
+			PrivateKeyPEM: testPrivateKey,
+		}, WithAuthBaseURL(ComBaseURL),
+			WithAuthHttpClient(newHTTPClientWithTransport(func(req *http.Request) (*http.Response, error) {
 				return mockResponse(http.StatusBadRequest, &OAuthToken{
 					AccessToken: "",
 					ExpiresIn:   0,
 				})
-			},
-		}
-
-		client, err := NewJWTOAuthClient(NewJWTOAuthClientParam{
-			ClientID:      "test_client_id",
-			PublicKey:     "test_public_key",
-			PrivateKeyPEM: testPrivateKey,
-		}, WithAuthBaseURL(ComBaseURL),
-			WithAuthHttpClient(&http.Client{Transport: mockTransport}))
-		require.NoError(t, err)
+			})))
+		as.Nil(err)
+		as.NotNil(client)
 
 		auth := NewJWTAuth(client, nil)
 
 		token, err := auth.Token(context.Background())
-		assert.Error(t, err)
-		assert.Empty(t, token)
+		as.Error(err)
+		as.Empty(token)
 	})
 
 	t.Run("Token with specified account_id", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				return mockResponse(http.StatusOK, &OAuthToken{
-					AccessToken: "test_access_token",
-					ExpiresIn:   3600,
-				})
-			},
-		}
-
 		client, err := NewJWTOAuthClient(NewJWTOAuthClientParam{
 			ClientID:      "test_client_id",
 			PublicKey:     "test_public_key",
 			PrivateKeyPEM: testPrivateKey,
 		}, WithAuthBaseURL(ComBaseURL),
-			WithAuthHttpClient(&http.Client{Transport: mockTransport}))
-		require.NoError(t, err)
+			WithAuthHttpClient(newHTTPClientWithTransport(func(req *http.Request) (*http.Response, error) {
+				return mockResponse(http.StatusBadRequest, &OAuthToken{
+					AccessToken: "test_access_token",
+					ExpiresIn:   3600,
+				})
+			})))
+		as.Nil(err)
+		as.NotNil(client)
 
-		accountID := int64(1234567890123456)
 		auth := NewJWTAuth(client, &GetJWTAccessTokenReq{
-			AccountID: &accountID,
+			AccountID: ptr(int64(1234567890123456)),
 		})
-
 		token1, err := auth.Token(context.Background())
-		require.NoError(t, err)
-		assert.Equal(t, "test_access_token", token1)
+		as.Nil(err)
+		as.Equal("test_access_token", token1)
 	})
 
 	t.Run("Test get RefreshBefore", func(t *testing.T) {
-		assert.Equal(t, int64(30), getRefreshBefore(600))
-		assert.Equal(t, int64(10), getRefreshBefore(599))
-		assert.Equal(t, int64(10), getRefreshBefore(60))
-		assert.Equal(t, int64(5), getRefreshBefore(59))
-		assert.Equal(t, int64(5), getRefreshBefore(30))
-		assert.Equal(t, int64(0), getRefreshBefore(29))
+		as.Equal(int64(30), getRefreshBefore(600))
+		as.Equal(int64(10), getRefreshBefore(599))
+		as.Equal(int64(10), getRefreshBefore(60))
+		as.Equal(int64(5), getRefreshBefore(59))
+		as.Equal(int64(5), getRefreshBefore(30))
+		as.Equal(int64(0), getRefreshBefore(29))
 	})
 }

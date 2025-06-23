@@ -59,14 +59,16 @@ func Test_Ptr(t *testing.T) {
 }
 
 func Test_GenerateRandomString(t *testing.T) {
+	as := assert.New(t)
 	str1, err := generateRandomString(10)
-	assert.Nil(t, err)
+	as.Nil(err)
 	str2, err := generateRandomString(10)
-	assert.Nil(t, err)
-	assert.NotEqual(t, str1, str2)
+	as.Nil(err)
+	as.NotEqual(str1, str2)
 }
 
 func Test_MustToJson(t *testing.T) {
+	as := assert.New(t)
 	jsonStr := mustToJson(map[string]string{"test": "test"})
-	assert.Equal(t, jsonStr, `{"test":"test"}`)
+	as.Equal(jsonStr, `{"test":"test"}`)
 }

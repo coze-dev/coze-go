@@ -9,22 +9,25 @@ import (
 )
 
 func TestNewCozeError(t *testing.T) {
-	// 测试创建新的 Error
-	err := NewError(1001, "test error", "test-log-id")
-	assert.NotNil(t, err)
-	assert.Equal(t, 1001, err.Code)
-	assert.Equal(t, "test error", err.Message)
-	assert.Equal(t, "test-log-id", err.LogID)
-}
+	as := assert.New(t)
 
-func TestCozeError_Error(t *testing.T) {
-	// 测试 Error() 方法
-	err := NewError(1001, "test error", "test-log-id")
-	expectedMsg := "code=1001, message=test error, logid=test-log-id"
-	assert.Equal(t, expectedMsg, err.Error())
+	t.Run("new", func(t *testing.T) {
+		err := NewError(1001, "test error", "test-log-id")
+		as.NotNil(err)
+		as.Equal(1001, err.Code)
+		as.Equal("test error", err.Message)
+		as.Equal("test-log-id", err.LogID)
+	})
+
+	t.Run("Error()", func(t *testing.T) {
+		err := NewError(1001, "test error", "test-log-id")
+		expectedMsg := "code=1001, message=test error, logid=test-log-id"
+		as.Equal(expectedMsg, err.Error())
+	})
 }
 
 func TestAsCozeError(t *testing.T) {
+	as := assert.New(t)
 	tests := []struct {
 		name     string
 		err      error
@@ -61,19 +64,20 @@ func TestAsCozeError(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotErr, gotBool := AsCozeError(tt.err)
-			assert.Equal(t, tt.wantBool, gotBool)
+			as.Equal(tt.wantBool, gotBool)
 			if tt.wantErr != nil {
-				assert.Equal(t, tt.wantErr.Code, gotErr.Code)
-				assert.Equal(t, tt.wantErr.Message, gotErr.Message)
-				assert.Equal(t, tt.wantErr.LogID, gotErr.LogID)
+				as.Equal(tt.wantErr.Code, gotErr.Code)
+				as.Equal(tt.wantErr.Message, gotErr.Message)
+				as.Equal(tt.wantErr.LogID, gotErr.LogID)
 			} else {
-				assert.Nil(t, gotErr)
+				as.Nil(gotErr)
 			}
 		})
 	}
 }
 
 func TestAuthErrorCode_String(t *testing.T) {
+	as := assert.New(t)
 	tests := []struct {
 		name string
 		code AuthErrorCode
@@ -103,12 +107,13 @@ func TestAuthErrorCode_String(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			assert.Equal(t, tt.want, tt.code.String())
+			as.Equal(tt.want, tt.code.String())
 		})
 	}
 }
 
 func TestNewCozeAuthExceptionWithoutParent(t *testing.T) {
+	as := assert.New(t)
 	// 测试创建新的认证错误
 	errorFormat := &authErrorFormat{
 		ErrorMessage: "invalid token",
@@ -117,17 +122,17 @@ func TestNewCozeAuthExceptionWithoutParent(t *testing.T) {
 	}
 	err := NewAuthError(errorFormat, 401, "test-log-id")
 
-	assert.NotNil(t, err)
-	assert.Equal(t, 401, err.HttpCode)
-	assert.Equal(t, "invalid token", err.ErrorMessage)
-	assert.Equal(t, AuthErrorCode("invalid_token"), err.Code)
-	assert.Equal(t, "token_error", err.Param)
-	assert.Equal(t, "test-log-id", err.LogID)
-	assert.Nil(t, err.parent)
+	as.NotNil(err)
+	as.Equal(401, err.HttpCode)
+	as.Equal("invalid token", err.ErrorMessage)
+	as.Equal(AuthErrorCode("invalid_token"), err.Code)
+	as.Equal("token_error", err.Param)
+	as.Equal("test-log-id", err.LogID)
+	as.Nil(err.parent)
 }
 
 func TestAuthError_Error(t *testing.T) {
-	// 测试 Error() 方法
+	as := assert.New(t)
 	err := &AuthError{
 		HttpCode:     401,
 		Code:         AuthErrorCode("invalid_token"),
@@ -137,14 +142,14 @@ func TestAuthError_Error(t *testing.T) {
 	}
 
 	expectedMsg := "HttpCode: 401, Code: invalid_token, Message: invalid token, Param: token_error, LogID: test-log-id"
-	assert.Equal(t, expectedMsg, err.Error())
+	as.Equal(expectedMsg, err.Error())
 }
 
 func TestAuthError_Unwrap(t *testing.T) {
-	// 测试无父错误的情况
+	as := assert.New(t)
 	t.Run("No Parent", func(t *testing.T) {
 		err := &AuthError{}
-		assert.Nil(t, err.Unwrap())
+		as.Nil(err.Unwrap())
 	})
 
 	// 测试有父错误的情况
@@ -153,11 +158,12 @@ func TestAuthError_Unwrap(t *testing.T) {
 		err := &AuthError{
 			parent: parentErr,
 		}
-		assert.Equal(t, parentErr, err.Unwrap())
+		as.Equal(parentErr, err.Unwrap())
 	})
 }
 
 func TestAsAuthError(t *testing.T) {
+	as := assert.New(t)
 	tests := []struct {
 		name     string
 		err      error
@@ -217,15 +223,15 @@ func TestAsAuthError(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotErr, gotBool := AsAuthError(tt.err)
-			assert.Equal(t, tt.wantBool, gotBool)
+			as.Equal(tt.wantBool, gotBool)
 			if tt.wantErr != nil {
-				assert.Equal(t, tt.wantErr.HttpCode, gotErr.HttpCode)
-				assert.Equal(t, tt.wantErr.Code, gotErr.Code)
-				assert.Equal(t, tt.wantErr.ErrorMessage, gotErr.ErrorMessage)
-				assert.Equal(t, tt.wantErr.Param, gotErr.Param)
-				assert.Equal(t, tt.wantErr.LogID, gotErr.LogID)
+				as.Equal(tt.wantErr.HttpCode, gotErr.HttpCode)
+				as.Equal(tt.wantErr.Code, gotErr.Code)
+				as.Equal(tt.wantErr.ErrorMessage, gotErr.ErrorMessage)
+				as.Equal(tt.wantErr.Param, gotErr.Param)
+				as.Equal(tt.wantErr.LogID, gotErr.LogID)
 			} else {
-				assert.Nil(t, gotErr)
+				as.Nil(gotErr)
 			}
 		})
 	}

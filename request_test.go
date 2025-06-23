@@ -1,13 +1,35 @@
 package coze
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-// TestResponse 用于测试的响应结构
+func newHTTPClientWithTransport(fn func(req *http.Request) (*http.Response, error)) *http.Client {
+	return &http.Client{Transport: newMockTransport(fn)}
+}
+
+func newCoreWithTransport(transport http.RoundTripper) *core {
+	return newCore(&clientOption{
+		baseURL:     CnBaseURL,
+		client:      &http.Client{Transport: transport},
+		logLevel:    LogLevelDebug,
+		logger:      newStdLogger(),
+		auth:        NewTokenAuth("token"),
+		enableLogID: true,
+	})
+}
+
+func randomString(length int) string {
+	b := make([]byte, length)
+	_, _ = rand.Read(b)
+	return hex.EncodeToString(b)
+}
+
 type TestResponse struct {
 	Data struct {
 		Name string `json:"name"`
@@ -21,17 +43,18 @@ type TestReq struct {
 }
 
 func TestNewClient(t *testing.T) {
+	as := assert.New(t)
 	// 测试创建客户端
 	t.Run("With Custom Doer", func(t *testing.T) {
 		customDoer := &mockHTTP{}
 		core := newCore(&clientOption{baseURL: "https://api.test.com", client: customDoer})
-		assert.Equal(t, customDoer, core.client)
+		as.Equal(customDoer, core.client)
 	})
 
 	t.Run("With Nil Doer", func(t *testing.T) {
 		core := newCore(&clientOption{baseURL: "https://api.test.com"})
-		assert.NotNil(t, core.client)
+		as.NotNil(core.client)
 		_, ok := core.client.(*http.Client)
-		assert.True(t, ok)
+		as.True(ok)
 	})
 }

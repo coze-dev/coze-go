@@ -45,6 +45,7 @@ func mockEventProcessor(ctx context.Context, core *core, line []byte, reader *bu
 }
 
 func TestStreamReader(t *testing.T) {
+	as := assert.New(t)
 	ctx := context.Background()
 	t.Run("successful event processing", func(t *testing.T) {
 		// Create mock response with multiple events
@@ -68,27 +69,27 @@ func TestStreamReader(t *testing.T) {
 		// Read first event
 		event, err := reader.Recv()
 		require.NoError(t, err)
-		assert.Equal(t, WorkflowEventTypeMessage, event.Event)
-		assert.Equal(t, "first", event.Message.Content)
-		assert.False(t, reader.isFinished)
+		as.Equal(WorkflowEventTypeMessage, event.Event)
+		as.Equal("first", event.Message.Content)
+		as.False(reader.isFinished)
 
 		// Read second event
 		event, err = reader.Recv()
 		require.NoError(t, err)
-		assert.Equal(t, WorkflowEventTypeMessage, event.Event)
-		assert.Equal(t, "second", event.Message.Content)
-		assert.False(t, reader.isFinished)
+		as.Equal(WorkflowEventTypeMessage, event.Event)
+		as.Equal("second", event.Message.Content)
+		as.False(reader.isFinished)
 
 		// Read final event
 		event, err = reader.Recv()
 		require.NoError(t, err)
-		assert.Equal(t, WorkflowEventTypeDone, event.Event)
-		assert.True(t, reader.isFinished)
+		as.Equal(WorkflowEventTypeDone, event.Event)
+		as.True(reader.isFinished)
 
 		// Try reading after done
 		event, err = reader.Recv()
-		assert.Equal(t, io.EOF, err)
-		assert.Nil(t, event)
+		as.Equal(io.EOF, err)
+		as.Nil(event)
 	})
 
 	t.Run("empty lines are skipped", func(t *testing.T) {
@@ -111,14 +112,14 @@ func TestStreamReader(t *testing.T) {
 
 		// First non-empty event
 		event, err := reader.Recv()
-		require.NoError(t, err)
-		assert.Equal(t, WorkflowEventTypeMessage, event.Event)
-		assert.Equal(t, "test", event.Message.Content)
+		as.Nil(err)
+		as.Equal(WorkflowEventTypeMessage, event.Event)
+		as.Equal("test", event.Message.Content)
 
 		// Second non-empty event
 		event, err = reader.Recv()
-		require.NoError(t, err)
-		assert.Equal(t, WorkflowEventTypeDone, event.Event)
+		as.Nil(err)
+		as.Equal(WorkflowEventTypeDone, event.Event)
 	})
 
 	t.Run("error response handling", func(t *testing.T) {
@@ -148,8 +149,8 @@ func TestStreamReader(t *testing.T) {
 
 		// Attempt to read should return error
 		event, err := reader.Recv()
-		assert.Error(t, err)
-		assert.Nil(t, event)
+		as.Error(err)
+		as.Nil(event)
 	})
 
 	t.Run("LogID method", func(t *testing.T) {
@@ -157,7 +158,7 @@ func TestStreamReader(t *testing.T) {
 			ctx:          ctx,
 			httpResponse: mockHTTPResponse(),
 		}
-		assert.Equal(t, "test_log_id", reader.httpResponse.LogID())
+		as.Equal("test_log_id", reader.httpResponse.LogID())
 	})
 }
 

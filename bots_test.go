@@ -206,8 +206,8 @@ func TestBots(t *testing.T) {
 
 	t.Run("List bots with default pagination", func(t *testing.T) {
 		bots := newBots(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
-			assert.Equal(t, "1", req.URL.Query().Get("page_index"))
-			assert.Equal(t, "20", req.URL.Query().Get("page_size"))
+			as.Equal("1", req.URL.Query().Get("page_index"))
+			as.Equal("20", req.URL.Query().Get("page_size"))
 			return mockResponse(http.StatusOK, &listBotsResp{
 				Data: struct {
 					Bots  []*SimpleBot `json:"space_bots"`
@@ -223,13 +223,14 @@ func TestBots(t *testing.T) {
 		})
 
 		require.NoError(t, err)
-		assert.Empty(t, paged.Items())
+		as.Empty(paged.Items())
 	})
 }
 
 func TestBotMode(t *testing.T) {
+	as := assert.New(t)
 	t.Run("BotMode constants", func(t *testing.T) {
-		assert.Equal(t, BotMode(1), BotModeMultiAgent)
-		assert.Equal(t, BotMode(0), BotModeSingleAgentWorkflow)
+		as.Equal(BotMode(1), BotModeMultiAgent)
+		as.Equal(BotMode(0), BotModeSingleAgentWorkflow)
 	})
 }

@@ -2,8 +2,6 @@ package coze
 
 import (
 	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"net/http"
 	"testing"
@@ -11,23 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
-
-func newCoreWithTransport(transport http.RoundTripper) *core {
-	return newCore(&clientOption{
-		baseURL:     CnBaseURL,
-		client:      &http.Client{Transport: transport},
-		logLevel:    LogLevelDebug,
-		logger:      newStdLogger(),
-		auth:        NewTokenAuth("token"),
-		enableLogID: true,
-	})
-}
-
-func randomString(length int) string {
-	b := make([]byte, length)
-	_, _ = rand.Read(b)
-	return hex.EncodeToString(b)
-}
 
 func TestConversations(t *testing.T) {
 	as := assert.New(t)
@@ -118,55 +99,45 @@ func TestConversations(t *testing.T) {
 	})
 
 	t.Run("list with default pagination", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				as.Equal("1", req.URL.Query().Get("page_num"))
-				as.Equal("20", req.URL.Query().Get("page_size"))
+		conversations := newConversations(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			as.Equal("1", req.URL.Query().Get("page_num"))
+			as.Equal("20", req.URL.Query().Get("page_size"))
 
-				return mockResponse(http.StatusOK, &listConversationsResp{
-					Data: &ListConversationsResp{
-						HasMore:       false,
-						Conversations: []*Conversation{},
-					},
-				})
-			},
-		}
-
-		core := newCoreWithTransport(mockTransport)
-		conversations := newConversations(core)
-
+			return mockResponse(http.StatusOK, &listConversationsResp{
+				Data: &ListConversationsResp{
+					HasMore:       false,
+					Conversations: []*Conversation{},
+				},
+			})
+		})))
 		paged, err := conversations.List(context.Background(), &ListConversationsReq{
 			BotID: "test_bot_id",
 		})
 		as.Nil(err)
+		as.NotNil(paged)
+		// as.NotEmpty(paged.logid) // todo
 		as.False(paged.HasMore())
 		as.Empty(paged.Items())
 	})
 
 	t.Run("create success", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				as.Equal(http.MethodPost, req.Method)
-				as.Equal("/v1/conversation/create", req.URL.Path)
+		conversations := newConversations(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			as.Equal(http.MethodPost, req.Method)
+			as.Equal("/v1/conversation/create", req.URL.Path)
 
-				return mockResponse(http.StatusOK, &createConversationsResp{
-					Conversation: &CreateConversationsResp{
-						Conversation: Conversation{
-							ID:            "conv1",
-							CreatedAt:     1234567890,
-							LastSectionID: "section1",
-							MetaData: map[string]string{
-								"key1": "value1",
-							},
+			return mockResponse(http.StatusOK, &createConversationsResp{
+				Conversation: &CreateConversationsResp{
+					Conversation: Conversation{
+						ID:            "conv1",
+						CreatedAt:     1234567890,
+						LastSectionID: "section1",
+						MetaData: map[string]string{
+							"key1": "value1",
 						},
 					},
-				})
-			},
-		}
-
-		core := newCoreWithTransport(mockTransport)
-		conversations := newConversations(core)
-
+				},
+			})
+		})))
 		resp, err := conversations.Create(context.Background(), &CreateConversationsReq{
 			Messages: []*Message{
 				{
@@ -189,31 +160,25 @@ func TestConversations(t *testing.T) {
 	})
 
 	t.Run("retrieve success", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				as.Equal(http.MethodGet, req.Method)
-				as.Equal("/v1/conversation/retrieve", req.URL.Path)
+		conversations := newConversations(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			as.Equal(http.MethodGet, req.Method)
+			as.Equal("/v1/conversation/retrieve", req.URL.Path)
 
-				as.Equal("conv1", req.URL.Query().Get("conversation_id"))
+			as.Equal("conv1", req.URL.Query().Get("conversation_id"))
 
-				return mockResponse(http.StatusOK, &retrieveConversationsResp{
-					Conversation: &RetrieveConversationsResp{
-						Conversation: Conversation{
-							ID:            "conv1",
-							CreatedAt:     1234567890,
-							LastSectionID: "section1",
-							MetaData: map[string]string{
-								"key1": "value1",
-							},
+			return mockResponse(http.StatusOK, &retrieveConversationsResp{
+				Conversation: &RetrieveConversationsResp{
+					Conversation: Conversation{
+						ID:            "conv1",
+						CreatedAt:     1234567890,
+						LastSectionID: "section1",
+						MetaData: map[string]string{
+							"key1": "value1",
 						},
 					},
-				})
-			},
-		}
-
-		core := newCoreWithTransport(mockTransport)
-		conversations := newConversations(core)
-
+				},
+			})
+		})))
 		resp, err := conversations.Retrieve(context.Background(), &RetrieveConversationsReq{
 			ConversationID: "conv1",
 		})
@@ -227,25 +192,19 @@ func TestConversations(t *testing.T) {
 	})
 
 	t.Run("clear success", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// Verify request method and path
-				as.Equal(http.MethodPost, req.Method)
-				as.Equal("/v1/conversations/conv1/clear", req.URL.Path)
+		conversations := newConversations(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			// Verify request method and path
+			as.Equal(http.MethodPost, req.Method)
+			as.Equal("/v1/conversations/conv1/clear", req.URL.Path)
 
-				// Return mock response
-				return mockResponse(http.StatusOK, &clearConversationsResp{
-					Data: &ClearConversationsResp{
-						ConversationID: "conv1",
-						ID:             "new_section",
-					},
-				})
-			},
-		}
-
-		core := newCoreWithTransport(mockTransport)
-		conversations := newConversations(core)
-
+			// Return mock response
+			return mockResponse(http.StatusOK, &clearConversationsResp{
+				Data: &ClearConversationsResp{
+					ConversationID: "conv1",
+					ID:             "new_section",
+				},
+			})
+		})))
 		resp, err := conversations.Clear(context.Background(), &ClearConversationsReq{
 			ConversationID: "conv1",
 		})

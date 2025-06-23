@@ -20,20 +20,20 @@ func (m *mockAuth) Token(ctx context.Context) (string, error) {
 }
 
 func TestNewCozeAPI(t *testing.T) {
-	// Test default initialization
+	as := assert.New(t)
 	t.Run("default initialization", func(t *testing.T) {
 		auth := &mockAuth{token: "test_token"}
 		api := NewCozeAPI(auth)
 
-		assert.Equal(t, ComBaseURL, api.baseURL)
-		assert.NotNil(t, api.Audio)
-		assert.NotNil(t, api.Bots)
-		assert.NotNil(t, api.Chat)
-		assert.NotNil(t, api.Conversations)
-		assert.NotNil(t, api.Workflows)
-		assert.NotNil(t, api.Workspaces)
-		assert.NotNil(t, api.Datasets)
-		assert.NotNil(t, api.Files)
+		as.Equal(ComBaseURL, api.baseURL)
+		as.NotNil(api.Audio)
+		as.NotNil(api.Bots)
+		as.NotNil(api.Chat)
+		as.NotNil(api.Conversations)
+		as.NotNil(api.Workflows)
+		as.NotNil(api.Workspaces)
+		as.NotNil(api.Datasets)
+		as.NotNil(api.Files)
 	})
 
 	// Test with custom base URL
@@ -42,7 +42,7 @@ func TestNewCozeAPI(t *testing.T) {
 		customURL := "https://custom.api.coze.com"
 		api := NewCozeAPI(auth, WithBaseURL(customURL))
 
-		assert.Equal(t, customURL, api.baseURL)
+		as.Equal(customURL, api.baseURL)
 	})
 
 	// Test with custom HTTP core
@@ -53,7 +53,7 @@ func TestNewCozeAPI(t *testing.T) {
 		}
 		api := NewCozeAPI(auth, WithHttpClient(customClient))
 
-		assert.NotNil(t, api)
+		as.NotNil(api)
 	})
 
 	// Test with custom log level
@@ -61,7 +61,7 @@ func TestNewCozeAPI(t *testing.T) {
 		auth := &mockAuth{token: "test_token"}
 		api := NewCozeAPI(auth, WithLogLevel(LogLevelDebug))
 
-		assert.NotNil(t, api)
+		as.NotNil(api)
 	})
 
 	// Test with custom logger
@@ -70,7 +70,7 @@ func TestNewCozeAPI(t *testing.T) {
 		customLogger := &mockLogger{}
 		api := NewCozeAPI(auth, WithLogger(customLogger))
 
-		assert.NotNil(t, api)
+		as.NotNil(api)
 	})
 
 	// Test with multiple options
@@ -89,20 +89,20 @@ func TestNewCozeAPI(t *testing.T) {
 			WithLogger(customLogger),
 		)
 
-		assert.Equal(t, customURL, api.baseURL)
-		assert.NotNil(t, api)
+		as.Equal(customURL, api.baseURL)
+		as.NotNil(api)
 	})
 
 	t.Run("with logid", func(t *testing.T) {
 		auth := &mockAuth{token: "test_token"}
 		api := NewCozeAPI(auth, WithEnableLogID(true))
 
-		assert.NotNil(t, api)
+		as.NotNil(api)
 	})
 }
 
 func TestAuthTransport(t *testing.T) {
-	// Test successful authentication
+	as := assert.New(t)
 	t.Run("successful authentication", func(t *testing.T) {
 		auth := &mockAuth{token: "test_token"}
 		transport := &authTransport{
@@ -110,7 +110,7 @@ func TestAuthTransport(t *testing.T) {
 			next: &mockTransport{
 				roundTripFunc: func(req *http.Request) (*http.Response, error) {
 					// Verify authorization header
-					assert.Equal(t, "Bearer test_token", req.Header.Get("Authorization"))
+					as.Equal("Bearer test_token", req.Header.Get("Authorization"))
 					return &http.Response{StatusCode: http.StatusOK}, nil
 				},
 			},
@@ -120,7 +120,7 @@ func TestAuthTransport(t *testing.T) {
 		resp, err := transport.RoundTrip(req)
 
 		require.NoError(t, err)
-		assert.Equal(t, http.StatusOK, resp.StatusCode)
+		as.Equal(http.StatusOK, resp.StatusCode)
 	})
 
 	// Test authentication error
@@ -137,8 +137,8 @@ func TestAuthTransport(t *testing.T) {
 		req, _ := http.NewRequest(http.MethodGet, ComBaseURL, nil)
 		resp, err := transport.RoundTrip(req)
 
-		require.Error(t, err)
-		assert.Nil(t, resp)
+		as.NotNil(err)
+		as.Nil(resp)
 	})
 }
 

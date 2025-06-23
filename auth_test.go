@@ -53,6 +53,7 @@ func mockResponse(statusCode int, body interface{}) (*http.Response, error) {
 }
 
 func TestPKCEOAuthClient(t *testing.T) {
+	as := assert.New(t)
 	t.Run("GenOAuthURL success", func(t *testing.T) {
 		client, err := NewPKCEOAuthClient("test_client_id", WithAuthBaseURL(ComBaseURL))
 		require.NoError(t, err)
@@ -63,12 +64,12 @@ func TestPKCEOAuthClient(t *testing.T) {
 		})
 
 		require.NoError(t, err)
-		assert.NotEmpty(t, resp.CodeVerifier)
-		assert.Contains(t, resp.AuthorizationURL, "https://www.coze.com/api/permission/oauth2/authorize")
-		assert.Contains(t, resp.AuthorizationURL, "client_id=test_client_id")
-		assert.Contains(t, resp.AuthorizationURL, "redirect_uri=https%3A%2F%2Fexample.com%2Fcallback")
-		assert.Contains(t, resp.AuthorizationURL, "state=test_state")
-		assert.Contains(t, resp.AuthorizationURL, "code_challenge_method=S256")
+		as.NotEmpty(resp.CodeVerifier)
+		as.Contains(resp.AuthorizationURL, "https://www.coze.com/api/permission/oauth2/authorize")
+		as.Contains(resp.AuthorizationURL, "client_id=test_client_id")
+		as.Contains(resp.AuthorizationURL, "redirect_uri=https%3A%2F%2Fexample.com%2Fcallback")
+		as.Contains(resp.AuthorizationURL, "state=test_state")
+		as.Contains(resp.AuthorizationURL, "code_challenge_method=S256")
 	})
 
 	t.Run("GenWorkspaceOAuthURL success", func(t *testing.T) {
@@ -83,43 +84,42 @@ func TestPKCEOAuthClient(t *testing.T) {
 		})
 
 		require.NoError(t, err)
-		assert.NotEmpty(t, resp.CodeVerifier)
-		assert.Contains(t, resp.AuthorizationURL, "https://www.coze.com/api/permission/oauth2/workspace_id/workspace_id/authorize")
-		assert.Contains(t, resp.AuthorizationURL, "client_id=test_client_id")
-		assert.Contains(t, resp.AuthorizationURL, "redirect_uri=https%3A%2F%2Fexample.com%2Fcallback")
-		assert.Contains(t, resp.AuthorizationURL, "state=test_state")
-		assert.Contains(t, resp.AuthorizationURL, "code_challenge_method=S256")
+		as.NotEmpty(resp.CodeVerifier)
+		as.Contains(resp.AuthorizationURL, "https://www.coze.com/api/permission/oauth2/workspace_id/workspace_id/authorize")
+		as.Contains(resp.AuthorizationURL, "client_id=test_client_id")
+		as.Contains(resp.AuthorizationURL, "redirect_uri=https%3A%2F%2Fexample.com%2Fcallback")
+		as.Contains(resp.AuthorizationURL, "state=test_state")
+		as.Contains(resp.AuthorizationURL, "code_challenge_method=S256")
 	})
 
 	t.Run("GetAccessToken success", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
+		client, err := NewPKCEOAuthClient("test_client_id",
+			WithAuthBaseURL(ComBaseURL),
+			WithAuthHttpClient(newHTTPClientWithTransport(func(req *http.Request) (*http.Response, error) {
 				expectedToken := &OAuthToken{
 					AccessToken:  "test_access_token",
 					ExpiresIn:    3600,
 					RefreshToken: "test_refresh_token",
 				}
 				return mockResponse(http.StatusOK, expectedToken)
-			},
-		}
-
-		client, err := NewPKCEOAuthClient("test_client_id",
-			WithAuthBaseURL(ComBaseURL),
-			WithAuthHttpClient(&http.Client{Transport: mockTransport}))
-		require.NoError(t, err)
+			})))
+		as.Nil(err)
+		as.NotNil(client)
 
 		token, err := client.GetAccessToken(context.Background(), &GetPKCEAccessTokenReq{Code: "test_code", RedirectURI: "https://example.com/callback", CodeVerifier: "test_verifier"})
-		require.NoError(t, err)
-		assert.Equal(t, "test_access_token", token.AccessToken)
-		assert.Equal(t, int64(3600), token.ExpiresIn)
-		assert.Equal(t, "test_refresh_token", token.RefreshToken)
+		as.Nil(err)
+		as.Equal("test_access_token", token.AccessToken)
+		as.Equal(int64(3600), token.ExpiresIn)
+		as.Equal("test_refresh_token", token.RefreshToken)
 	})
 }
 
 func TestDeviceOAuthClient(t *testing.T) {
+	as := assert.New(t)
 	t.Run("GetDeviceCode success", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
+		client, err := NewDeviceOAuthClient("test_client_id",
+			WithAuthBaseURL(ComBaseURL),
+			WithAuthHttpClient(newHTTPClientWithTransport(func(req *http.Request) (*http.Response, error) {
 				expectedResp := &GetDeviceAuthResp{
 					DeviceCode:      "test_device_code",
 					UserCode:        "test_user_code",
@@ -128,26 +128,23 @@ func TestDeviceOAuthClient(t *testing.T) {
 					Interval:        5,
 				}
 				return mockResponse(http.StatusOK, expectedResp)
-			},
-		}
-
-		client, err := NewDeviceOAuthClient("test_client_id",
-			WithAuthBaseURL(ComBaseURL),
-			WithAuthHttpClient(&http.Client{Transport: mockTransport}))
-		require.NoError(t, err)
+			})))
+		as.Nil(err)
+		as.NotNil(client)
 
 		resp, err := client.GetDeviceCode(context.Background(), nil)
-		require.NoError(t, err)
-		assert.Equal(t, "test_device_code", resp.DeviceCode)
-		assert.Equal(t, "test_user_code", resp.UserCode)
-		assert.Equal(t, "https://www.coze.com/verify", resp.VerificationURI)
-		assert.Equal(t, "https://www.coze.com/verify?user_code=test_user_code", resp.VerificationURL)
+		as.Nil(err)
+		as.Equal("test_device_code", resp.DeviceCode)
+		as.Equal("test_user_code", resp.UserCode)
+		as.Equal("https://www.coze.com/verify", resp.VerificationURI)
+		as.Equal("https://www.coze.com/verify?user_code=test_user_code", resp.VerificationURL)
 	})
 
 	t.Run("GetAccessToken with polling", func(t *testing.T) {
 		attempts := 0
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
+		client, err := NewDeviceOAuthClient("test_client_id",
+			WithAuthBaseURL(ComBaseURL),
+			WithAuthHttpClient(newHTTPClientWithTransport(func(req *http.Request) (*http.Response, error) {
 				attempts++
 				if attempts == 1 {
 					return mockResponse(http.StatusBadRequest, &authErrorFormat{
@@ -166,25 +163,23 @@ func TestDeviceOAuthClient(t *testing.T) {
 					ExpiresIn:    3600,
 					RefreshToken: "test_refresh_token",
 				})
-			},
-		}
+			})))
+		as.Nil(err)
+		as.NotNil(client)
 
-		httpClient, err := NewDeviceOAuthClient("test_client_id",
-			WithAuthBaseURL(ComBaseURL),
-			WithAuthHttpClient(&http.Client{Transport: mockTransport}))
-		require.NoError(t, err)
-
-		token, err := httpClient.GetAccessToken(context.Background(), &GetDeviceOAuthAccessTokenReq{
+		token, err := client.GetAccessToken(context.Background(), &GetDeviceOAuthAccessTokenReq{
 			DeviceCode: "test_device_code",
 			Poll:       true,
 		})
-		require.NoError(t, err)
-		assert.Equal(t, "test_access_token", token.AccessToken)
-		assert.Equal(t, 3, attempts)
+		as.Nil(err)
+		as.NotNil(token)
+		as.Equal("test_access_token", token.AccessToken)
+		as.Equal(3, attempts)
 	})
 }
 
 func TestJWTOAuthClient(t *testing.T) {
+	as := assert.New(t)
 	const testPrivateKey = `-----BEGIN PRIVATE KEY-----
 MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCj1Mlf7zfg/kx4
 DHogPkN7gTkAYi7FM6TktFZFHDm8Zs1KiL6WrpU+UTqBiHHhlMVB3RiaJxWH40ia
@@ -215,135 +210,124 @@ qI39/arl6ZhTeQMv7TrpQ6Q=
 -----END PRIVATE KEY-----`
 
 	t.Run("GetAccessToken success", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				return mockResponse(http.StatusOK, &OAuthToken{
-					AccessToken:  "test_access_token",
-					ExpiresIn:    3600,
-					RefreshToken: "test_refresh_token",
-				})
-			},
-		}
-
 		client, err := NewJWTOAuthClient(NewJWTOAuthClientParam{
 			ClientID:      "test_client_id",
 			PublicKey:     "test_public_key",
 			PrivateKeyPEM: testPrivateKey,
 			TTL:           nil,
 		}, WithAuthBaseURL(ComBaseURL),
-			WithAuthHttpClient(&http.Client{Transport: mockTransport}))
-		require.NoError(t, err)
+			WithAuthHttpClient(newHTTPClientWithTransport(func(req *http.Request) (*http.Response, error) {
+				return mockResponse(http.StatusOK, &OAuthToken{
+					AccessToken:  "test_access_token",
+					ExpiresIn:    3600,
+					RefreshToken: "test_refresh_token",
+				})
+			})))
+		as.Nil(err)
+		as.NotNil(client)
 
 		token, err := client.GetAccessToken(context.Background(), &GetJWTAccessTokenReq{
 			TTL:         900,
 			Scope:       BuildBotChat([]string{"bot id"}, []string{"permission id"}),
 			SessionName: ptr("session"),
 		})
-		require.NoError(t, err)
-		assert.Equal(t, "test_access_token", token.AccessToken)
+		as.Nil(err)
+		as.Equal("test_access_token", token.AccessToken)
 	})
 }
 
 func TestWebOAuthClient(t *testing.T) {
+	as := assert.New(t)
 	t.Run("GetOAuthURL success", func(t *testing.T) {
 		client, err := NewWebOAuthClient("test_client_id", "test_client_secret",
 			WithAuthBaseURL(ComBaseURL))
-		require.NoError(t, err)
+		as.Nil(err)
+		as.NotNil(client)
 
 		url := client.GetOAuthURL(context.Background(), &GetWebOAuthURLReq{
 			RedirectURI: "https://example.com/callback",
 			State:       "test_state",
 		})
-		assert.Contains(t, url, "https://www.coze.com/api/permission/oauth2/authorize")
-		assert.Contains(t, url, "client_id=test_client_id")
-		assert.Contains(t, url, "redirect_uri=https%3A%2F%2Fexample.com%2Fcallback")
-		assert.Contains(t, url, "state=test_state")
+		as.Contains(url, "https://www.coze.com/api/permission/oauth2/authorize")
+		as.Contains(url, "client_id=test_client_id")
+		as.Contains(url, "redirect_uri=https%3A%2F%2Fexample.com%2Fcallback")
+		as.Contains(url, "state=test_state")
 	})
 
 	t.Run("GetAccessToken success", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
+		client, err := NewWebOAuthClient("test_client_id", "test_client_secret", WithAuthBaseURL(ComBaseURL),
+			WithAuthHttpClient(newHTTPClientWithTransport(func(req *http.Request) (*http.Response, error) {
 				return mockResponse(http.StatusOK, &OAuthToken{
 					AccessToken:  "test_access_token",
 					ExpiresIn:    3600,
 					RefreshToken: "test_refresh_token",
 				})
-			},
-		}
-
-		client, err := NewWebOAuthClient("test_client_id", "test_client_secret",
-			WithAuthBaseURL(ComBaseURL),
-			WithAuthHttpClient(&http.Client{Transport: mockTransport}))
-		require.NoError(t, err)
+			})))
+		as.Nil(err)
+		as.NotNil(client)
 
 		token, err := client.GetAccessToken(context.Background(), &GetWebOAuthAccessTokenReq{
 			Code:        "test_code",
 			RedirectURI: "https://example.com/callback",
 		})
-		require.NoError(t, err)
-		assert.Equal(t, "test_access_token", token.AccessToken)
+		as.Nil(err)
+		as.Equal("test_access_token", token.AccessToken)
 	})
 
 	t.Run("RefreshToken success", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
+		client, err := NewWebOAuthClient("test_client_id", "test_client_secret", WithAuthBaseURL(ComBaseURL),
+			WithAuthHttpClient(newHTTPClientWithTransport(func(req *http.Request) (*http.Response, error) {
 				return mockResponse(http.StatusOK, &OAuthToken{
 					AccessToken:  "new_access_token",
 					ExpiresIn:    3600,
 					RefreshToken: "new_refresh_token",
 				})
-			},
-		}
-
-		client, err := NewWebOAuthClient("test_client_id", "test_client_secret",
-			WithAuthBaseURL(ComBaseURL),
-			WithAuthHttpClient(&http.Client{Transport: mockTransport}))
-		require.NoError(t, err)
+			})))
+		as.Nil(err)
+		as.NotNil(client)
 
 		token, err := client.RefreshToken(context.Background(), "test_refresh_token")
-		require.NoError(t, err)
-		assert.Equal(t, "new_access_token", token.AccessToken)
-		assert.Equal(t, "new_refresh_token", token.RefreshToken)
+		as.Nil(err)
+		as.Equal("new_access_token", token.AccessToken)
+		as.Equal("new_refresh_token", token.RefreshToken)
 	})
 }
 
 func TestOAuthError(t *testing.T) {
+	as := assert.New(t)
 	t.Run("Handle auth error", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
+		client, err := NewWebOAuthClient("test_client_id", "test_client_secret", WithAuthBaseURL(ComBaseURL),
+			WithAuthHttpClient(newHTTPClientWithTransport(func(req *http.Request) (*http.Response, error) {
 				return mockResponse(http.StatusUnauthorized, &authErrorFormat{
 					ErrorCode:    "unauthorized",
 					ErrorMessage: "Invalid core credentials",
 				})
-			},
-		}
-
-		client, err := NewWebOAuthClient("test_client_id", "test_client_secret",
-			WithAuthBaseURL(ComBaseURL),
-			WithAuthHttpClient(&http.Client{Transport: mockTransport}))
-		require.NoError(t, err)
+			})))
+		as.Nil(err)
+		as.NotNil(client)
 
 		_, err = client.GetAccessToken(context.Background(), &GetWebOAuthAccessTokenReq{
 			Code:        "test_code",
 			RedirectURI: "https://example.com/callback",
 		})
-		require.Error(t, err)
+		as.Error(err)
 
 		authErr, ok := AsAuthError(err)
-		require.True(t, ok)
-		assert.Equal(t, "unauthorized", authErr.Code.String())
+		as.True(ok)
+		as.Equal("unauthorized", authErr.Code.String())
 	})
 }
 
 func TestParsePrivateKey(t *testing.T) {
+	as := assert.New(t)
 	t.Run("Invalid private key format", func(t *testing.T) {
 		_, err := parsePrivateKey("invalid_key")
-		assert.Error(t, err)
-		assert.Contains(t, err.Error(), "failed to decode private key")
+		as.Error(err)
+		as.Contains(err.Error(), "failed to decode private key")
 	})
 
 	t.Run("Invalid PEM block", func(t *testing.T) {
 		_, err := parsePrivateKey("LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCmludmFsaWQga2V5IGNvbnRlbnQKLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo=")
-		assert.Error(t, err)
+		as.Error(err)
 	})
 }
