@@ -9,96 +9,46 @@ import (
 	"strings"
 )
 
+// Create执行工作流
+//
+// docs: https://www.coze.cn/open/docs/developer_guides/workflow_run
 func (r *workflowRuns) Create(ctx context.Context, req *RunWorkflowsReq) (*RunWorkflowsResp, error) {
-	method := http.MethodPost
-	uri := "/v1/workflow/run"
-	resp := &runWorkflowsResp{}
-	err := r.client.Request(ctx, method, uri, req, resp)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodPost,
+		URL:    "/v1/workflow/run",
+		Body:   req,
 	}
-	resp.RunWorkflowsResp.setHTTPResponse(resp.HTTPResponse)
-	return resp.RunWorkflowsResp, nil
+	response := new(runWorkflowsResp)
+	err := r.client.rawRequest(ctx, request, response)
+	return response.RunWorkflowsResp, err
 }
 
+// Resume 恢复运行工作流
+//
+// docs: https://www.coze.cn/open/docs/developer_guides/workflow_resume
 func (r *workflowRuns) Resume(ctx context.Context, req *ResumeRunWorkflowsReq) (Stream[WorkflowEvent], error) {
-	method := http.MethodPost
-	uri := "/v1/workflow/stream_resume"
-	resp, err := r.client.StreamRequest(ctx, method, uri, req)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodPost,
+		URL:    "/v1/workflow/stream_resume",
+		Body:   req,
 	}
-
-	return &streamReader[WorkflowEvent]{
-		ctx:          ctx,
-		response:     resp,
-		reader:       bufio.NewReader(resp.Body),
-		processor:    parseWorkflowEvent,
-		httpResponse: newHTTPResponse(resp),
-	}, nil
+	response := new(runWorkflowsResp)
+	err := r.client.rawRequest(ctx, request, response)
+	return newStream(ctx, r.client, response.HTTPResponse, parseWorkflowEvent), err
 }
 
+// Stream 流式执行工作流
+//
+// docs: https://www.coze.cn/open/docs/developer_guides/workflow_stream_run
 func (r *workflowRuns) Stream(ctx context.Context, req *RunWorkflowsReq) (Stream[WorkflowEvent], error) {
-	method := http.MethodPost
-	uri := "/v1/workflow/stream_run"
-	resp, err := r.client.StreamRequest(ctx, method, uri, req)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodPost,
+		URL:    "/v1/workflow/stream_run",
+		Body:   req,
 	}
-
-	return &streamReader[WorkflowEvent]{
-		ctx:          ctx,
-		response:     resp,
-		reader:       bufio.NewReader(resp.Body),
-		processor:    parseWorkflowEvent,
-		httpResponse: newHTTPResponse(resp),
-	}, nil
-}
-
-type workflowRuns struct {
-	client    *core
-	Histories *workflowRunsHistories
-}
-
-func newWorkflowRun(core *core) *workflowRuns {
-	return &workflowRuns{
-		client:    core,
-		Histories: newWorkflowRunsHistories(core),
-	}
-}
-
-func parseWorkflowEvent(ctx context.Context, core *core, lineBytes []byte, reader *bufio.Reader) (*WorkflowEvent, bool, error) {
-	line := string(lineBytes)
-	if strings.HasPrefix(line, "id:") {
-		id := strings.TrimSpace(line[3:])
-		core.Log(ctx, LogLevelDebug, "receive workflow event, id: %s", id)
-		data, err := reader.ReadString('\n')
-		if err != nil {
-			return nil, false, err
-		}
-		event := strings.TrimSpace(data[6:])
-		core.Log(ctx, LogLevelDebug, "receive workflow event, event: %s", event)
-		data, err = reader.ReadString('\n')
-		if err != nil {
-			return nil, false, err
-		}
-		data = strings.TrimSpace(data[5:])
-		core.Log(ctx, LogLevelDebug, "receive workflow data, event: %s", data)
-
-		eventLine := map[string]string{
-			"id":    id,
-			"event": event,
-			"data":  data,
-		}
-
-		eventData, err := doParseWorkflowEvent(eventLine)
-		if err != nil {
-			return nil, false, err
-		}
-
-		return eventData, eventData.IsDone(), nil
-	}
-	return nil, false, nil
+	response := new(runWorkflowsResp)
+	err := r.client.rawRequest(ctx, request, response)
+	return newStream(ctx, r.client, response.HTTPResponse, parseWorkflowEvent), err
 }
 
 // WorkflowRunResult represents the result of a workflow runs
@@ -132,93 +82,6 @@ type WorkflowEvent struct {
 
 type WorkflowEventDebugURL struct {
 	URL string `json:"debug_url"`
-}
-
-func parseWorkflowEventMessage(id int, data string) (*WorkflowEvent, error) {
-	var message WorkflowEventMessage
-	if err := json.Unmarshal([]byte(data), &message); err != nil {
-		return nil, err
-	}
-
-	return &WorkflowEvent{
-		ID:      id,
-		Event:   WorkflowEventTypeMessage,
-		Message: &message,
-	}, nil
-}
-
-func parseWorkflowEventInterrupt(id int, data string) (*WorkflowEvent, error) {
-	var interrupt WorkflowEventInterrupt
-	if err := json.Unmarshal([]byte(data), &interrupt); err != nil {
-		return nil, err
-	}
-
-	return &WorkflowEvent{
-		ID:        id,
-		Event:     WorkflowEventTypeInterrupt,
-		Interrupt: &interrupt,
-	}, nil
-}
-
-func parseWorkflowEventError(id int, data string) (*WorkflowEvent, error) {
-	var errorEvent WorkflowEventError
-	if err := json.Unmarshal([]byte(data), &errorEvent); err != nil {
-		return nil, err
-	}
-
-	return &WorkflowEvent{
-		ID:    id,
-		Event: WorkflowEventTypeError,
-		Error: &errorEvent,
-	}, nil
-}
-
-func parseWorkflowEventDone(id int, data string) (*WorkflowEvent, error) {
-	var debugURL WorkflowEventDebugURL
-	if err := json.Unmarshal([]byte(data), &debugURL); err != nil {
-		return nil, err
-	}
-	return &WorkflowEvent{
-		ID:       id,
-		Event:    WorkflowEventTypeDone,
-		DebugURL: &debugURL,
-	}, nil
-}
-
-func parseWorkflowEventPing(id int) (*WorkflowEvent, error) {
-	return &WorkflowEvent{
-		ID:    id,
-		Event: WorkflowEventTypePing,
-	}, nil
-}
-
-func parseWorkflowEventUnknown(id int, events map[string]string) (*WorkflowEvent, error) {
-	return &WorkflowEvent{
-		ID:      id,
-		Event:   WorkflowEventTypeUnknown,
-		Unknown: events,
-	}, nil
-}
-
-func doParseWorkflowEvent(eventLine map[string]string) (*WorkflowEvent, error) {
-	id, _ := strconv.Atoi(eventLine["id"])
-	event := WorkflowEventType(eventLine["event"])
-	data := eventLine["data"]
-
-	switch event {
-	case WorkflowEventTypeMessage:
-		return parseWorkflowEventMessage(id, data)
-	case WorkflowEventTypeInterrupt:
-		return parseWorkflowEventInterrupt(id, data)
-	case WorkflowEventTypeError:
-		return parseWorkflowEventError(id, data)
-	case WorkflowEventTypeDone:
-		return parseWorkflowEventDone(id, data)
-	case WorkflowEventTypePing:
-		return parseWorkflowEventPing(id)
-	default:
-		return parseWorkflowEventUnknown(id, eventLine)
-	}
 }
 
 func (e *WorkflowEvent) IsDone() bool {
@@ -348,4 +211,137 @@ type ResumeRunWorkflowsReq struct {
 
 	// Interrupt type
 	InterruptType int `json:"interrupt_type"`
+}
+
+func parseWorkflowEvent(ctx context.Context, core *core, lineBytes []byte, reader *bufio.Reader) (*WorkflowEvent, bool, error) {
+	line := string(lineBytes)
+	if strings.HasPrefix(line, "id:") {
+		id := strings.TrimSpace(line[3:])
+		core.Log(ctx, LogLevelDebug, "receive workflow event, id: %s", id)
+		data, err := reader.ReadString('\n')
+		if err != nil {
+			return nil, false, err
+		}
+		event := strings.TrimSpace(data[6:])
+		core.Log(ctx, LogLevelDebug, "receive workflow event, event: %s", event)
+		data, err = reader.ReadString('\n')
+		if err != nil {
+			return nil, false, err
+		}
+		data = strings.TrimSpace(data[5:])
+		core.Log(ctx, LogLevelDebug, "receive workflow data, event: %s", data)
+
+		eventLine := map[string]string{
+			"id":    id,
+			"event": event,
+			"data":  data,
+		}
+
+		eventData, err := doParseWorkflowEvent(eventLine)
+		if err != nil {
+			return nil, false, err
+		}
+
+		return eventData, eventData.IsDone(), nil
+	}
+	return nil, false, nil
+}
+
+func parseWorkflowEventMessage(id int, data string) (*WorkflowEvent, error) {
+	var message WorkflowEventMessage
+	if err := json.Unmarshal([]byte(data), &message); err != nil {
+		return nil, err
+	}
+
+	return &WorkflowEvent{
+		ID:      id,
+		Event:   WorkflowEventTypeMessage,
+		Message: &message,
+	}, nil
+}
+
+func parseWorkflowEventInterrupt(id int, data string) (*WorkflowEvent, error) {
+	var interrupt WorkflowEventInterrupt
+	if err := json.Unmarshal([]byte(data), &interrupt); err != nil {
+		return nil, err
+	}
+
+	return &WorkflowEvent{
+		ID:        id,
+		Event:     WorkflowEventTypeInterrupt,
+		Interrupt: &interrupt,
+	}, nil
+}
+
+func parseWorkflowEventError(id int, data string) (*WorkflowEvent, error) {
+	var errorEvent WorkflowEventError
+	if err := json.Unmarshal([]byte(data), &errorEvent); err != nil {
+		return nil, err
+	}
+
+	return &WorkflowEvent{
+		ID:    id,
+		Event: WorkflowEventTypeError,
+		Error: &errorEvent,
+	}, nil
+}
+
+func parseWorkflowEventDone(id int, data string) (*WorkflowEvent, error) {
+	var debugURL WorkflowEventDebugURL
+	if err := json.Unmarshal([]byte(data), &debugURL); err != nil {
+		return nil, err
+	}
+	return &WorkflowEvent{
+		ID:       id,
+		Event:    WorkflowEventTypeDone,
+		DebugURL: &debugURL,
+	}, nil
+}
+
+func parseWorkflowEventPing(id int) (*WorkflowEvent, error) {
+	return &WorkflowEvent{
+		ID:    id,
+		Event: WorkflowEventTypePing,
+	}, nil
+}
+
+func parseWorkflowEventUnknown(id int, events map[string]string) (*WorkflowEvent, error) {
+	return &WorkflowEvent{
+		ID:      id,
+		Event:   WorkflowEventTypeUnknown,
+		Unknown: events,
+	}, nil
+}
+
+func doParseWorkflowEvent(eventLine map[string]string) (*WorkflowEvent, error) {
+	id, _ := strconv.Atoi(eventLine["id"])
+	event := WorkflowEventType(eventLine["event"])
+	data := eventLine["data"]
+
+	switch event {
+	case WorkflowEventTypeMessage:
+		return parseWorkflowEventMessage(id, data)
+	case WorkflowEventTypeInterrupt:
+		return parseWorkflowEventInterrupt(id, data)
+	case WorkflowEventTypeError:
+		return parseWorkflowEventError(id, data)
+	case WorkflowEventTypeDone:
+		return parseWorkflowEventDone(id, data)
+	case WorkflowEventTypePing:
+		return parseWorkflowEventPing(id)
+	default:
+		return parseWorkflowEventUnknown(id, eventLine)
+	}
+}
+
+type workflowRuns struct {
+	client    *core
+	Histories *workflowRunsHistories
+}
+
+func newWorkflowRun(core *core) *workflowRuns {
+	return &workflowRuns{
+		client:    core,
+		Histories: newWorkflowRunsHistories(core),
+	}
 }

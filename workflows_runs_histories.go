@@ -72,6 +72,7 @@ type RetrieveWorkflowsRunsHistoriesReq struct {
 type runWorkflowsResp struct {
 	baseResponse
 	*RunWorkflowsResp
+	HTTPResponse *http.Response `json:"-"`
 }
 
 // RunWorkflowsResp represents response for running workflow
