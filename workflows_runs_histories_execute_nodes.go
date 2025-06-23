@@ -2,46 +2,31 @@ package coze
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 )
 
-type workflowsRunsHistoriesExecuteNodes struct {
-	core *core
-}
-
-func newWorkflowsRunsHistoriesExecuteNodes(core *core) *workflowsRunsHistoriesExecuteNodes {
-	return &workflowsRunsHistoriesExecuteNodes{core: core}
-}
-
 // Retrieve retrieves the output of a node execution
 func (r *workflowsRunsHistoriesExecuteNodes) Retrieve(ctx context.Context, req *RetrieveWorkflowsRunsHistoriesExecuteNodesReq) (*RetrieveWorkflowRunsHistoriesExecuteNodesResp, error) {
-	method := http.MethodGet
-	uri := fmt.Sprintf("/v1/workflows/%s/run_histories/%s/execute_nodes/%s", req.WorkflowID, req.ExecuteID, req.NodeExecuteUUID)
-	resp := &retrieveWorkflowRunsHistoriesExecuteNodeResp{}
-	err := r.core.Request(ctx, method, uri, nil, resp)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodGet,
+		URL:    "/v1/workflows/:workflow_id/run_histories/:execute_id/execute_nodes/:node_execute_uuid",
+		Body:   req,
 	}
-	resp.Data.setHTTPResponse(resp.HTTPResponse)
-	return resp.Data, nil
+	response := new(retrieveWorkflowRunsHistoriesExecuteNodeResp)
+	err := r.core.rawRequest(ctx, request, response)
+	return response.Data, err
 }
 
 // RetrieveWorkflowsRunsHistoriesExecuteNodesReq query output node execution result
 type RetrieveWorkflowsRunsHistoriesExecuteNodesReq struct {
 	// The ID of the workflow async execute.
-	WorkflowID string `json:"workflow_id"`
+	WorkflowID string `path:"workflow_id" json:"-"`
 
 	// The ID of the workflow.
-	ExecuteID string `json:"execute_id"`
+	ExecuteID string `path:"execute_id" json:"-"`
 
 	// The ID of the node execute.
-	NodeExecuteUUID string `json:"node_execute_uuid"`
-}
-
-type retrieveWorkflowRunsHistoriesExecuteNodeResp struct {
-	baseResponse
-	Data *RetrieveWorkflowRunsHistoriesExecuteNodesResp `json:"data"`
+	NodeExecuteUUID string `path:"node_execute_uuid" json:"-"`
 }
 
 // RetrieveWorkflowRunsHistoriesExecuteNodesResp allows you to retrieve the output of a node execution
@@ -51,4 +36,17 @@ type RetrieveWorkflowRunsHistoriesExecuteNodesResp struct {
 	IsFinish bool `json:"is_finish"`
 	// The node output.
 	NodeOutput string `json:"node_output"`
+}
+
+type retrieveWorkflowRunsHistoriesExecuteNodeResp struct {
+	baseResponse
+	Data *RetrieveWorkflowRunsHistoriesExecuteNodesResp `json:"data"`
+}
+
+type workflowsRunsHistoriesExecuteNodes struct {
+	core *core
+}
+
+func newWorkflowsRunsHistoriesExecuteNodes(core *core) *workflowsRunsHistoriesExecuteNodes {
+	return &workflowsRunsHistoriesExecuteNodes{core: core}
 }
