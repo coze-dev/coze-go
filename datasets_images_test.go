@@ -79,8 +79,6 @@ func TestDatasetsImages(t *testing.T) {
 			DatasetID:  "123",
 			Keyword:    ptr("test"),
 			HasCaption: ptr(true),
-			PageNum:    1,
-			PageSize:   10,
 		})
 		as.Nil(err)
 		as.NotNil(paged)

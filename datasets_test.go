@@ -2,40 +2,25 @@ package coze
 
 import (
 	"context"
-	"io"
 	"net/http"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
-func TestDatasets(t *testing.T) {
-	t.Run("Create dataset success", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// Verify request method and path
-				assert.Equal(t, http.MethodPost, req.Method)
-				assert.Equal(t, "/v1/datasets", req.URL.Path)
-
-				// Return mock response
-				return &http.Response{
-					StatusCode: http.StatusOK,
-					Body: io.NopCloser(strings.NewReader(`{
-						"data": {
-							"dataset_id": "123"
-						}
-					}`)),
-					Header: make(http.Header),
-				}, nil
-			},
-		}
-
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
-		datasets := newDatasets(core)
-
-		// Create test request
+func TestDataset(t *testing.T) {
+	as := assert.New(t)
+	t.Run("create dataset success", func(t *testing.T) {
+		datasetID := randomString(10)
+		datasets := newDatasets(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			as.Equal(http.MethodPost, req.Method)
+			as.Equal("/v1/datasets", req.URL.Path)
+			return mockResponse(http.StatusOK, &createDatasetResp{
+				Data: &CreateDatasetResp{
+					DatasetID: datasetID,
+				},
+			})
+		})))
 		req := &CreateDatasetsReq{
 			Name:        "test_dataset",
 			SpaceID:     "space_123",
@@ -43,188 +28,132 @@ func TestDatasets(t *testing.T) {
 			Description: "Test dataset description",
 			IconFileID:  "icon_123",
 		}
-
-		// Test dataset creation
 		resp, err := datasets.Create(context.Background(), req)
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		assert.Equal(t, "123", resp.DatasetID)
+		as.Nil(err)
+		as.NotNil(resp)
+		as.NotEmpty(resp.Response().LogID())
+		as.Equal(datasetID, resp.DatasetID)
 	})
 
-	t.Run("List datasets success", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// Verify request method and path
-				assert.Equal(t, http.MethodGet, req.Method)
-				assert.Equal(t, "/v1/datasets", req.URL.Path)
-
-				// Return mock response
-				return &http.Response{
-					StatusCode: http.StatusOK,
-					Body: io.NopCloser(strings.NewReader(`{
-						"data": {
-							"total_count": 2,
-							"dataset_list": [
-								{
-									"dataset_id": "123",
-									"name": "dataset1",
-									"space_id": "space_123",
-									"status": 1,
-									"format_type": 0
-								},
-								{
-									"dataset_id": "456",
-									"name": "dataset2",
-									"space_id": "space_123",
-									"status": 1,
-									"format_type": 0
-								}
-							]
-						}
-					}`)),
-					Header: make(http.Header),
-				}, nil
-			},
-		}
-
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
-		datasets := newDatasets(core)
-
-		// Create test request
+	t.Run("list datasets success", func(t *testing.T) {
+		datasets := newDatasets(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			as.Equal(http.MethodGet, req.Method)
+			as.Equal("/v1/datasets", req.URL.Path)
+			return mockResponse(http.StatusOK, &listDatasetsResp{
+				Data: &ListDatasetsResp{
+					TotalCount: 2,
+					DatasetList: []*Dataset{
+						{
+							ID:         "123",
+							Name:       "dataset1",
+							SpaceID:    "space_123",
+							Status:     DatasetStatusEnabled,
+							FormatType: DocumentFormatTypeDocument,
+						},
+						{
+							ID:         "456",
+							Name:       "dataset2",
+							SpaceID:    "space_123",
+							Status:     DatasetStatusEnabled,
+							FormatType: DocumentFormatTypeDocument,
+						},
+					},
+				},
+			})
+		})))
 		req := NewListDatasetsReq("space_123")
 		req.Name = "dataset"
 		req.FormatType = DocumentFormatTypeDocument
 
-		// Test dataset listing
-		pager, err := datasets.List(context.Background(), req)
-		require.NoError(t, err)
+		paged, err := datasets.List(context.Background(), req)
+		as.Nil(err)
+		as.NotNil(paged)
+		// as.NotEmpty(paged.resp) // todo
 
-		// Verify pagination results
-		items := pager.Items()
-		assert.Len(t, items, 2)
-		assert.Equal(t, "123", items[0].ID)
-		assert.Equal(t, "456", items[1].ID)
-		assert.Equal(t, int(2), pager.Total())
-		assert.False(t, pager.HasMore())
+		items := paged.Items()
+		as.Len(items, 2)
+		as.Equal("123", items[0].ID)
+		as.Equal("456", items[1].ID)
+		as.Equal(int(2), paged.Total())
+		as.False(paged.HasMore())
 	})
 
-	t.Run("Update dataset success", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// Verify request method and path
-				assert.Equal(t, http.MethodPut, req.Method)
-				assert.Equal(t, "/v1/datasets/123", req.URL.Path)
-
-				// Return mock response
-				return &http.Response{
-					StatusCode: http.StatusOK,
-					Body:       io.NopCloser(strings.NewReader(`{"data": {}}`)),
-					Header:     make(http.Header),
-				}, nil
-			},
-		}
-
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
-		datasets := newDatasets(core)
-
-		// Create test request
+	t.Run("update dataset success", func(t *testing.T) {
+		datasets := newDatasets(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			as.Equal(http.MethodPut, req.Method)
+			as.Equal("/v1/datasets/123", req.URL.Path)
+			return mockResponse(http.StatusOK, &updateDatasetResp{
+				Data: &UpdateDatasetsResp{},
+			})
+		})))
 		req := &UpdateDatasetsReq{
 			DatasetID:   "123",
 			Name:        "updated_dataset",
 			Description: "Updated description",
 			IconFileID:  "new_icon_123",
 		}
-
-		// Test dataset update
 		resp, err := datasets.Update(context.Background(), req)
-		require.NoError(t, err)
-		require.NotNil(t, resp)
+		as.Nil(err)
+		as.NotNil(resp)
+		as.NotEmpty(resp.Response().LogID())
 	})
 
 	t.Run("Delete dataset success", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// Verify request method and path
-				assert.Equal(t, http.MethodDelete, req.Method)
-				assert.Equal(t, "/v1/datasets/123", req.URL.Path)
-
-				// Return mock response
-				return &http.Response{
-					StatusCode: http.StatusOK,
-					Body:       io.NopCloser(strings.NewReader(`{"data": {}}`)),
-					Header:     make(http.Header),
-				}, nil
-			},
-		}
-
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
-		datasets := newDatasets(core)
-
-		// Create test request
+		datasets := newDatasets(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			as.Equal(http.MethodDelete, req.Method)
+			as.Equal("/v1/datasets/123", req.URL.Path)
+			return mockResponse(http.StatusOK, &updateDatasetResp{
+				Data: &UpdateDatasetsResp{},
+			})
+		})))
 		req := &DeleteDatasetsReq{
 			DatasetID: "123",
 		}
-
-		// Test dataset deletion
 		resp, err := datasets.Delete(context.Background(), req)
-		require.NoError(t, err)
-		require.NotNil(t, resp)
+		as.Nil(err)
+		as.NotNil(resp)
+		as.NotEmpty(resp.Response().LogID())
 	})
 
 	t.Run("Process documents success", func(t *testing.T) {
-		mockTransport := &mockTransport{
-			roundTripFunc: func(req *http.Request) (*http.Response, error) {
-				// Verify request method and path
-				assert.Equal(t, http.MethodPost, req.Method)
-				assert.Equal(t, "/v1/datasets/123/process", req.URL.Path)
-
-				// Return mock response
-				return &http.Response{
-					StatusCode: http.StatusOK,
-					Body: io.NopCloser(strings.NewReader(`{
-						"data": {
-							"data": [
-								{
-									"document_id": "doc_123",
-									"status": 1,
-									"progress": 100,
-									"document_name": "test.txt"
-								}
-							]
-						}
-					}`)),
-					Header: make(http.Header),
-				}, nil
-			},
-		}
-
-		core := newCore(&clientOption{baseURL: ComBaseURL, client: &http.Client{Transport: mockTransport}})
-		datasets := newDatasets(core)
-
-		// Create test request
+		datasets := newDatasets(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			as.Equal(http.MethodPost, req.Method)
+			as.Equal("/v1/datasets/123/process", req.URL.Path)
+			return mockResponse(http.StatusOK, &processDocumentsResp{
+				Data: &ProcessDocumentsResp{
+					Data: []*DocumentProgress{
+						{
+							DocumentID:   "doc_123",
+							Status:       DocumentStatusCompleted,
+							Progress:     100,
+							DocumentName: "test.txt",
+						},
+					},
+				},
+			})
+		})))
 		req := &ProcessDocumentsReq{
 			DatasetID:   "123",
 			DocumentIDs: []string{"doc_123"},
 		}
-
-		// Test document processing
 		resp, err := datasets.Process(context.Background(), req)
-		require.NoError(t, err)
-		require.NotNil(t, resp)
-		require.Len(t, resp.Data, 1)
+		as.Nil(err)
+		as.NotNil(resp)
+		as.NotEmpty(resp.Response().LogID())
+		as.Len(resp.Data, 1)
 
 		progress := resp.Data[0]
-		assert.Equal(t, "doc_123", progress.DocumentID)
-		assert.Equal(t, DocumentStatusCompleted, progress.Status)
-		assert.Equal(t, 100, progress.Progress)
-		assert.Equal(t, "test.txt", progress.DocumentName)
+		as.Equal("doc_123", progress.DocumentID)
+		as.Equal(DocumentStatusCompleted, progress.Status)
+		as.Equal(100, progress.Progress)
+		as.Equal("test.txt", progress.DocumentName)
 	})
 }
 
-// Test dataset status constants
 func TestDatasetStatus(t *testing.T) {
-	t.Run("DatasetStatus constants", func(t *testing.T) {
-		assert.Equal(t, DatasetStatus(1), DatasetStatusEnabled)
-		assert.Equal(t, DatasetStatus(3), DatasetStatusDisabled)
+	as := assert.New(t)
+	t.Run("dataset status constants", func(t *testing.T) {
+		as.Equal(DatasetStatus(1), DatasetStatusEnabled)
+		as.Equal(DatasetStatus(3), DatasetStatusDisabled)
 	})
 }

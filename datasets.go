@@ -2,97 +2,78 @@ package coze
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"strconv"
 )
 
 func (r *datasets) Create(ctx context.Context, req *CreateDatasetsReq) (*CreateDatasetResp, error) {
-	method := http.MethodPost
-	uri := "/v1/datasets"
-	resp := &createDatasetResp{}
-	err := r.client.Request(ctx, method, uri, req, resp)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodPost,
+		URL:    "/v1/datasets",
+		Body:   req,
 	}
-	resp.Data.setHTTPResponse(resp.HTTPResponse)
-	return resp.Data, nil
+	response := new(createDatasetResp)
+	err := r.client.rawRequest(ctx, request, response)
+	return response.Data, err
 }
 
 func (r *datasets) List(ctx context.Context, req *ListDatasetsReq) (NumberPaged[Dataset], error) {
 	if req.PageSize == 0 {
-		req.PageSize = 10 // 设置默认值为10
+		req.PageSize = 10
 	}
 	if req.PageNum == 0 {
 		req.PageNum = 1
 	}
-	return NewNumberPaged[Dataset](
+	return NewNumberPaged(
 		func(request *pageRequest) (*pageResponse[Dataset], error) {
-			uri := "/v1/datasets"
-			resp := &listDatasetsResp{}
-			queries := []RequestOption{}
-			if req.SpaceID != "" {
-				queries = append(queries, withHTTPQuery("space_id", req.SpaceID))
-			}
-			if req.Name != "" {
-				queries = append(queries, withHTTPQuery("name", req.Name))
-			}
-			if req.FormatType != 0 {
-				queries = append(queries, withHTTPQuery("format_type", strconv.Itoa(int(req.FormatType))))
-			}
-			queries = append(queries,
-				withHTTPQuery("page_num", strconv.Itoa(request.PageNum)),
-				withHTTPQuery("page_size", strconv.Itoa(request.PageSize)),
-			)
-			err := r.client.Request(ctx, http.MethodGet, uri, nil, resp, queries...)
+			response := new(listDatasetsResp)
+			err := r.client.rawRequest(ctx, &RawRequestReq{
+				Method: http.MethodGet,
+				URL:    "/v1/datasets",
+				Body:   req.toReq(request),
+			}, response)
 			if err != nil {
 				return nil, err
 			}
 			return &pageResponse[Dataset]{
-				Total:   resp.Data.TotalCount,
-				HasMore: len(resp.Data.DatasetList) >= request.PageSize,
-				Data:    resp.Data.DatasetList,
-				LogID:   resp.HTTPResponse.LogID(),
+				Total:   response.Data.TotalCount,
+				HasMore: len(response.Data.DatasetList) >= request.PageSize,
+				Data:    response.Data.DatasetList,
+				LogID:   response.HTTPResponse.LogID(),
 			}, nil
 		}, req.PageSize, req.PageNum)
 }
 
 func (r *datasets) Update(ctx context.Context, req *UpdateDatasetsReq) (*UpdateDatasetsResp, error) {
-	method := http.MethodPut
-	uri := fmt.Sprintf("/v1/datasets/%s", req.DatasetID)
-	resp := &updateDatasetResp{}
-	err := r.client.Request(ctx, method, uri, req, resp)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodPut,
+		URL:    "/v1/datasets/:dataset_id",
+		Body:   req,
 	}
-	result := &UpdateDatasetsResp{}
-	result.setHTTPResponse(resp.HTTPResponse)
-	return result, nil
+	response := new(updateDatasetResp)
+	err := r.client.rawRequest(ctx, request, response)
+	return response.Data, err
 }
 
 func (r *datasets) Delete(ctx context.Context, req *DeleteDatasetsReq) (*DeleteDatasetsResp, error) {
-	method := http.MethodDelete
-	uri := fmt.Sprintf("/v1/datasets/%s", req.DatasetID)
-	resp := &deleteDatasetResp{}
-	err := r.client.Request(ctx, method, uri, nil, resp)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodDelete,
+		URL:    "/v1/datasets/:dataset_id",
+		Body:   req,
 	}
-	result := &DeleteDatasetsResp{}
-	result.setHTTPResponse(resp.HTTPResponse)
-	return result, nil
+	response := new(deleteDatasetResp)
+	err := r.client.rawRequest(ctx, request, response)
+	return response.Data, err
 }
 
 func (r *datasets) Process(ctx context.Context, req *ProcessDocumentsReq) (*ProcessDocumentsResp, error) {
-	method := http.MethodPost
-	uri := fmt.Sprintf("/v1/datasets/%s/process", req.DatasetID)
-	resp := &processDocumentsResp{}
-	err := r.client.Request(ctx, method, uri, req, resp)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method: http.MethodPost,
+		URL:    "/v1/datasets/:dataset_id/process",
+		Body:   req,
 	}
-	resp.Data.setHTTPResponse(resp.HTTPResponse)
-	return resp.Data, nil
+	response := new(processDocumentsResp)
+	err := r.client.rawRequest(ctx, request, response)
+	return response.Data, err
 }
 
 // DatasetStatus 表示数据集状态
@@ -139,12 +120,6 @@ type CreateDatasetsReq struct {
 	IconFileID  string             `json:"file_id,omitempty"`
 }
 
-// CreateDatasetResp 表示创建数据集的响应
-type createDatasetResp struct {
-	baseResponse
-	Data *CreateDatasetResp `json:"data"`
-}
-
 type CreateDatasetResp struct {
 	baseModel
 	DatasetID string `json:"dataset_id"`
@@ -152,11 +127,11 @@ type CreateDatasetResp struct {
 
 // ListDatasetsReq 表示列出数据集的请求
 type ListDatasetsReq struct {
-	SpaceID    string             `json:"space_id"`
-	Name       string             `json:"name,omitempty"`
-	FormatType DocumentFormatType `json:"format_type,omitempty"`
-	PageNum    int                `json:"page_num"`
-	PageSize   int                `json:"page_size"`
+	SpaceID    string             `query:"space_id" json:"-"`
+	Name       string             `query:"name,omitempty" json:"-"`
+	FormatType DocumentFormatType `query:"format_type,omitempty" json:"-"`
+	PageNum    int                `query:"page_num" json:"-"`
+	PageSize   int                `query:"page_size" json:"-"`
 }
 
 func NewListDatasetsReq(spaceID string) *ListDatasetsReq {
@@ -167,12 +142,6 @@ func NewListDatasetsReq(spaceID string) *ListDatasetsReq {
 	}
 }
 
-// ListDatasetsResp 表示列出数据集的响应
-type listDatasetsResp struct {
-	baseResponse
-	Data *ListDatasetsResp `json:"data"`
-}
-
 type ListDatasetsResp struct {
 	baseModel
 	TotalCount  int        `json:"total_count"`
@@ -181,16 +150,10 @@ type ListDatasetsResp struct {
 
 // UpdateDatasetsReq 表示更新数据集的请求
 type UpdateDatasetsReq struct {
-	DatasetID   string `json:"-"`
+	DatasetID   string `path:"dataset_id" json:"-"`
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
 	IconFileID  string `json:"file_id,omitempty"`
-}
-
-// UpdateDatasetResp 表示更新数据集的响应
-type updateDatasetResp struct {
-	baseResponse
-	Data *UpdateDatasetsResp `json:"data"`
 }
 
 type UpdateDatasetsResp struct {
@@ -199,13 +162,7 @@ type UpdateDatasetsResp struct {
 
 // DeleteDatasetsReq 表示删除数据集的请求
 type DeleteDatasetsReq struct {
-	DatasetID string `json:"-"`
-}
-
-// DeleteDatasetResp 表示删除数据集的响应
-type deleteDatasetResp struct {
-	baseResponse
-	Data *DeleteDatasetsResp `json:"data"`
+	DatasetID string `path:"dataset_id" json:"-"`
 }
 
 type DeleteDatasetsResp struct {
@@ -229,19 +186,48 @@ type DocumentProgress struct {
 
 // ProcessDocumentsReq 表示处理文档的请求
 type ProcessDocumentsReq struct {
-	DatasetID   string   `json:"-"`
+	DatasetID   string   `path:"dataset_id" json:"-"`
 	DocumentIDs []string `json:"document_ids"`
-}
-
-// ProcessDocumentsResp 表示处理文档的响应
-type processDocumentsResp struct {
-	baseResponse
-	Data *ProcessDocumentsResp `json:"data"`
 }
 
 type ProcessDocumentsResp struct {
 	baseModel
 	Data []*DocumentProgress `json:"data"`
+}
+
+type processDocumentsResp struct {
+	baseResponse
+	Data *ProcessDocumentsResp `json:"data"`
+}
+
+type deleteDatasetResp struct {
+	baseResponse
+	Data *DeleteDatasetsResp `json:"data"`
+}
+
+type createDatasetResp struct {
+	baseResponse
+	Data *CreateDatasetResp `json:"data"`
+}
+
+type listDatasetsResp struct {
+	baseResponse
+	Data *ListDatasetsResp `json:"data"`
+}
+
+type updateDatasetResp struct {
+	baseResponse
+	Data *UpdateDatasetsResp `json:"data"`
+}
+
+func (r ListDatasetsReq) toReq(request *pageRequest) *ListDatasetsReq {
+	return &ListDatasetsReq{
+		SpaceID:    r.SpaceID,
+		Name:       r.Name,
+		FormatType: r.FormatType,
+		PageNum:    request.PageNum,
+		PageSize:   request.PageSize,
+	}
 }
 
 type datasets struct {
