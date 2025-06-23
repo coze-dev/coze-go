@@ -5,6 +5,9 @@ import (
 	"net/http"
 )
 
+// Create 创建智能体
+//
+// docs: https://www.coze.cn/open/docs/developer_guides/create_bot
 func (r *bots) Create(ctx context.Context, req *CreateBotsReq) (*CreateBotsResp, error) {
 	request := &RawRequestReq{
 		Method: http.MethodPost,
@@ -16,6 +19,9 @@ func (r *bots) Create(ctx context.Context, req *CreateBotsReq) (*CreateBotsResp,
 	return response.Data, err
 }
 
+// Update 更新智能体
+//
+// docs: https://www.coze.cn/open/docs/developer_guides/update_bot
 func (r *bots) Update(ctx context.Context, req *UpdateBotsReq) (*UpdateBotsResp, error) {
 	request := &RawRequestReq{
 		Method: http.MethodPost,
@@ -27,6 +33,9 @@ func (r *bots) Update(ctx context.Context, req *UpdateBotsReq) (*UpdateBotsResp,
 	return response.Data, err
 }
 
+// Publish 发布智能体
+//
+// docs: https://www.coze.cn/open/docs/developer_guides/publish_bot
 func (r *bots) Publish(ctx context.Context, req *PublishBotsReq) (*PublishBotsResp, error) {
 	request := &RawRequestReq{
 		Method: http.MethodPost,
@@ -38,6 +47,9 @@ func (r *bots) Publish(ctx context.Context, req *PublishBotsReq) (*PublishBotsRe
 	return response.Data, err
 }
 
+// Retrieve 获取已发布智能体配置（即将下线）
+//
+// docs: https://www.coze.cn/open/docs/developer_guides/get_metadata
 func (r *bots) Retrieve(ctx context.Context, req *RetrieveBotsReq) (*RetrieveBotsResp, error) {
 	request := &RawRequestReq{
 		Method: http.MethodGet,
@@ -49,6 +61,9 @@ func (r *bots) Retrieve(ctx context.Context, req *RetrieveBotsReq) (*RetrieveBot
 	return response.Data, err
 }
 
+// List 查看已发布智能体列表（即将下线）
+//
+// docs: https://www.coze.cn/open/docs/developer_guides/published_bots_list
 func (r *bots) List(ctx context.Context, req *ListBotsReq) (NumberPaged[SimpleBot], error) {
 	if req.PageSize == 0 {
 		req.PageSize = 20
@@ -204,9 +219,9 @@ type PublishBotsResp struct {
 
 // ListBotsReq represents the request structure for listing bots
 type ListBotsReq struct {
-	SpaceID  string `query:"space_id" json:"-"`  // Space ID
-	PageNum  int    `query:"page_num" json:"-"`  // Page number
-	PageSize int    `query:"page_size" json:"-"` // Page size
+	SpaceID  string `query:"space_id" json:"-"`   // Space ID
+	PageNum  int    `query:"page_index" json:"-"` // Page number
+	PageSize int    `query:"page_size" json:"-"`  // Page size
 }
 
 // RetrieveBotsReq represents the request structure for retrieving a bot
