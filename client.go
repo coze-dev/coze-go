@@ -101,6 +101,21 @@ func NewCozeAPI(auth Auth, opts ...CozeAPIOption) CozeAPI {
 	return cozeClient
 }
 
+type core struct {
+	*clientOption
+}
+
+func newCore(opt *clientOption) *core {
+	if opt.client == nil {
+		opt.client = &http.Client{
+			Timeout: time.Second * 5,
+		}
+	}
+	return &core{
+		clientOption: opt,
+	}
+}
+
 type authTransport struct {
 	auth Auth
 	next http.RoundTripper

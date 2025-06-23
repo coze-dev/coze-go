@@ -19,7 +19,6 @@ import (
 // DeviceAuthReq represents the device authorization request
 type DeviceAuthReq struct {
 	ClientID string `json:"client_id"`
-	LogID    string `json:"log_id,omitempty"`
 }
 
 // GetDeviceAuthResp represents the device authorization response
@@ -49,6 +48,28 @@ type getAccessTokenReq struct {
 	EnterpriseID    *string `json:"enterprise_id,omitempty"` // Enterprise ID
 }
 
+func (r getAccessTokenReq) getAPIPath() string {
+	if r.AccountID != nil && *r.AccountID > 0 {
+		return fmt.Sprintf(getAccountTokenPath, *r.AccountID)
+	} else if r.EnterpriseID != nil && *r.EnterpriseID != "" {
+		return fmt.Sprintf(getEnterpriseTokenPath, *r.EnterpriseID)
+	}
+	return getTokenPath
+}
+
+func (r getAccessTokenParams) getReq(clientID string) *getAccessTokenReq {
+	if r.Request != nil {
+		return r.Request
+	}
+	return &getAccessTokenReq{
+		ClientID:     clientID,
+		GrantType:    r.Type.String(),
+		Code:         r.Code,
+		RefreshToken: r.RefreshToken,
+		RedirectURI:  r.RedirectURI,
+	}
+}
+
 // GetPKCEOAuthURLResp represents the PKCE authorization URL response
 type GetPKCEOAuthURLResp struct {
 	CodeVerifier     string `json:"code_verifier"`
@@ -71,9 +92,7 @@ func (r GrantType) String() string {
 
 type getOAuthTokenResp struct {
 	baseResponse
-	AccessToken  string `json:"access_token"`
-	ExpiresIn    int64  `json:"expires_in"`
-	RefreshToken string `json:"refresh_token,omitempty"`
+	*OAuthToken
 }
 
 // OAuthToken represents the OAuth token response
@@ -305,34 +324,20 @@ type getAccessTokenParams struct {
 }
 
 func (c *OAuthClient) getAccessToken(ctx context.Context, params getAccessTokenParams) (*OAuthToken, error) {
-	result := &OAuthToken{}
-	var req *getAccessTokenReq
-	if params.Request != nil {
-		req = params.Request
-	} else {
-		req = &getAccessTokenReq{
-			ClientID:     c.clientID,
-			GrantType:    params.Type.String(),
-			Code:         params.Code,
-			RefreshToken: params.RefreshToken,
-			RedirectURI:  params.RedirectURI,
-		}
-	}
-
-	opt := make([]RequestOption, 0)
-	if params.Secret != "" {
-		opt = append(opt, withHTTPHeader(authorizeHeader, fmt.Sprintf("Bearer %s", params.Secret)))
-	}
-	path := getTokenPath
-	if req.AccountID != nil && *req.AccountID > 0 {
-		path = fmt.Sprintf(getAccountTokenPath, *req.AccountID)
-	} else if req.EnterpriseID != nil && *req.EnterpriseID != "" {
-		path = fmt.Sprintf(getEnterpriseTokenPath, *req.EnterpriseID)
-	}
-	if err := c.core.Request(genAuthContext(ctx), http.MethodPost, path, req, result, opt...); err != nil {
+	request := params.getReq(c.clientID)
+	response := &OAuthToken{}
+	if err := c.core.rawRequest(ctx, &RawRequestReq{
+		Method:   http.MethodPost,
+		URL:      request.getAPIPath(),
+		Body:     request,
+		AuthType: 1,
+		Headers: map[string]string{
+			authorizeHeader: fmt.Sprintf("Bearer %s", params.Secret),
+		},
+	}, response); err != nil {
 		return nil, err
 	}
-	return result, nil
+	return response, nil
 }
 
 // refreshAccessToken is a convenience method that internally calls getAccessToken
@@ -496,22 +501,26 @@ func (c *DeviceOAuthClient) GetDeviceCode(ctx context.Context, req *GetDeviceOAu
 }
 
 func (c *DeviceOAuthClient) doGetDeviceCode(ctx context.Context, workspaceID *string) (*GetDeviceAuthResp, error) {
-	urlPath := ""
-	if workspaceID == nil {
-		urlPath = getDeviceCodePath
-	} else {
-		urlPath = fmt.Sprintf(getWorkspaceDeviceCodePath, *workspaceID)
-	}
-	req := DeviceAuthReq{
-		ClientID: c.clientID,
-	}
-	result := &GetDeviceAuthResp{}
-	err := c.core.Request(genAuthContext(ctx), http.MethodPost, urlPath, req, result)
+	response := &GetDeviceAuthResp{}
+	err := c.core.rawRequest(ctx, &RawRequestReq{
+		Method: http.MethodPost,
+		URL:    c.getGetDeviceCodeAPIPath(workspaceID),
+		Body: DeviceAuthReq{
+			ClientID: c.clientID,
+		},
+	}, response)
 	if err != nil {
 		return nil, err
 	}
-	result.VerificationURL = fmt.Sprintf("%s?user_code=%s", result.VerificationURI, result.UserCode)
-	return result, nil
+	response.VerificationURL = fmt.Sprintf("%s?user_code=%s", response.VerificationURI, response.UserCode)
+	return response, nil
+}
+
+func (c *DeviceOAuthClient) getGetDeviceCodeAPIPath(workspaceID *string) string {
+	if workspaceID == nil {
+		return getDeviceCodePath
+	}
+	return fmt.Sprintf(getWorkspaceDeviceCodePath, *workspaceID)
 }
 
 type GetDeviceOAuthAccessTokenReq struct {
@@ -559,17 +568,15 @@ func (c *DeviceOAuthClient) GetAccessToken(ctx context.Context, dReq *GetDeviceO
 }
 
 func (c *DeviceOAuthClient) doGetAccessToken(ctx context.Context, req *getAccessTokenReq) (*OAuthToken, error) {
-	resp := &getOAuthTokenResp{}
-	if err := c.core.Request(genAuthContext(ctx), http.MethodPost, getTokenPath, req, resp); err != nil {
+	response := &getOAuthTokenResp{}
+	if err := c.core.rawRequest(ctx, &RawRequestReq{
+		Method: http.MethodPost,
+		URL:    getTokenPath,
+		Body:   req,
+	}, response); err != nil {
 		return nil, err
 	}
-	res := &OAuthToken{
-		AccessToken:  resp.AccessToken,
-		ExpiresIn:    resp.ExpiresIn,
-		RefreshToken: resp.RefreshToken,
-	}
-	res.setHTTPResponse(resp.HTTPResponse)
-	return res, nil
+	return response.OAuthToken, nil
 }
 
 // RefreshToken refreshes the access token
