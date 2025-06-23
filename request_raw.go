@@ -561,19 +561,6 @@ func setHTTPResponse(resp *http.Response, realResp any) error {
 	return nil
 }
 
-func newStream[T streamable](ctx context.Context, resp *http.Response, processor eventProcessor[T]) Stream[T] {
-	if resp == nil {
-		return nil
-	}
-	return &streamReader[T]{
-		ctx:          ctx,
-		response:     resp,
-		reader:       bufio.NewReader(resp.Body),
-		processor:    processor,
-		httpResponse: newHTTPResponse(resp),
-	}
-}
-
 func setBaseRespInterface(resp any, httpResponse *http.Response) {
 	if resp == nil {
 		return

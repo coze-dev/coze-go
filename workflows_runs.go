@@ -67,20 +67,23 @@ func newWorkflowRun(core *core) *workflowRuns {
 	}
 }
 
-func parseWorkflowEvent(lineBytes []byte, reader *bufio.Reader) (*WorkflowEvent, bool, error) {
+func parseWorkflowEvent(ctx context.Context, core *core, lineBytes []byte, reader *bufio.Reader) (*WorkflowEvent, bool, error) {
 	line := string(lineBytes)
 	if strings.HasPrefix(line, "id:") {
 		id := strings.TrimSpace(line[3:])
+		core.Log(ctx, LogLevelDebug, "receive workflow event, id: %s", id)
 		data, err := reader.ReadString('\n')
 		if err != nil {
 			return nil, false, err
 		}
 		event := strings.TrimSpace(data[6:])
+		core.Log(ctx, LogLevelDebug, "receive workflow event, event: %s", event)
 		data, err = reader.ReadString('\n')
 		if err != nil {
 			return nil, false, err
 		}
 		data = strings.TrimSpace(data[5:])
+		core.Log(ctx, LogLevelDebug, "receive workflow data, event: %s", data)
 
 		eventLine := map[string]string{
 			"id":    id,

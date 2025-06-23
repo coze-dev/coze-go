@@ -86,7 +86,7 @@ func (r *chat) Stream(ctx context.Context, req *CreateChatsReq) (Stream[ChatEven
 	}
 	response := new(createChatsResp)
 	err := r.client.rawRequest(ctx, request, response)
-	return newStream(ctx, response.HTTPResponse, parseChatEvent), err
+	return newStream(ctx, r.client, response.HTTPResponse, parseChatEvent), err
 }
 
 func (r *chat) Cancel(ctx context.Context, req *CancelChatsReq) (*CancelChatsResp, error) {
@@ -134,7 +134,7 @@ func (r *chat) StreamSubmitToolOutputs(ctx context.Context, req *SubmitToolOutpu
 	}
 	response := new(submitToolOutputsChatResp)
 	err := r.client.rawRequest(ctx, request, response)
-	return newStream(ctx, response.HTTPResponse, parseChatEvent), err
+	return newStream(ctx, r.client, response.HTTPResponse, parseChatEvent), err
 }
 
 // ChatStatus The running status of the session.
@@ -441,16 +441,18 @@ type retrieveChatsResp struct {
 	Chat *RetrieveChatsResp `json:"data"`
 }
 
-func parseChatEvent(lineBytes []byte, reader *bufio.Reader) (*ChatEvent, bool, error) {
+func parseChatEvent(ctx context.Context, core *core, lineBytes []byte, reader *bufio.Reader) (*ChatEvent, bool, error) {
 	line := string(lineBytes)
 	if strings.HasPrefix(line, "event:") {
 		event := strings.TrimSpace(line[6:])
+		core.Log(ctx, LogLevelDebug, "receive chat event, event: %s", event)
 		data, err := reader.ReadString('\n')
 		if err != nil {
 			return nil, false, err
 		}
 		data = strings.TrimSpace(data[5:])
 
+		core.Log(ctx, LogLevelDebug, "receive chat event, data: %s", data)
 		eventLine := map[string]string{
 			"event": event,
 			"data":  data,

@@ -21,16 +21,32 @@ type Stream[T streamable] interface {
 	Recv() (*T, error)
 }
 
-type eventProcessor[T streamable] func(line []byte, reader *bufio.Reader) (*T, bool, error)
+type eventProcessor[T streamable] func(ctx context.Context, core *core, line []byte, reader *bufio.Reader) (*T, bool, error)
 
 type streamReader[T streamable] struct {
-	isFinished bool
-	ctx        context.Context
-
-	reader       *bufio.Reader
+	// un-mutable
+	ctx          context.Context
+	core         *core
 	response     *http.Response
-	processor    eventProcessor[T]
 	httpResponse *httpResponse
+	processor    eventProcessor[T]
+
+	isFinished bool
+	reader     *bufio.Reader
+}
+
+func newStream[T streamable](ctx context.Context, core *core, resp *http.Response, processor eventProcessor[T]) Stream[T] {
+	if resp == nil {
+		return nil
+	}
+	return &streamReader[T]{
+		ctx:          ctx,
+		core:         core,
+		response:     resp,
+		httpResponse: newHTTPResponse(resp),
+		processor:    processor,
+		reader:       bufio.NewReader(resp.Body),
+	}
 }
 
 func (s *streamReader[T]) Recv() (response *T, err error) {
@@ -55,7 +71,7 @@ func (s *streamReader[T]) processLines() (*T, error) {
 		if len(line) == 0 {
 			continue
 		}
-		event, isDone, err := s.processor(line, s.reader)
+		event, isDone, err := s.processor(s.ctx, s.core, line, s.reader)
 		if err != nil {
 			return nil, err
 		}

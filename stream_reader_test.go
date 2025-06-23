@@ -22,7 +22,7 @@ func mockHTTPResponse() *httpResponse {
 }
 
 // Mock event processor for testing
-func mockEventProcessor(line []byte, reader *bufio.Reader) (*WorkflowEvent, bool, error) {
+func mockEventProcessor(ctx context.Context, core *core, line []byte, reader *bufio.Reader) (*WorkflowEvent, bool, error) {
 	if len(line) == 0 {
 		return nil, false, nil
 	}
