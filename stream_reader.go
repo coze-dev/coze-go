@@ -9,7 +9,10 @@ import (
 )
 
 type streamable interface {
-	ChatEvent | WorkflowEvent
+	ChatEvent | WorkflowEvent | NopEvent
+}
+
+type NopEvent struct {
 }
 
 type Stream[T streamable] interface {
@@ -17,6 +20,7 @@ type Stream[T streamable] interface {
 	Close() error
 	Recv() (*T, error)
 }
+
 type eventProcessor[T streamable] func(line []byte, reader *bufio.Reader) (*T, bool, error)
 
 type streamReader[T streamable] struct {

@@ -1,9 +1,11 @@
 package coze
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"mime"
@@ -19,11 +21,12 @@ import (
 
 // RawRequestReq ...
 type RawRequestReq struct {
-	Method   string      // http request method, such as GET, POST
-	URL      string      // http request url
-	Body     interface{} // http request body, query, path and other parameter information
-	IsFile   bool        // send body data as a file
-	AuthType int         // 0: token, 1: no-token, 2: jwt(not-jwt-token)
+	Method           string      // http request method, such as GET, POST
+	URL              string      // http request url
+	Body             interface{} // http request body, query, path and other parameter information
+	IsFile           bool        // send body data as a file
+	AuthType         int         // 0: token, 1: no-token, 2: jwt(not-jwt-token)
+	parseStreamEvent func(line []byte, reader *bufio.Reader) (any, bool, error)
 }
 
 func (r *core) rawRequest(ctx context.Context, req *RawRequestReq, resp interface{}) (err error) {
@@ -138,55 +141,18 @@ func (r *core) doRequest(ctx context.Context, rawHttpReq *rawHttpRequest, realRe
 
 	switch {
 	case strings.Contains(contentType, "application/json") && respFilename == "":
+		// json 返回
 		respContent, err := r.parseJsonResponse(resp, realResponse)
+		return resp, respContent, err
+	case strings.Contains(contentType, "text/event-stream"):
+		// sse 返回
+		respContent, err := r.parseStreamResponse(resp, realResponse)
 		return resp, respContent, err
 	default:
 		respContent, err := r.parseFileResponse(resp, realResponse, respFilename)
+		// file 返回
 		return resp, respContent, err
 	}
-
-	// if resp.Body != nil {
-	// 	defer resp.Body.Close()
-	// }
-
-	// bs, err := io.ReadAll(resp.Body)
-	// if err != nil {
-	// 	return resp, "", err
-	// }
-
-	// var respContent string
-	// if respFilename == "" {
-	// 	respContent = string(bs)
-	// } else {
-	// 	respContent = fmt.Sprintf("<FILE: %d>", len(bs))
-	// }
-
-	// if realResponse != nil {
-	// 	if resp != nil && resp.StatusCode == http.StatusOK {
-	// 		isSpecResp := false
-	// 		if setter, ok := realResponse.(readerSetter); ok {
-	// 			isSpecResp = true
-	// 			setter.SetReader(bytes.NewReader(bs))
-	// 		}
-	// 		if setter, ok := realResponse.(filenameSetter); ok {
-	// 			isSpecResp = true
-	// 			setter.SetFilename(respFilename)
-	// 		}
-	// 		if isSpecResp {
-	// 			return resp, respContent, nil
-	// 		}
-	// 	}
-
-	// 	if len(bs) == 0 && resp.StatusCode >= http.StatusBadRequest {
-	// 		return resp, respContent, fmt.Errorf("request fail: %s", resp.Status)
-	// 	}
-
-	// 	if err = json.Unmarshal(bs, realResponse); err != nil {
-	// 		return resp, respContent, fmt.Errorf("invalid json: %s, err: %s", bs, err)
-	// 	}
-	// }
-
-	// return resp, respContent, nil
 }
 
 func (r *core) parseJsonResponse(resp *http.Response, realResponse any) (string, error) {
@@ -211,6 +177,13 @@ func (r *core) parseJsonResponse(resp *http.Response, realResponse any) (string,
 	}
 
 	return respContent, nil
+}
+
+func (r *core) parseStreamResponse(resp *http.Response, realResponse any) (string, error) {
+	if err := setHTTPResponse(resp, realResponse); err != nil {
+		return "", err
+	}
+	return "<STREAM>", nil
 }
 
 func (r *core) parseFileResponse(resp *http.Response, realResponse any, respFilename string) (string, error) {
@@ -287,8 +260,8 @@ func (r *rawHttpRequest) parseRawRequestReqBody(body interface{}, isFile bool) e
 				}
 			}
 		} else if j := fieldVT.Tag.Get("json"); j != "" {
-			j = strings.TrimSuffix(j, ",omitempty")
 			if isFile {
+				j = strings.TrimSuffix(j, ",omitempty")
 				fileKey = j
 				if r, ok := fieldVV.Interface().(io.Reader); ok {
 					reader = r
@@ -544,9 +517,10 @@ func findBaseModelInValueBFS(v reflect.Value) *baseModel {
 }
 
 func couldContainBaseModel(t reflect.Type) bool {
-	if t == nil {
+	if t == nil || t.String() == "*http.Response" {
 		return false
 	}
+	// fmt.Println(t.Name(), t.String())
 	if t.Kind() == reflect.Ptr {
 		return couldContainBaseModel(t.Elem())
 	}
@@ -565,6 +539,39 @@ func couldContainBaseModel(t reflect.Type) bool {
 		}
 	}
 	return false
+}
+
+func setHTTPResponse(resp *http.Response, realResp any) error {
+	v := reflect.ValueOf(realResp)
+	if v.Kind() != reflect.Ptr {
+		return errors.New("response must be a pointer")
+	}
+	elem := v.Elem()
+	if elem.Kind() != reflect.Struct {
+		return errors.New("response must be a pointer to struct")
+	}
+	field := elem.FieldByName("HTTPResponse")
+	if !field.IsValid() {
+		return errors.New("response must have HTTPResponse field")
+	}
+	if !field.CanSet() {
+		return errors.New("response HTTPResponse field cannot be set")
+	}
+	field.Set(reflect.ValueOf(resp))
+	return nil
+}
+
+func newStream[T streamable](ctx context.Context, resp *http.Response, processor eventProcessor[T]) Stream[T] {
+	if resp == nil {
+		return nil
+	}
+	return &streamReader[T]{
+		ctx:          ctx,
+		response:     resp,
+		reader:       bufio.NewReader(resp.Body),
+		processor:    processor,
+		httpResponse: newHTTPResponse(resp),
+	}
 }
 
 func setBaseRespInterface(resp any, httpResponse *http.Response) {
