@@ -242,8 +242,8 @@ func (r *rawHttpRequest) parseHeader(ctx context.Context, ins *core, req *RawReq
 	}
 
 	// auth
-	switch req.AuthType {
-	case 0:
+	switch {
+	case req.AuthType == 0 && ins.auth != nil:
 		token, err := ins.auth.Token(ctx)
 		if err != nil {
 			return err

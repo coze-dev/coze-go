@@ -2,7 +2,6 @@ package coze
 
 import (
 	"encoding/json"
-	"net/http"
 	"os"
 	"runtime"
 	"strings"
@@ -19,33 +18,6 @@ var (
 	userAgent            = userAgentSDK + "/" + version + " " + userAgentLang + "/" + userAgentLangVersion + " " + userAgentOsName + "/" + userAgentOsVersion
 	clientUserAgent      string
 )
-
-func (c *core) setCommonHeaders(req *http.Request) error {
-	// agent
-	req.Header.Set("User-Agent", userAgent)
-	req.Header.Set("X-Coze-Client-User-Agent", clientUserAgent)
-
-	// logid
-	if c.enableLogID {
-		v := req.Context().Value(ctxLogIDKey)
-		if logid, ok := v.(string); ok && logid != "" {
-			req.Header.Set(httpLogIDKey, logid)
-		}
-	}
-
-	// auth
-	if c.auth != nil {
-		// auth 相关请求, c.auth 为 nil
-		accessToken, err := c.auth.Token(req.Context())
-		if err != nil {
-			logger.Errorf(req.Context(), "failed to get access_token: %s", err)
-			return err
-		}
-		req.Header.Set("Authorization", "Bearer "+accessToken)
-	}
-
-	return nil
-}
 
 func init() {
 	clientUserAgent = getCozeClientUserAgent()

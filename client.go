@@ -115,22 +115,3 @@ func newCore(opt *clientOption) *core {
 		clientOption: opt,
 	}
 }
-
-type authTransport struct {
-	auth Auth
-	next http.RoundTripper
-}
-
-func (h *authTransport) RoundTrip(req *http.Request) (*http.Response, error) {
-	if isAuthContext(req.Context()) {
-		return h.next.RoundTrip(req)
-	}
-	accessToken, err := h.auth.Token(req.Context())
-	if err != nil {
-		logger.Errorf(req.Context(), "Failed to get access token: %v", err)
-		return nil, err
-	}
-	req.Header.Set("Authorization", "Bearer "+accessToken)
-
-	return h.next.RoundTrip(req)
-}

@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 // mockAuth implements Auth interface for testing
@@ -98,47 +97,6 @@ func TestNewCozeAPI(t *testing.T) {
 		api := NewCozeAPI(auth, WithEnableLogID(true))
 
 		as.NotNil(api)
-	})
-}
-
-func TestAuthTransport(t *testing.T) {
-	as := assert.New(t)
-	t.Run("successful authentication", func(t *testing.T) {
-		auth := &mockAuth{token: "test_token"}
-		transport := &authTransport{
-			auth: auth,
-			next: &mockTransport{
-				roundTripFunc: func(req *http.Request) (*http.Response, error) {
-					// Verify authorization header
-					as.Equal("Bearer test_token", req.Header.Get("Authorization"))
-					return &http.Response{StatusCode: http.StatusOK}, nil
-				},
-			},
-		}
-
-		req, _ := http.NewRequest(http.MethodGet, ComBaseURL, nil)
-		resp, err := transport.RoundTrip(req)
-
-		require.NoError(t, err)
-		as.Equal(http.StatusOK, resp.StatusCode)
-	})
-
-	// Test authentication error
-	t.Run("authentication error", func(t *testing.T) {
-		auth := &mockAuth{
-			token: "",
-			err:   assert.AnError,
-		}
-		transport := &authTransport{
-			auth: auth,
-			next: http.DefaultTransport,
-		}
-
-		req, _ := http.NewRequest(http.MethodGet, ComBaseURL, nil)
-		resp, err := transport.RoundTrip(req)
-
-		as.NotNil(err)
-		as.Nil(resp)
 	})
 }
 
