@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-// Create执行工作流
+// Create 执行工作流
 //
 // docs: https://www.coze.cn/open/docs/developer_guides/workflow_run
 func (r *workflowRuns) Create(ctx context.Context, req *RunWorkflowsReq) (*RunWorkflowsResp, error) {
