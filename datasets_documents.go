@@ -7,41 +7,39 @@ import (
 )
 
 func (r *datasetsDocuments) Create(ctx context.Context, req *CreateDatasetsDocumentsReq) (*CreateDatasetsDocumentsResp, error) {
-	method := http.MethodPost
-	uri := "/open_api/knowledge/document/create"
-	resp := &createDatasetsDocumentsResp{}
-	err := r.client.Request(ctx, method, uri, req, resp, r.commonHeaderOpt...)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method:  http.MethodPost,
+		URL:     "/open_api/knowledge/document/create",
+		Body:    req,
+		Headers: r.commonHeaderOpt,
 	}
-	resp.CreateDatasetsDocumentsResp.setHTTPResponse(resp.HTTPResponse)
-	return resp.CreateDatasetsDocumentsResp, nil
+	response := new(createDatasetsDocumentsResp)
+	err := r.client.rawRequest(ctx, request, response)
+	return response.CreateDatasetsDocumentsResp, err
 }
 
 func (r *datasetsDocuments) Update(ctx context.Context, req *UpdateDatasetsDocumentsReq) (*UpdateDatasetsDocumentsResp, error) {
-	method := http.MethodPost
-	uri := "/open_api/knowledge/document/update"
-	resp := &updateDatasetsDocumentsResp{}
-	err := r.client.Request(ctx, method, uri, req, resp, r.commonHeaderOpt...)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method:  http.MethodPost,
+		URL:     "/open_api/knowledge/document/update",
+		Body:    req,
+		Headers: r.commonHeaderOpt,
 	}
-	result := &UpdateDatasetsDocumentsResp{}
-	result.setHTTPResponse(resp.HTTPResponse)
-	return result, nil
+	response := new(updateDatasetsDocumentsResp)
+	err := r.client.rawRequest(ctx, request, response)
+	return response.Data, err
 }
 
 func (r *datasetsDocuments) Delete(ctx context.Context, req *DeleteDatasetsDocumentsReq) (*DeleteDatasetsDocumentsResp, error) {
-	method := http.MethodPost
-	uri := "/open_api/knowledge/document/delete"
-	resp := &deleteDatasetsDocumentsResp{}
-	err := r.client.Request(ctx, method, uri, req, resp, r.commonHeaderOpt...)
-	if err != nil {
-		return nil, err
+	request := &RawRequestReq{
+		Method:  http.MethodPost,
+		URL:     "/open_api/knowledge/document/delete",
+		Body:    req,
+		Headers: r.commonHeaderOpt,
 	}
-	result := &DeleteDatasetsDocumentsResp{}
-	result.setHTTPResponse(resp.HTTPResponse)
-	return result, nil
+	response := new(deleteDatasetsDocumentsResp)
+	err := r.client.rawRequest(ctx, request, response)
+	return response.Data, err
 }
 
 func (r *datasetsDocuments) List(ctx context.Context, req *ListDatasetsDocumentsReq) (NumberPaged[Document], error) {
@@ -51,37 +49,24 @@ func (r *datasetsDocuments) List(ctx context.Context, req *ListDatasetsDocuments
 	if req.Size == 0 {
 		req.Size = 20
 	}
-	return NewNumberPaged[Document](
+	return NewNumberPaged(
 		func(request *pageRequest) (*pageResponse[Document], error) {
-			uri := "/open_api/knowledge/document/list"
-			resp := &listDatasetsDocumentsResp{}
-			doReq := &ListDatasetsDocumentsReq{
-				DatasetID: req.DatasetID,
-				Size:      request.PageSize,
-				Page:      request.PageNum,
-			}
-			err := r.client.Request(ctx, http.MethodPost, uri, doReq, resp, r.commonHeaderOpt...)
-			if err != nil {
+			response := new(listDatasetsDocumentsResp)
+			if err := r.client.rawRequest(ctx, &RawRequestReq{
+				Method:  http.MethodPost,
+				URL:     "/open_api/knowledge/document/list",
+				Body:    req.toReq(request),
+				Headers: r.commonHeaderOpt,
+			}, response); err != nil {
 				return nil, err
 			}
 			return &pageResponse[Document]{
-				Total:   int(resp.Total),
-				HasMore: request.PageSize <= len(resp.DocumentInfos),
-				Data:    resp.DocumentInfos,
-				LogID:   resp.HTTPResponse.LogID(),
+				Total:   int(response.Total),
+				HasMore: request.PageSize <= len(response.DocumentInfos),
+				Data:    response.DocumentInfos,
+				LogID:   response.HTTPResponse.LogID(),
 			}, nil
 		}, req.Size, req.Page)
-}
-
-type datasetsDocuments struct {
-	client          *core
-	commonHeaderOpt []RequestOption
-}
-
-func newDatasetsDocuments(core *core) *datasetsDocuments {
-	return &datasetsDocuments{client: core, commonHeaderOpt: []RequestOption{
-		withHTTPHeader("Agw-Js-Conv", "str"),
-	}}
 }
 
 // Document represents a document in the datasets
@@ -321,19 +306,12 @@ type UpdateDatasetsDocumentsReq struct {
 	UpdateRule *DocumentUpdateRule `json:"update_rule,omitempty"`
 }
 
-// createDatasetsDocumentsResp represents response for creating document
-type createDatasetsDocumentsResp struct {
-	baseResponse
-	*CreateDatasetsDocumentsResp
-}
-
 // CreateDatasetsDocumentsResp represents response for creating document
 type CreateDatasetsDocumentsResp struct {
 	baseModel
 	DocumentInfos []*Document `json:"document_infos"`
 }
 
-// listDatasetsDocumentsResp represents response for listing datasetsDocuments
 type listDatasetsDocumentsResp struct {
 	baseResponse
 	*ListDatasetsDocumentsResp
@@ -346,19 +324,9 @@ type ListDatasetsDocumentsResp struct {
 	DocumentInfos []*Document `json:"document_infos"`
 }
 
-// deleteDatasetsDocumentsResp represents response for deleting datasetsDocuments
-type deleteDatasetsDocumentsResp struct {
-	baseResponse
-}
-
 // DeleteDatasetsDocumentsResp represents response for deleting datasetsDocuments
 type DeleteDatasetsDocumentsResp struct {
 	baseModel
-}
-
-// updateDatasetsDocumentsResp represents response for updating document
-type updateDatasetsDocumentsResp struct {
-	baseResponse
 }
 
 // UpdateDatasetsDocumentsResp represents response for updating document
@@ -432,5 +400,42 @@ func DocumentUpdateRuleBuildAutoUpdate(interval int) *DocumentUpdateRule {
 	return &DocumentUpdateRule{
 		UpdateType:     DocumentUpdateTypeAutoUpdate,
 		UpdateInterval: interval,
+	}
+}
+
+type updateDatasetsDocumentsResp struct {
+	baseResponse
+	Data *UpdateDatasetsDocumentsResp `json:"data"`
+}
+
+type deleteDatasetsDocumentsResp struct {
+	baseResponse
+	Data *DeleteDatasetsDocumentsResp `json:"data"`
+}
+
+type createDatasetsDocumentsResp struct {
+	baseResponse
+	*CreateDatasetsDocumentsResp
+}
+
+func (r ListDatasetsDocumentsReq) toReq(page *pageRequest) *ListDatasetsDocumentsReq {
+	return &ListDatasetsDocumentsReq{
+		DatasetID: r.DatasetID,
+		Page:      page.PageNum,
+		Size:      page.PageSize,
+	}
+}
+
+type datasetsDocuments struct {
+	client          *core
+	commonHeaderOpt map[string]string
+}
+
+func newDatasetsDocuments(core *core) *datasetsDocuments {
+	return &datasetsDocuments{
+		client: core,
+		commonHeaderOpt: map[string]string{
+			"Agw-Js-Conv": "str",
+		},
 	}
 }

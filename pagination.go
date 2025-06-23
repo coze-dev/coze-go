@@ -12,6 +12,7 @@ type NumberPaged[T any] interface {
 	BasePaged[T]
 	Total() int
 }
+
 type LastIDPaged[T any] interface {
 	BasePaged[T]
 	GetLastID() string

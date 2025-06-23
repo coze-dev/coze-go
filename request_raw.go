@@ -1,7 +1,6 @@
 package coze
 
 import (
-	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -21,12 +20,12 @@ import (
 
 // RawRequestReq ...
 type RawRequestReq struct {
-	Method           string      // http request method, such as GET, POST
-	URL              string      // http request url
-	Body             interface{} // http request body, query, path and other parameter information
-	IsFile           bool        // send body data as a file
-	AuthType         int         // 0: token, 1: no-token, 2: jwt(not-jwt-token)
-	parseStreamEvent func(line []byte, reader *bufio.Reader) (any, bool, error)
+	Method   string      // http request method, such as GET, POST
+	URL      string      // http request url
+	Body     interface{} // http request body, query, path and other parameter information
+	IsFile   bool        // send body data as a file
+	AuthType int         // 0: token, 1: no-token, 2: jwt(not-jwt-token)
+	Headers  map[string]string
 }
 
 func (r *core) rawRequest(ctx context.Context, req *RawRequestReq, resp interface{}) (err error) {
@@ -217,6 +216,11 @@ func (r *rawHttpRequest) parseHeader(ctx context.Context, ins *core, req *RawReq
 	// agent
 	r.Headers["User-Agent"] = userAgent
 	r.Headers["X-Coze-Client-User-Agent"] = clientUserAgent
+
+	// req
+	for k, v := range req.Headers {
+		r.Headers[k] = v
+	}
 
 	// logid
 	if ins.enableLogID {
