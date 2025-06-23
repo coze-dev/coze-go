@@ -158,7 +158,7 @@ type NodeExecuteStatus struct {
 	// Whether the node is finished.
 	IsFinish bool `json:"is_finish"`
 	// The loop index of the node.
-	LoopIndex int `json:"loop_index"`
+	LoopIndex *int `json:"loop_index"`
 	// The batch index of the node.
 	BatchIndex *int `json:"batch_index"`
 	// The update time of the node.
