@@ -136,6 +136,9 @@ type WorkflowRunHistory struct {
 	// structured string.
 	Output string `json:"output"`
 
+	// The status of each output node execution.
+	NodeExecuteStatus map[string]*WorkflowRunHistoryNodeExecuteStatus `json:"node_execute_status"`
+
 	// Status code. 0 represents a successful API call. Other values indicate that the call has
 	// failed. You can determine the detailed reason for the error through the error_message field.
 	ErrorCode string `json:"error_code"`
@@ -146,4 +149,22 @@ type WorkflowRunHistory struct {
 	// Workflow trial runs debugging page. Visit this page to view the running results, input and
 	// output information of each workflow node.
 	DebugURL string `json:"debug_url"`
+}
+
+// NodeExecuteStatus represents the status of a node execution
+type WorkflowRunHistoryNodeExecuteStatus struct {
+	// The ID of the node.
+	NodeID string `json:"node_id"`
+	// Whether the node is finished.
+	IsFinish bool `json:"is_finish"`
+	// The loop index of the node.
+	LoopIndex *int `json:"loop_index"`
+	// The batch index of the node.
+	BatchIndex *int `json:"batch_index"`
+	// The update time of the node.
+	UpdateTime int `json:"update_time"`
+	// The ID of the sub-execute.
+	SubExecuteID *string `json:"sub_execute_id"`
+	// The UUID of the node execution.
+	NodeExecuteUUID string `json:"node_execute_uuid"`
 }
