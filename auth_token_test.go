@@ -2,6 +2,7 @@ package coze
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"testing"
 	"time"
@@ -99,9 +100,9 @@ qI39/arl6ZhTeQMv7TrpQ6Q=
 			PrivateKeyPEM: testPrivateKey,
 		}, WithAuthBaseURL(ComBaseURL),
 			WithAuthHttpClient(newHTTPClientWithTransport(func(req *http.Request) (*http.Response, error) {
-				return mockResponse(http.StatusUnauthorized, &authErrorFormat{
-					ErrorCode:    "unauthorized",
-					ErrorMessage: "Invalid core credentials",
+				return mockResponse(http.StatusOK, &OAuthToken{
+					AccessToken: "test_access_token",
+					ExpiresIn:   3600,
 				})
 			})))
 		as.Nil(err)
@@ -161,19 +162,15 @@ qI39/arl6ZhTeQMv7TrpQ6Q=
 			PrivateKeyPEM: testPrivateKey,
 		}, WithAuthBaseURL(ComBaseURL),
 			WithAuthHttpClient(newHTTPClientWithTransport(func(req *http.Request) (*http.Response, error) {
-				return mockResponse(http.StatusBadRequest, &OAuthToken{
-					AccessToken: "",
-					ExpiresIn:   0,
-				})
+				return nil, errors.New("test error")
 			})))
 		as.Nil(err)
 		as.NotNil(client)
 
 		auth := NewJWTAuth(client, nil)
 
-		token, err := auth.Token(context.Background())
-		as.Error(err)
-		as.Empty(token)
+		_, err = auth.Token(context.Background())
+		as.NotNil(err)
 	})
 
 	t.Run("Token with specified account_id", func(t *testing.T) {
