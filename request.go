@@ -276,6 +276,9 @@ func (r *rawHttpRequest) parseRawRequestReqBody(body interface{}, isFile bool) e
 			}
 		} else if j := fieldVT.Tag.Get("json"); j != "" {
 			if isFile {
+				if fieldVV.IsValid() && fieldVV.Kind() == reflect.Ptr {
+					fieldVV = fieldVV.Elem()
+				}
 				j = strings.TrimSuffix(j, ",omitempty")
 				fileKey = j
 				if r, ok := fieldVV.Interface().(FileTypes); ok {
@@ -336,21 +339,21 @@ type rawHttpRequest struct {
 func newFileUploadRequest(params map[string]string, filekey, fileName string, reader io.Reader) (string, io.Reader, error) {
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
-	part, err := writer.CreateFormFile(filekey, fileName)
-	if err != nil {
-		return "", nil, err
-	}
 	if reader != nil {
+		part, err := writer.CreateFormFile(filekey, fileName)
+		if err != nil {
+			return "", nil, err
+		}
 		if _, err = io.Copy(part, reader); err != nil {
 			return "", nil, err
 		}
 	}
 	for key, val := range params {
-		if err = writer.WriteField(key, val); err != nil {
+		if err := writer.WriteField(key, val); err != nil {
 			return "", nil, err
 		}
 	}
-	if err = writer.Close(); err != nil {
+	if err := writer.Close(); err != nil {
 		return "", nil, err
 	}
 
