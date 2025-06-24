@@ -4,41 +4,48 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAudioVoiceprintGroup(t *testing.T) {
+func TestAudioVoiceprintGroupFeature(t *testing.T) {
 	as := assert.New(t)
 	t.Run("create", func(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
 			groupID := randomString(10)
-			groups := newAudioVoiceprintGroups(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			featureID := randomString(10)
+			features := newAudioVoiceprintGroupsFeatures(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 				as.Equal(http.MethodPost, req.Method)
-				as.Equal("/v1/audio/voiceprint_groups", req.URL.Path)
-				return mockResponse(http.StatusOK, &createVoicePrintGroupResp{
-					Data: &CreateVoicePrintGroupResp{
-						ID: groupID,
+				as.Equal("/v1/audio/voiceprint_groups/"+groupID+"/features", req.URL.Path)
+				return mockResponse(http.StatusOK, &createVoicePrintGroupFeatureResp{
+					Data: &CreateVoicePrintGroupFeatureResp{
+						ID: featureID,
 					},
 				})
 			})))
-			resp, err := groups.Create(context.Background(), &CreateVoicePrintGroupReq{
-				Name: "test_group",
-				Desc: "test_desc",
+			resp, err := features.Create(context.Background(), &CreateVoicePrintGroupFeatureReq{
+				GroupID:    groupID,
+				Name:       "test_feature",
+				File:       NewUploadFile(strings.NewReader("test_file"), "file.wav"),
+				SampleRate: ptr(16000),
+				Channel:    ptr(1),
+				Desc:       ptr("test_desc"),
 			})
 			as.Nil(err)
 			as.NotNil(resp)
 			as.NotEmpty(resp.Response().LogID())
-			as.Equal(groupID, resp.ID)
+			as.Equal(featureID, resp.ID)
 		})
 		t.Run("error", func(t *testing.T) {
-			groups := newAudioVoiceprintGroups(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			features := newAudioVoiceprintGroupsFeatures(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 				return nil, errors.New("test error")
 			})))
-			_, err := groups.Create(context.Background(), &CreateVoicePrintGroupReq{
-				Name: "test_group",
-				Desc: "test_desc",
+			_, err := features.Create(context.Background(), &CreateVoicePrintGroupFeatureReq{
+				GroupID: randomString(10),
+				Name:    "test_feature",
+				File:    NewUploadFile(strings.NewReader("test_file"), "file.wav"),
 			})
 			as.NotNil(err)
 			as.Contains(err.Error(), "test error")
@@ -48,30 +55,32 @@ func TestAudioVoiceprintGroup(t *testing.T) {
 	t.Run("update", func(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
 			groupID := randomString(10)
-			groups := newAudioVoiceprintGroups(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			featureID := randomString(10)
+			features := newAudioVoiceprintGroupsFeatures(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 				as.Equal(http.MethodPut, req.Method)
-				as.Equal("/v1/audio/voiceprint_groups/"+groupID, req.URL.Path)
-				return mockResponse(http.StatusOK, &updateVoicePrintGroupResp{
-					Data: &UpdateVoicePrintGroupResp{},
+				as.Equal("/v1/audio/voiceprint_groups/"+groupID+"/features/"+featureID, req.URL.Path)
+				return mockResponse(http.StatusOK, &updateVoicePrintGroupFeatureResp{
+					Data: &UpdateVoicePrintGroupFeatureResp{},
 				})
 			})))
-			resp, err := groups.Update(context.Background(), &UpdateVoicePrintGroupReq{
-				GroupID: groupID,
-				Name:    ptr("test_group"),
-				Desc:    ptr("test_desc"),
+			resp, err := features.Update(context.Background(), &UpdateVoicePrintGroupFeatureReq{
+				GroupID:   groupID,
+				FeatureID: featureID,
+				Name:      ptr("test_feature"),
+				Desc:      ptr("test_desc"),
 			})
 			as.Nil(err)
 			as.NotNil(resp)
 			as.NotEmpty(resp.Response().LogID())
 		})
 		t.Run("error", func(t *testing.T) {
-			groups := newAudioVoiceprintGroups(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			features := newAudioVoiceprintGroupsFeatures(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 				return nil, errors.New("test error")
 			})))
-			_, err := groups.Update(context.Background(), &UpdateVoicePrintGroupReq{
-				GroupID: randomString(10),
-				Name:    ptr("test_group"),
-				Desc:    ptr("test_desc"),
+			_, err := features.Update(context.Background(), &UpdateVoicePrintGroupFeatureReq{
+				GroupID:   randomString(10),
+				FeatureID: randomString(10),
+				Name:      ptr("test_feature"),
 			})
 			as.NotNil(err)
 			as.Contains(err.Error(), "test error")
@@ -81,26 +90,29 @@ func TestAudioVoiceprintGroup(t *testing.T) {
 	t.Run("delete", func(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
 			groupID := randomString(10)
-			groups := newAudioVoiceprintGroups(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			featureID := randomString(10)
+			features := newAudioVoiceprintGroupsFeatures(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 				as.Equal(http.MethodDelete, req.Method)
-				as.Equal("/v1/audio/voiceprint_groups/"+groupID, req.URL.Path)
-				return mockResponse(http.StatusOK, &deleteVoicePrintGroupResp{
-					Data: &DeleteVoicePrintGroupResp{},
+				as.Equal("/v1/audio/voiceprint_groups/"+groupID+"/features/"+featureID, req.URL.Path)
+				return mockResponse(http.StatusOK, &deleteVoicePrintGroupFeatureResp{
+					Data: &DeleteVoicePrintGroupFeatureResp{},
 				})
 			})))
-			resp, err := groups.Delete(context.Background(), &DeleteVoicePrintGroupReq{
-				GroupID: groupID,
+			resp, err := features.Delete(context.Background(), &DeleteVoicePrintGroupFeatureReq{
+				GroupID:   groupID,
+				FeatureID: featureID,
 			})
 			as.Nil(err)
 			as.NotNil(resp)
 			as.NotEmpty(resp.Response().LogID())
 		})
 		t.Run("error", func(t *testing.T) {
-			groups := newAudioVoiceprintGroups(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			features := newAudioVoiceprintGroupsFeatures(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 				return nil, errors.New("test error")
 			})))
-			_, err := groups.Delete(context.Background(), &DeleteVoicePrintGroupReq{
-				GroupID: randomString(10),
+			_, err := features.Delete(context.Background(), &DeleteVoicePrintGroupFeatureReq{
+				GroupID:   randomString(10),
+				FeatureID: randomString(10),
 			})
 			as.NotNil(err)
 			as.Contains(err.Error(), "test error")
@@ -110,36 +122,40 @@ func TestAudioVoiceprintGroup(t *testing.T) {
 	t.Run("list", func(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
 			groupID := randomString(10)
-			groups := newAudioVoiceprintGroups(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			featureID := randomString(10)
+			features := newAudioVoiceprintGroupsFeatures(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 				as.Equal(http.MethodGet, req.Method)
-				as.Equal("/v1/audio/voiceprint_groups", req.URL.Path)
-				return mockResponse(http.StatusOK, &listVoicePrintGroupResp{
-					Data: &ListVoicePrintGroupResp{
-						Items: []*VoicePrintGroup{
+				as.Equal("/v1/audio/voiceprint_groups/"+groupID+"/features", req.URL.Path)
+				return mockResponse(http.StatusOK, &listVoicePrintGroupFeatureResp{
+					Data: &listVoicePrintGroupFeatureRespData{
+						Items: []*VoicePrintGroupFeature{
 							{
-								ID:   groupID,
-								Name: "test_group",
+								ID:   featureID,
+								Name: "test_feature",
 								Desc: "test_desc",
 							},
 						},
 					},
 				})
 			})))
-			resp, err := groups.List(context.Background(), &ListVoicePrintGroupReq{
+			resp, err := features.List(context.Background(), &ListVoicePrintGroupFeatureReq{
+				GroupID:  groupID,
 				PageNum:  1,
 				PageSize: 10,
 			})
 			as.Nil(err)
 			as.NotNil(resp)
 			as.Len(resp.Items(), 1)
-			as.Equal(groupID, resp.Items()[0].ID)
+			as.Equal(featureID, resp.Items()[0].ID)
 			// as.NotEmpty(resp.Response().LogID()) // todo
 		})
 		t.Run("error", func(t *testing.T) {
-			groups := newAudioVoiceprintGroups(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			groupID := randomString(10)
+			features := newAudioVoiceprintGroupsFeatures(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 				return nil, errors.New("test error")
 			})))
-			_, err := groups.List(context.Background(), &ListVoicePrintGroupReq{
+			_, err := features.List(context.Background(), &ListVoicePrintGroupFeatureReq{
+				GroupID:  groupID,
 				PageNum:  1,
 				PageSize: 10,
 			})

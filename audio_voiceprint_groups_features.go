@@ -34,6 +34,7 @@ func (r *audioVoiceprintGroupsFeatures) Delete(ctx context.Context, req *DeleteV
 	if err := r.core.rawRequest(ctx, &RawRequestReq{
 		Method: http.MethodDelete,
 		URL:    "/v1/audio/voiceprint_groups/:group_id/features/:feature_id",
+		Body:   req,
 	}, response); err != nil {
 		return nil, err
 	}
