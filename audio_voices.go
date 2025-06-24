@@ -43,18 +43,51 @@ func (r *audioVoices) List(ctx context.Context, req *ListAudioVoicesReq) (Number
 		}, req.PageSize, req.PageNum)
 }
 
+type VoiceState string
+
+const (
+	VoiceStateInit   VoiceState = "init"   // 初始化
+	VoiceStateCloned VoiceState = "cloned" // 已克隆
+	VoiceStateAll    VoiceState = "all"    // 所有, 只有查询的时候有效
+)
+
+func (r VoiceState) String() string {
+	return string(r)
+}
+
+func (r VoiceState) Ptr() *VoiceState {
+	return &r
+}
+
+type VoiceModelType string
+
+const (
+	VoiceModelTypeBig   VoiceModelType = "big"   // 大模型音色
+	VoiceModelTypeSmall VoiceModelType = "small" // 小模型音色
+)
+
+func (r VoiceModelType) String() string {
+	return string(r)
+}
+
+func (r VoiceModelType) Ptr() *VoiceModelType {
+	return &r
+}
+
 // Voice represents the voice model
 type Voice struct {
-	VoiceID                string `json:"voice_id"`
-	Name                   string `json:"name"`
-	IsSystemVoice          bool   `json:"is_system_voice"`
-	LanguageCode           string `json:"language_code"`
-	LanguageName           string `json:"language_name"`
-	PreviewText            string `json:"preview_text"`
-	PreviewAudio           string `json:"preview_audio"`
-	AvailableTrainingTimes int    `json:"available_training_times"`
-	CreateTime             int    `json:"create_time"`
-	UpdateTime             int    `json:"update_time"`
+	VoiceID                string         `json:"voice_id"`
+	Name                   string         `json:"name"`
+	IsSystemVoice          bool           `json:"is_system_voice"`
+	LanguageCode           string         `json:"language_code"`
+	LanguageName           string         `json:"language_name"`
+	PreviewText            string         `json:"preview_text"`
+	PreviewAudio           string         `json:"preview_audio"`
+	AvailableTrainingTimes int            `json:"available_training_times"`
+	CreateTime             int            `json:"create_time"`
+	UpdateTime             int            `json:"update_time"`
+	ModelType              VoiceModelType `json:"model_type"`
+	State                  VoiceState     `json:"state"`
 }
 
 // CloneAudioVoicesReq represents the request for cloning a voice
@@ -78,9 +111,11 @@ type CloneAudioVoicesResp struct {
 
 // ListAudioVoicesReq represents the request for listing voices
 type ListAudioVoicesReq struct {
-	FilterSystemVoice bool `query:"filter_system_voice" json:"-"`
-	PageNum           int  `query:"page_num" json:"-"`
-	PageSize          int  `query:"page_size" json:"-"`
+	FilterSystemVoice bool            `query:"filter_system_voice" json:"-"`
+	PageNum           int             `query:"page_num" json:"-"`
+	PageSize          int             `query:"page_size" json:"-"`
+	ModelType         *VoiceModelType `query:"model_type" json:"-"`
+	VoiceState        *VoiceState     `query:"voice_state" json:"-"`
 }
 
 // ListAudioVoicesResp represents the response for listing voices
@@ -99,6 +134,8 @@ type cloneAudioVoicesResp struct {
 func (r ListAudioVoicesReq) toReq(request *pageRequest) *ListAudioVoicesReq {
 	return &ListAudioVoicesReq{
 		FilterSystemVoice: r.FilterSystemVoice,
+		ModelType:         r.ModelType,
+		VoiceState:        r.VoiceState,
 		PageNum:           request.PageNum,
 		PageSize:          request.PageSize,
 	}

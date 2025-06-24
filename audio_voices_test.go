@@ -158,3 +158,15 @@ func TestAudioVoices(t *testing.T) {
 		as.NotNil(err)
 	})
 }
+
+func TestVoiceModelType(t *testing.T) {
+	as := assert.New(t)
+	t.Run("voice model", func(t *testing.T) {
+		as.Equal("big", VoiceModelTypeBig.String())
+		as.NotNil(VoiceModelTypeBig.Ptr())
+	})
+	t.Run("voice state", func(t *testing.T) {
+		as.Equal("all", VoiceStateAll.String())
+		as.NotNil(VoiceStateAll.Ptr())
+	})
+}
