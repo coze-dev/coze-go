@@ -101,9 +101,13 @@ func (r ListWorkspaceReq) toReq(request *pageRequest) *ListWorkspaceReq {
 }
 
 type workspace struct {
-	core *core
+	core    *core
+	Members *workspacesMembers
 }
 
 func newWorkspace(core *core) *workspace {
-	return &workspace{core: core}
+	return &workspace{
+		core:    core,
+		Members: newWorkspacesMembers(core),
+	}
 }
