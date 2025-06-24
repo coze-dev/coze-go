@@ -11,6 +11,7 @@ func (r *audioVoiceprintGroupsFeatures) Create(ctx context.Context, req *CreateV
 		Method: http.MethodPost,
 		URL:    "/v1/audio/voiceprint_groups/:group_id/features",
 		Body:   req,
+		IsFile: true,
 	}, response); err != nil {
 		return nil, err
 	}
