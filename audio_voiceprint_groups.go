@@ -65,14 +65,14 @@ func (r *audioVoiceprintGroups) List(ctx context.Context, req *ListVoicePrintGro
 }
 
 type VoicePrintGroup struct {
-	ID           string `json:"id"`
-	Name         string `json:"name"`
-	Desc         string `json:"desc"`
-	CreatedAt    int    `json:"created_at"`
-	UpdatedAt    int    `json:"updated_at"`
-	IconURL      string `json:"icon_url"`
-	FeatureCount int    `json:"feature_count"`
-	// UserInfo     UserInfo `json:"user_info"`
+	ID           string    `json:"id"`
+	Name         string    `json:"name"`
+	Desc         string    `json:"desc"`
+	CreatedAt    int       `json:"created_at"`
+	UpdatedAt    int       `json:"updated_at"`
+	IconURL      string    `json:"icon_url"`
+	FeatureCount int       `json:"feature_count"`
+	UserInfo     *UserInfo `json:"user_info"`
 }
 
 type CreateVoicePrintGroupReq struct {
