@@ -64,9 +64,9 @@ type WorkspaceMember struct {
 
 // ListWorkspaceMemberReq ...
 type ListWorkspaceMemberReq struct {
-	WorkspaceID *string `path:"workspace_id" json:"-"`
-	PageNum     int     `query:"page_num" json:"-"`
-	PageSize    int     `query:"page_size" json:"-"`
+	WorkspaceID string `path:"workspace_id" json:"-"`
+	PageNum     int    `query:"page_num" json:"-"`
+	PageSize    int    `query:"page_size" json:"-"`
 }
 
 // ListWorkspaceMemberResp ...

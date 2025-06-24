@@ -43,7 +43,7 @@ func TestWorkspacesMembers(t *testing.T) {
 				})
 			})))
 			paged, err := members.List(context.Background(), &ListWorkspaceMemberReq{
-				WorkspaceID: &workspaceID,
+				WorkspaceID: workspaceID,
 			})
 			as.Nil(err)
 			as.NotNil(paged)
@@ -70,7 +70,7 @@ func TestWorkspacesMembers(t *testing.T) {
 				return nil, errors.New("test error")
 			})))
 			_, err := members.List(context.Background(), &ListWorkspaceMemberReq{
-				WorkspaceID: &workspaceID,
+				WorkspaceID: workspaceID,
 			})
 			as.NotNil(err)
 			as.Contains(err.Error(), "test error")
