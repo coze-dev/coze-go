@@ -24,6 +24,7 @@ func (r *audioVoiceprintGroupsFeatures) Update(ctx context.Context, req *UpdateV
 		Method: http.MethodPut,
 		URL:    "/v1/audio/voiceprint_groups/:group_id/features/:feature_id",
 		Body:   req,
+		IsFile: true,
 	}, response); err != nil {
 		return nil, err
 	}
