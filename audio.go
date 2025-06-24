@@ -37,17 +37,19 @@ func (l LanguageCode) String() string {
 }
 
 type audio struct {
-	Rooms          *audioRooms
-	Speech         *audioSpeech
-	Voices         *audioVoices
-	Transcriptions *audioTranscriptions
+	Rooms            *audioRooms
+	Speech           *audioSpeech
+	Voices           *audioVoices
+	Transcriptions   *audioTranscriptions
+	VoiceprintGroups *audioVoiceprintGroups
 }
 
 func newAudio(core *core) *audio {
 	return &audio{
-		Rooms:          newRooms(core),
-		Speech:         newSpeech(core),
-		Voices:         newVoice(core),
-		Transcriptions: newTranscriptions(core),
+		Rooms:            newAudioRooms(core),
+		Speech:           newAudioSpeech(core),
+		Voices:           newAudioVoices(core),
+		Transcriptions:   newAudioTranscriptions(core),
+		VoiceprintGroups: newAudioVoiceprintGroups(core),
 	}
 }

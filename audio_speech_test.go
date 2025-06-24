@@ -15,7 +15,7 @@ func TestAudioSpeech(t *testing.T) {
 	as := assert.New(t)
 	t.Run("create", func(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
-			speech := newSpeech(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			speech := newAudioSpeech(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 				resp := &http.Response{
 					StatusCode: http.StatusOK,
 					Header:     http.Header{},
@@ -37,7 +37,7 @@ func TestAudioSpeech(t *testing.T) {
 		})
 
 		t.Run("write failed", func(t *testing.T) {
-			speech := newSpeech(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			speech := newAudioSpeech(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 				resp := &http.Response{
 					StatusCode: http.StatusOK,
 					Header:     http.Header{},
@@ -59,7 +59,7 @@ func TestAudioSpeech(t *testing.T) {
 		})
 
 		t.Run("failed", func(t *testing.T) {
-			speech := newSpeech(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			speech := newAudioSpeech(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 				return nil, fmt.Errorf("test error")
 			})))
 			_, err := speech.Create(context.Background(), &CreateAudioSpeechReq{

@@ -145,6 +145,6 @@ type audioVoices struct {
 	core *core
 }
 
-func newVoice(core *core) *audioVoices {
+func newAudioVoices(core *core) *audioVoices {
 	return &audioVoices{core: core}
 }

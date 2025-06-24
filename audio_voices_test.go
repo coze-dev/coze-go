@@ -13,7 +13,7 @@ import (
 func TestAudioVoices(t *testing.T) {
 	as := assert.New(t)
 	t.Run("Clone voice success", func(t *testing.T) {
-		voices := newVoice(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+		voices := newAudioVoices(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 			as.Equal(http.MethodPost, req.Method)
 			as.Equal("/v1/audio/voices/clone", req.URL.Path)
 			return mockResponse(http.StatusOK, &cloneAudioVoicesResp{
@@ -40,7 +40,7 @@ func TestAudioVoices(t *testing.T) {
 	})
 
 	t.Run("clone voice with error", func(t *testing.T) {
-		voices := newVoice(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+		voices := newAudioVoices(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 			return nil, errors.New("test error")
 		})))
 		_, err := voices.Clone(context.Background(), &CloneAudioVoicesReq{
@@ -51,7 +51,7 @@ func TestAudioVoices(t *testing.T) {
 	})
 
 	t.Run("list voices success", func(t *testing.T) {
-		voices := newVoice(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+		voices := newAudioVoices(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 			as.Equal(http.MethodGet, req.Method)
 			as.Equal("/v1/audio/voices", req.URL.Path)
 			as.Equal("1", req.URL.Query().Get("page_num"))
@@ -128,7 +128,7 @@ func TestAudioVoices(t *testing.T) {
 	})
 
 	t.Run("list voices with default pagination", func(t *testing.T) {
-		voices := newVoice(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+		voices := newAudioVoices(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 			as.Equal("1", req.URL.Query().Get("page_num"))
 			as.Equal("20", req.URL.Query().Get("page_size"))
 			return mockResponse(http.StatusOK, &ListAudioVoicesResp{
@@ -148,7 +148,7 @@ func TestAudioVoices(t *testing.T) {
 	})
 
 	t.Run("list voices with error", func(t *testing.T) {
-		voices := newVoice(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+		voices := newAudioVoices(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 			return nil, errors.New("test error")
 		})))
 		_, err := voices.List(context.Background(), &ListAudioVoicesReq{

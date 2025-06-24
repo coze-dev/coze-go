@@ -61,6 +61,6 @@ type audioSpeech struct {
 	core *core
 }
 
-func newSpeech(core *core) *audioSpeech {
+func newAudioSpeech(core *core) *audioSpeech {
 	return &audioSpeech{core: core}
 }

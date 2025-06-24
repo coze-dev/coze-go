@@ -14,7 +14,7 @@ func TestAudioTranscription(t *testing.T) {
 	as := assert.New(t)
 	t.Run("Transcriptions with different text", func(t *testing.T) {
 		text := randomString(10)
-		transcription := newTranscriptions(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+		transcription := newAudioTranscriptions(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 			as.Equal(http.MethodPost, req.Method)
 			as.Equal("/v1/audio/transcriptions", req.URL.Path)
 			return mockResponse(http.StatusOK, &CreateAudioTranscriptionsResp{
@@ -34,7 +34,7 @@ func TestAudioTranscription(t *testing.T) {
 	})
 
 	t.Run("Transcription error", func(t *testing.T) {
-		transcription := newTranscriptions(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+		transcription := newAudioTranscriptions(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 			as.Equal(http.MethodPost, req.Method)
 			as.Equal("/v1/audio/transcriptions", req.URL.Path)
 			return nil, fmt.Errorf("test error")

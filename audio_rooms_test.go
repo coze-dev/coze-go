@@ -19,7 +19,7 @@ func TestAudioRooms(t *testing.T) {
 				Token:  randomString(10),
 				UID:    randomString(10),
 			}
-			rooms := newRooms(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			rooms := newAudioRooms(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 				as.Equal(http.MethodPost, req.Method)
 				as.Equal("/v1/audio/rooms", req.URL.Path)
 				return mockResponse(http.StatusOK, &createAudioRoomsResp{
@@ -58,7 +58,7 @@ func TestAudioRooms(t *testing.T) {
 				Token:  randomString(10),
 				UID:    randomString(10),
 			}
-			rooms := newRooms(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			rooms := newAudioRooms(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 				as.Equal(http.MethodPost, req.Method)
 				as.Equal("/v1/audio/rooms", req.URL.Path)
 				return mockResponse(http.StatusOK, &createAudioRoomsResp{
@@ -78,7 +78,7 @@ func TestAudioRooms(t *testing.T) {
 		})
 
 		t.Run("failed", func(t *testing.T) {
-			rooms := newRooms(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			rooms := newAudioRooms(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 				return nil, fmt.Errorf("test error")
 			})))
 

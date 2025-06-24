@@ -120,6 +120,6 @@ type audioRooms struct {
 	core *core
 }
 
-func newRooms(core *core) *audioRooms {
+func newAudioRooms(core *core) *audioRooms {
 	return &audioRooms{core: core}
 }

@@ -41,6 +41,6 @@ type audioTranscriptions struct {
 	core *core
 }
 
-func newTranscriptions(core *core) *audioTranscriptions {
+func newAudioTranscriptions(core *core) *audioTranscriptions {
 	return &audioTranscriptions{core: core}
 }
