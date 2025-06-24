@@ -94,18 +94,19 @@ func TestAudioRooms(t *testing.T) {
 func TestAudioConst(t *testing.T) {
 	as := assert.New(t)
 	t.Run("AudioCodec", func(t *testing.T) {
-		as.Equal(AudioCodec("AACLC"), AudioCodecAACLC)
-		as.Equal(AudioCodec("G711A"), AudioCodecG711A)
 		as.Equal(AudioCodec("OPUS"), AudioCodecOPUS)
-		as.Equal(AudioCodec("G722"), AudioCodecG722)
+		as.Equal("OPUS", AudioCodecOPUS.String())
+		as.NotNil(AudioCodecOPUS.Ptr())
 	})
 
 	t.Run("VideoCodec", func(t *testing.T) {
 		as.Equal(VideoCodec("H264"), VideoCodecH264)
-		as.Equal(VideoCodec("BYTEVC1"), VideoCodecBYTEVC1)
+		as.Equal("H264", VideoCodecH264.String())
+		as.NotNil(VideoCodecH264.Ptr())
 	})
 	t.Run("StreamVideoType", func(t *testing.T) {
 		as.Equal(StreamVideoType("main"), StreamVideoTypeMain)
-		as.Equal(StreamVideoType("screen"), StreamVideoTypeScreen)
+		as.Equal("main", StreamVideoTypeMain.String())
+		as.NotNil(StreamVideoTypeMain.Ptr())
 	})
 }

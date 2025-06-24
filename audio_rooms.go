@@ -26,6 +26,14 @@ const (
 	AudioCodecG722  AudioCodec = "G722"
 )
 
+func (r AudioCodec) String() string {
+	return string(r)
+}
+
+func (r AudioCodec) Ptr() *AudioCodec {
+	return &r
+}
+
 // CreateAudioRoomsReq represents the request for creating an audio room
 type CreateAudioRoomsReq struct {
 	BotID          string      `json:"bot_id"`
@@ -51,18 +59,42 @@ const (
 	VideoCodecBYTEVC1 VideoCodec = "BYTEVC1"
 )
 
+func (r VideoCodec) String() string {
+	return string(r)
+}
+
+func (r VideoCodec) Ptr() *VideoCodec {
+	return &r
+}
+
 // StreamVideoType represents the stream video type
 type StreamVideoType string
 
 const (
-	StreamVideoTypeMain   StreamVideoType = "main"
+	// StreamVideoTypeMain 主流，包括通过摄像头/麦克风的内部采集机制获取的流，以及通过自定义采集方式获取的流。
+	StreamVideoTypeMain StreamVideoType = "main"
+	// StreamVideoTypeScreen 屏幕流，用于屏幕共享或屏幕录制的视频流。
 	StreamVideoTypeScreen StreamVideoType = "screen"
 )
 
+func (r StreamVideoType) String() string {
+	return string(r)
+}
+
+func (r StreamVideoType) Ptr() *StreamVideoType {
+	return &r
+}
+
 // RoomVideoConfig represents the room video configuration
 type RoomVideoConfig struct {
-	Codec           VideoCodec      `json:"codec,omitempty"`
+	// 房间视频编码格式
+	Codec VideoCodec `json:"codec,omitempty"`
+	// 房间视频流类型
 	StreamVideoType StreamVideoType `json:"stream_video_type,omitempty"`
+	// 视频抽帧速率
+	VideoFrameRate *int `json:"video_frame_rate,omitempty"`
+	// 视频帧过期时间, 单位为 s
+	VideoFrameExpireDuration *int `json:"video_frame_expire_duration,omitempty"`
 }
 
 // RoomAudioConfig represents the room audio configuration
