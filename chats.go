@@ -301,6 +301,9 @@ type CreateChatsReq struct {
 
 	// Optional：Assign values to custom parameters and pass them to the workflow
 	Parameters map[string]any `json:"parameters,omitempty"`
+
+	// Optional: Support card response for question node
+	EnableCard *bool `json:"enable_card,omitempty"`
 }
 
 // CancelChatsReq represents the request to cancel a chat
