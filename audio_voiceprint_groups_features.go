@@ -61,10 +61,11 @@ func (r *audioVoiceprintGroupsFeatures) List(ctx context.Context, req *ListVoice
 				return nil, err
 			}
 			return &pageResponse[VoicePrintGroupFeature]{
-				Total:   response.Data.Total,
-				HasMore: len(response.Data.Items) >= request.PageSize,
-				Data:    response.Data.Items,
-				LogID:   response.HTTPResponse.LogID(),
+				response: response.HTTPResponse,
+				Total:    response.Data.Total,
+				HasMore:  len(response.Data.Items) >= request.PageSize,
+				Data:     response.Data.Items,
+				LogID:    response.HTTPResponse.LogID(),
 			}, nil
 		}, req.PageSize, req.PageNum)
 }

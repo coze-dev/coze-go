@@ -75,16 +75,16 @@ func TestDatasetsImages(t *testing.T) {
 				},
 			})
 		})))
-		paged, err := images.List(context.Background(), &ListDatasetsImagesReq{
+		resp, err := images.List(context.Background(), &ListDatasetsImagesReq{
 			DatasetID:  "123",
 			Keyword:    ptr("test"),
 			HasCaption: ptr(true),
 		})
 		as.Nil(err)
-		as.NotNil(paged)
-		// as.NotEmpty(paged.Response().LogID())// todo
+		as.NotNil(resp)
+		as.NotEmpty(resp.Response().LogID())
 
-		items := paged.Items()
+		items := resp.Items()
 		as.Len(items, len(imageList))
 		as.Equal(imageList[0].DocumentID, items[0].DocumentID)
 		as.Equal(imageList[0].Name, items[0].Name)
@@ -100,7 +100,7 @@ func TestDatasetsImages(t *testing.T) {
 		as.Equal(DocumentFormatTypeImage, items[1].FormatType)
 		as.Equal(DocumentSourceTypeLocalFile, items[1].SourceType)
 
-		as.Equal(2, paged.Total())
-		as.False(paged.HasMore())
+		as.Equal(2, resp.Total())
+		as.False(resp.HasMore())
 	})
 }

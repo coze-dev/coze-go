@@ -28,9 +28,10 @@ func (r *conversations) List(ctx context.Context, req *ListConversationsReq) (Nu
 				return nil, err
 			}
 			return &pageResponse[Conversation]{
-				HasMore: resp.Data.HasMore,
-				Data:    resp.Data.Conversations,
-				LogID:   resp.HTTPResponse.LogID(),
+				response: resp.HTTPResponse,
+				HasMore:  resp.Data.HasMore,
+				Data:     resp.Data.Conversations,
+				LogID:    resp.HTTPResponse.LogID(),
 			}, nil
 		}, req.PageSize, req.PageNum)
 }

@@ -90,16 +90,16 @@ func TestAudioVoices(t *testing.T) {
 				},
 			})
 		})))
-		paged, err := voices.List(context.Background(), &ListAudioVoicesReq{
+		resp, err := voices.List(context.Background(), &ListAudioVoicesReq{
 			FilterSystemVoice: true,
 			PageNum:           1,
 			PageSize:          20,
 		})
 		as.Nil(err)
-		as.NotNil(paged)
-		// as.NotEmpty(paged.logid) // todo
-		as.False(paged.HasMore())
-		items := paged.Items()
+		as.NotNil(resp)
+		as.NotEmpty(resp.Response().LogID())
+		as.False(resp.HasMore())
+		items := resp.Items()
 		as.Len(items, 2)
 
 		// Verify first voice
@@ -139,12 +139,12 @@ func TestAudioVoices(t *testing.T) {
 				},
 			})
 		})))
-		paged, err := voices.List(context.Background(), &ListAudioVoicesReq{})
+		resp, err := voices.List(context.Background(), &ListAudioVoicesReq{})
 		as.Nil(err)
-		as.NotNil(paged)
-		// as.NotEmpty(paged.Response().LogID()) // todo
-		as.False(paged.HasMore())
-		as.Empty(paged.Items())
+		as.NotNil(resp)
+		as.NotEmpty(resp.Response().LogID())
+		as.False(resp.HasMore())
+		as.Empty(resp.Items())
 	})
 
 	t.Run("list voices with error", func(t *testing.T) {

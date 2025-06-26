@@ -35,10 +35,11 @@ func (r *datasets) List(ctx context.Context, req *ListDatasetsReq) (NumberPaged[
 				return nil, err
 			}
 			return &pageResponse[Dataset]{
-				Total:   response.Data.TotalCount,
-				HasMore: len(response.Data.DatasetList) >= request.PageSize,
-				Data:    response.Data.DatasetList,
-				LogID:   response.HTTPResponse.LogID(),
+				response: response.HTTPResponse,
+				Total:    response.Data.TotalCount,
+				HasMore:  len(response.Data.DatasetList) >= request.PageSize,
+				Data:     response.Data.DatasetList,
+				LogID:    response.HTTPResponse.LogID(),
 			}, nil
 		}, req.PageSize, req.PageNum)
 }

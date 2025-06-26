@@ -44,10 +44,11 @@ func (r *datasetsImages) List(ctx context.Context, req *ListDatasetsImagesReq) (
 				return nil, err
 			}
 			return &pageResponse[Image]{
-				Total:   response.Data.TotalCount,
-				HasMore: len(response.Data.ImagesInfos) >= request.PageSize,
-				Data:    response.Data.ImagesInfos,
-				LogID:   response.HTTPResponse.LogID(),
+				response: response.HTTPResponse,
+				Total:    response.Data.TotalCount,
+				HasMore:  len(response.Data.ImagesInfos) >= request.PageSize,
+				Data:     response.Data.ImagesInfos,
+				LogID:    response.HTTPResponse.LogID(),
 			}, nil
 		}, req.PageSize, req.PageNum)
 }

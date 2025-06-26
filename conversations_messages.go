@@ -23,11 +23,12 @@ func (r *conversationsMessages) List(ctx context.Context, req *ListConversations
 				return nil, err
 			}
 			return &pageResponse[Message]{
-				HasMore: response.HasMore,
-				Data:    response.Messages,
-				LastID:  response.FirstID,
-				NextID:  response.LastID,
-				LogID:   response.HTTPResponse.LogID(),
+				response: response.HTTPResponse,
+				HasMore:  response.HasMore,
+				Data:     response.Messages,
+				LastID:   response.FirstID,
+				NextID:   response.LastID,
+				LogID:    response.HTTPResponse.LogID(),
 			}, nil
 		}, req.Limit, req.AfterID)
 }

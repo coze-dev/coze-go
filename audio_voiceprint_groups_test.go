@@ -133,7 +133,7 @@ func TestAudioVoiceprintGroup(t *testing.T) {
 			as.NotNil(resp)
 			as.Len(resp.Items(), 1)
 			as.Equal(groupID, resp.Items()[0].ID)
-			// as.NotEmpty(resp.Response().LogID()) // todo
+			as.NotEmpty(resp.Response().LogID())
 		})
 		t.Run("error", func(t *testing.T) {
 			groups := newAudioVoiceprintGroups(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {

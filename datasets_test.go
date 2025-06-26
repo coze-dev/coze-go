@@ -67,17 +67,17 @@ func TestDataset(t *testing.T) {
 		req.PageSize = 0 // 提高覆盖率
 		req.FormatType = DocumentFormatTypeDocument
 
-		paged, err := datasets.List(context.Background(), req)
+		resp, err := datasets.List(context.Background(), req)
 		as.Nil(err)
-		as.NotNil(paged)
-		// as.NotEmpty(paged.resp) // todo
+		as.NotNil(resp)
+		as.NotEmpty(resp.Response().LogID())
 
-		items := paged.Items()
+		items := resp.Items()
 		as.Len(items, 2)
 		as.Equal("123", items[0].ID)
 		as.Equal("456", items[1].ID)
-		as.Equal(int(2), paged.Total())
-		as.False(paged.HasMore())
+		as.Equal(int(2), resp.Total())
+		as.False(resp.HasMore())
 	})
 
 	t.Run("update dataset success", func(t *testing.T) {

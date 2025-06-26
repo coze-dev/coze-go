@@ -39,13 +39,13 @@ func TestWorkspaces(t *testing.T) {
 				},
 			})
 		})))
-		paged, err := workspaces.List(context.Background(), &ListWorkspaceReq{})
+		resp, err := workspaces.List(context.Background(), &ListWorkspaceReq{})
 		as.Nil(err)
-		as.NotNil(paged)
-		// as.NotEmpty(paged.LogID()) // todo
-		as.False(paged.HasMore())
+		as.NotNil(resp)
+		as.NotEmpty(resp.Response().LogID())
+		as.False(resp.HasMore())
 
-		items := paged.Items()
+		items := resp.Items()
 		as.Len(items, 2)
 
 		as.Equal("ws1", items[0].ID)
@@ -72,12 +72,12 @@ func TestWorkspaces(t *testing.T) {
 				},
 			})
 		})))
-		paged, err := workspaces.List(context.Background(), NewListWorkspaceReq())
+		resp, err := workspaces.List(context.Background(), NewListWorkspaceReq())
 		as.Nil(err)
-		as.NotNil(paged)
-		// as.NotEmpty(paged.LogID()) // todo
-		as.False(paged.HasMore())
-		as.Empty(paged.Items())
+		as.NotNil(resp)
+		as.NotEmpty(resp.Response().LogID())
+		as.False(resp.HasMore())
+		as.Empty(resp.Items())
 	})
 
 	t.Run("list workspaces with error", func(t *testing.T) {

@@ -36,9 +36,10 @@ func (r *audioVoices) List(ctx context.Context, req *ListAudioVoicesReq) (Number
 				return nil, err
 			}
 			return &pageResponse[Voice]{
-				HasMore: len(response.Data.VoiceList) >= request.PageSize,
-				Data:    response.Data.VoiceList,
-				LogID:   response.HTTPResponse.LogID(),
+				response: response.HTTPResponse,
+				HasMore:  len(response.Data.VoiceList) >= request.PageSize,
+				Data:     response.Data.VoiceList,
+				LogID:    response.HTTPResponse.LogID(),
 			}, nil
 		}, req.PageSize, req.PageNum)
 }

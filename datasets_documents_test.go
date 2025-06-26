@@ -122,15 +122,15 @@ func TestDatasetsDocuments(t *testing.T) {
 				},
 			})
 		})))
-		paged, err := documents.List(context.Background(), &ListDatasetsDocumentsReq{
+		resp, err := documents.List(context.Background(), &ListDatasetsDocumentsReq{
 			DatasetID: 123,
 			Page:      1,
 			Size:      20,
 		})
 		as.Nil(err)
-		as.NotNil(paged)
-		// as.NotEmpty(paged.Response().LogID()) // todo
-		items := paged.Items()
+		as.NotNil(resp)
+		as.NotEmpty(resp.Response().LogID())
+		items := resp.Items()
 		as.Len(items, 2)
 
 		as.Equal("doc1", items[0].DocumentID)
@@ -156,13 +156,13 @@ func TestDatasetsDocuments(t *testing.T) {
 				},
 			})
 		})))
-		paged, err := documents.List(context.Background(), &ListDatasetsDocumentsReq{
+		resp, err := documents.List(context.Background(), &ListDatasetsDocumentsReq{
 			DatasetID: 123,
 		})
 		as.Nil(err)
-		as.NotNil(paged)
-		// as.NotEmpty(paged.Response().LogID()) // todo
-		as.Empty(paged.Items())
+		as.NotNil(resp)
+		as.NotEmpty(resp.Response().LogID())
+		as.Empty(resp.Items())
 	})
 
 	t.Run("helper functions", func(t *testing.T) {

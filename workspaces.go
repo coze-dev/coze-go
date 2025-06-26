@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-// 查看空间列表
+// List 查看空间列表
 //
 // docs: https://www.coze.cn/open/docs/developer_guides/list_workspace
 func (r *workspace) List(ctx context.Context, req *ListWorkspaceReq) (NumberPaged[Workspace], error) {
@@ -26,10 +26,11 @@ func (r *workspace) List(ctx context.Context, req *ListWorkspaceReq) (NumberPage
 				return nil, err
 			}
 			return &pageResponse[Workspace]{
-				Total:   response.Data.TotalCount,
-				HasMore: len(response.Data.Workspaces) >= request.PageSize,
-				Data:    response.Data.Workspaces,
-				LogID:   response.HTTPResponse.LogID(),
+				response: response.HTTPResponse,
+				Total:    response.Data.TotalCount,
+				HasMore:  len(response.Data.Workspaces) >= request.PageSize,
+				Data:     response.Data.Workspaces,
+				LogID:    response.HTTPResponse.LogID(),
 			}, nil
 		}, req.PageSize, req.PageNum)
 }

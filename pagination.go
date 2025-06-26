@@ -1,6 +1,7 @@
 package coze
 
 type BasePaged[T any] interface {
+	Response() HTTPResponse
 	Err() error
 	Items() []*T
 	Current() *T
@@ -25,15 +26,17 @@ type pageRequest struct {
 }
 
 type pageResponse[T any] struct {
-	HasMore bool   `json:"has_more"`
-	Total   int    `json:"total"`
-	Data    []*T   `json:"data"`
-	LastID  string `json:"last_id,omitempty"`
-	NextID  string `json:"next_id,omitempty"`
-	LogID   string `json:"log_id,omitempty"`
+	response *httpResponse `json:"-"`
+	HasMore  bool          `json:"has_more"`
+	Total    int           `json:"total"`
+	Data     []*T          `json:"data"`
+	LastID   string        `json:"last_id,omitempty"`
+	NextID   string        `json:"next_id,omitempty"`
+	LogID    string        `json:"log_id,omitempty"`
 }
 
 type basePager[T any] struct {
+	baseModel
 	pageFetcher    PageFetcher[T]
 	pageSize       int
 	currentPage    *pageResponse[T]
@@ -75,9 +78,17 @@ func NewNumberPaged[T any](fetcher PageFetcher[T], pageSize, pageNum int) (Numbe
 	if pageNum <= 0 {
 		pageNum = 1
 	}
-	paginator := &implNumberPaged[T]{basePager: basePager[T]{pageFetcher: fetcher, pageSize: pageSize, currentPageNum: pageNum}}
-	err := paginator.fetchNextPage()
-	if err != nil {
+	paginator := &implNumberPaged[T]{
+		basePager: basePager[T]{
+			baseModel: baseModel{
+				httpResponse: newHTTPResponse(nil),
+			},
+			pageFetcher:    fetcher,
+			pageSize:       pageSize,
+			currentPageNum: pageNum,
+		},
+	}
+	if err := paginator.fetchNextPage(); err != nil {
 		return nil, err
 	}
 	return paginator, nil
@@ -92,6 +103,7 @@ func (p *implNumberPaged[T]) fetchNextPage() error {
 	}
 	p.currentIndex = 0
 	p.currentPageNum++
+	p.httpResponse = p.currentPage.response
 	return nil
 }
 
@@ -102,8 +114,7 @@ func (p *implNumberPaged[T]) Next() bool {
 		return true
 	}
 	if p.currentPage.HasMore {
-		err := p.fetchNextPage()
-		if err != nil {
+		if err := p.fetchNextPage(); err != nil {
 			p.err = err
 			return false
 		}
@@ -124,9 +135,16 @@ type implLastIDPaged[T any] struct {
 }
 
 func NewLastIDPaged[T any](fetcher PageFetcher[T], pageSize int, nextID *string) (LastIDPaged[T], error) {
-	paginator := &implLastIDPaged[T]{basePager: basePager[T]{pageFetcher: fetcher, pageSize: pageSize}, pageToken: nextID}
-	err := paginator.fetchNextPage()
-	if err != nil {
+	paginator := &implLastIDPaged[T]{
+		basePager: basePager[T]{
+			baseModel: baseModel{
+				httpResponse: newHTTPResponse(nil),
+			},
+			pageFetcher: fetcher,
+			pageSize:    pageSize,
+		}, pageToken: nextID,
+	}
+	if err := paginator.fetchNextPage(); err != nil {
 		return nil, err
 	}
 	return paginator, nil
@@ -141,6 +159,7 @@ func (p *implLastIDPaged[T]) fetchNextPage() error {
 	}
 	p.currentIndex = 0
 	p.pageToken = &p.currentPage.NextID
+	p.httpResponse = p.currentPage.response
 	return nil
 }
 
@@ -151,8 +170,7 @@ func (p *implLastIDPaged[T]) Next() bool {
 		return true
 	}
 	if p.currentPage.HasMore {
-		err := p.fetchNextPage()
-		if err != nil {
+		if err := p.fetchNextPage(); err != nil {
 			p.err = err
 			return false
 		}

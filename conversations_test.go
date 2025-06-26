@@ -110,14 +110,14 @@ func TestConversations(t *testing.T) {
 				},
 			})
 		})))
-		paged, err := conversations.List(context.Background(), &ListConversationsReq{
+		resp, err := conversations.List(context.Background(), &ListConversationsReq{
 			BotID: "test_bot_id",
 		})
 		as.Nil(err)
-		as.NotNil(paged)
-		// as.NotEmpty(paged.logid) // todo
-		as.False(paged.HasMore())
-		as.Empty(paged.Items())
+		as.NotNil(resp)
+		as.NotEmpty(resp.Response().LogID())
+		as.False(resp.HasMore())
+		as.Empty(resp.Items())
 	})
 
 	t.Run("create success", func(t *testing.T) {

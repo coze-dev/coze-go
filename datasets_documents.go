@@ -61,10 +61,11 @@ func (r *datasetsDocuments) List(ctx context.Context, req *ListDatasetsDocuments
 				return nil, err
 			}
 			return &pageResponse[Document]{
-				Total:   int(response.Total),
-				HasMore: request.PageSize <= len(response.DocumentInfos),
-				Data:    response.DocumentInfos,
-				LogID:   response.HTTPResponse.LogID(),
+				response: response.HTTPResponse,
+				Total:    int(response.Total),
+				HasMore:  request.PageSize <= len(response.DocumentInfos),
+				Data:     response.DocumentInfos,
+				LogID:    response.HTTPResponse.LogID(),
 			}, nil
 		}, req.Size, req.Page)
 }

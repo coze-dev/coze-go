@@ -42,15 +42,15 @@ func TestWorkspacesMembers(t *testing.T) {
 					},
 				})
 			})))
-			paged, err := members.List(context.Background(), &ListWorkspaceMemberReq{
+			resp, err := members.List(context.Background(), &ListWorkspaceMemberReq{
 				WorkspaceID: workspaceID,
 			})
 			as.Nil(err)
-			as.NotNil(paged)
-			// as.NotEmpty(paged.LogID()) // todo
-			as.False(paged.HasMore())
+			as.NotNil(resp)
+			as.NotEmpty(resp.Response().LogID())
+			as.False(resp.HasMore())
 
-			items := paged.Items()
+			items := resp.Items()
 			as.Len(items, 2)
 
 			as.Equal("ws1", items[0].UserID)

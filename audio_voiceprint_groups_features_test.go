@@ -147,7 +147,7 @@ func TestAudioVoiceprintGroupFeature(t *testing.T) {
 			as.NotNil(resp)
 			as.Len(resp.Items(), 1)
 			as.Equal(featureID, resp.Items()[0].ID)
-			// as.NotEmpty(resp.Response().LogID()) // todo
+			as.NotEmpty(resp.Response().LogID())
 		})
 		t.Run("error", func(t *testing.T) {
 			groupID := randomString(10)

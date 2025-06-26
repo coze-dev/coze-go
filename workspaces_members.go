@@ -26,10 +26,11 @@ func (r *workspacesMembers) List(ctx context.Context, req *ListWorkspaceMemberRe
 				return nil, err
 			}
 			return &pageResponse[WorkspaceMember]{
-				Total:   response.Data.TotalCount,
-				HasMore: len(response.Data.Items) >= request.PageSize,
-				Data:    response.Data.Items,
-				LogID:   response.HTTPResponse.LogID(),
+				response: response.HTTPResponse,
+				Total:    response.Data.TotalCount,
+				HasMore:  len(response.Data.Items) >= request.PageSize,
+				Data:     response.Data.Items,
+				LogID:    response.HTTPResponse.LogID(),
 			}, nil
 		}, req.PageSize, req.PageNum)
 }

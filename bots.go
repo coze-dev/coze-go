@@ -87,10 +87,11 @@ func (r *bots) List(ctx context.Context, req *ListBotsReq) (NumberPaged[SimpleBo
 				return nil, err
 			}
 			return &pageResponse[SimpleBot]{
-				Total:   response.Data.Total,
-				HasMore: len(response.Data.Bots) >= request.PageSize,
-				Data:    response.Data.Bots,
-				LogID:   response.HTTPResponse.LogID(),
+				response: response.HTTPResponse,
+				Total:    response.Data.Total,
+				HasMore:  len(response.Data.Bots) >= request.PageSize,
+				Data:     response.Data.Bots,
+				LogID:    response.HTTPResponse.LogID(),
 			}, nil
 		}, req.PageSize, req.PageNum)
 }
