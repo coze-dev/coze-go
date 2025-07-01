@@ -39,7 +39,8 @@ func TestAudioRooms(t *testing.T) {
 						Codec:           VideoCodecH264,
 						StreamVideoType: StreamVideoTypeMain,
 					},
-					PrologueContent: randomString(10),
+					PrologueContent:         randomString(10),
+					PrologueDelayDurationMs: ptr(100),
 				},
 			})
 			as.Nil(err)

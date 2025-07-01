@@ -49,6 +49,8 @@ type RoomConfig struct {
 	AudioConfig     *RoomAudioConfig `json:"audio_config,omitempty"`
 	VideoConfig     *RoomVideoConfig `json:"video_config,omitempty"`
 	PrologueContent string           `json:"prologue_content,omitempty"`
+	// 在进房后等待多长时间播放开场白，默认是500ms，[0, 5000]
+	PrologueDelayDurationMs *int `json:"prologue_delay_duration_ms,omitempty"`
 }
 
 // VideoCodec represents the video codec
