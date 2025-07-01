@@ -2,6 +2,9 @@ package coze
 
 import (
 	"context"
+	"encoding/json"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -26,38 +29,28 @@ func NewTokenAuth(accessToken string) Auth {
 	}
 }
 
-func getRefreshBefore(ttl int) int64 {
-	if ttl >= 600 {
-		return 30
-	} else if ttl >= 60 {
-		return 10
-	} else if ttl >= 30 {
-		return 5
-	}
-	return 0
-}
-
 func NewJWTAuth(client *JWTOAuthClient, opt *GetJWTAccessTokenReq) Auth {
-	ttl := 900
 	if opt == nil {
-		return &jwtOAuthImpl{
-			TTL:           ttl,
-			client:        client,
-			refreshBefore: getRefreshBefore(ttl),
-		}
+		opt = &GetJWTAccessTokenReq{}
 	}
-	if opt.TTL > 0 {
-		ttl = opt.TTL
+	if opt.TTL <= 0 {
+		opt.TTL = 900
+	}
+	if opt.Store == nil {
+		opt.Store = newFixedKeyMemStore()
 	}
 
-	return &jwtOAuthImpl{
-		TTL:           ttl,
+	r := &jwtOAuthImpl{
+		TTL:           opt.TTL,
 		Scope:         opt.Scope,
 		SessionName:   opt.SessionName,
-		refreshBefore: getRefreshBefore(ttl),
+		refreshBefore: getRefreshBefore(opt.TTL),
 		client:        client,
 		accountID:     opt.AccountID,
+		store:         opt.Store,
 	}
+	r.storeKey = r.genJWTOAuthStoreKey()
+	return r
 }
 
 // Token returns the access token.
@@ -65,26 +58,34 @@ func (r *tokenAuthImpl) Token(ctx context.Context) (string, error) {
 	return r.accessToken, nil
 }
 
+func getRefreshBefore(ttl int) int64 {
+	if ttl >= 600 {
+		return 30 // 超过 10 分钟有效期, 提前 30 秒
+	} else if ttl >= 60 {
+		return 10 // 超过 1 分钟有效期, 提前 10 秒
+	} else if ttl >= 30 {
+		return 5 // 超过 30 秒有效期, 提前 5 秒
+	}
+	return 0 // 不提前, 兜底分支, 实际不会有这种情况
+}
+
 type jwtOAuthImpl struct {
 	TTL           int
 	SessionName   *string
 	Scope         *Scope
 	client        *JWTOAuthClient
-	accessToken   *string
-	expireIn      int64
-	refreshBefore int64 // refresh moment before expireIn, unit second
-	refreshAt     int64
+	refreshBefore int64 // 在到期前多少秒刷新
 	accountID     *int64
-}
-
-func (r *jwtOAuthImpl) needRefresh() bool {
-	return r.accessToken == nil || time.Now().Unix() > r.refreshAt
+	store         Store
+	storeKey      string
 }
 
 func (r *jwtOAuthImpl) Token(ctx context.Context) (string, error) {
-	if !r.needRefresh() {
-		return ptrValue(r.accessToken), nil
+	token, _ := r.store.Get(ctx, r.storeKey)
+	if token != "" {
+		return token, nil
 	}
+
 	resp, err := r.client.GetAccessToken(ctx, &GetJWTAccessTokenReq{
 		TTL:         r.TTL,
 		SessionName: r.SessionName,
@@ -94,8 +95,41 @@ func (r *jwtOAuthImpl) Token(ctx context.Context) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	r.accessToken = ptr(resp.AccessToken)
-	r.expireIn = resp.ExpiresIn
-	r.refreshAt = resp.ExpiresIn - r.refreshBefore
+
+	// resp.ExpiresIn 是到期的时间戳, 减去 r.refreshBefore buffer 时间, 再减去当前时间, 得到缓存 ttl
+	ttl := time.Second * time.Duration(resp.ExpiresIn-r.refreshBefore-time.Now().Unix())
+	_ = r.store.Set(ctx, r.storeKey, resp.AccessToken, ttl)
+
 	return resp.AccessToken, nil
+}
+
+func (r *jwtOAuthImpl) genJWTOAuthStoreKey() string {
+	clientID := r.client.clientID
+	host := r.client.hostName
+	accountID := r.accountID
+	sessionName := r.SessionName
+	scope := r.Scope
+
+	s := new(strings.Builder)
+	s.WriteString("coze:jwt:")
+	s.WriteString(host)
+	s.WriteString(":")
+	s.WriteString(clientID)
+	s.WriteString(":")
+
+	if accountID != nil {
+		s.WriteString(strconv.FormatInt(*accountID, 10))
+	}
+	s.WriteString(":")
+
+	if sessionName != nil {
+		s.WriteString(*sessionName)
+	}
+	s.WriteString(":")
+
+	if scope != nil {
+		scopeBytes, _ := json.Marshal(scope)
+		s.WriteString(string(scopeBytes))
+	}
+	return s.String()
 }
