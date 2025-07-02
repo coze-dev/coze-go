@@ -23,6 +23,7 @@ type CozeAPI struct {
 type clientOption struct {
 	baseURL     string
 	client      HTTPClient
+	header      map[string]string
 	logLevel    LogLevel
 	logger      Logger
 	auth        Auth
@@ -65,12 +66,19 @@ func WithEnableLogID(enableLogID bool) CozeAPIOption {
 	}
 }
 
+func WithHttpHeader(header map[string]string) CozeAPIOption {
+	return func(opt *clientOption) {
+		opt.header = header
+	}
+}
+
 func NewCozeAPI(auth Auth, opts ...CozeAPIOption) CozeAPI {
 	opt := &clientOption{
 		baseURL:  ComBaseURL,
 		client:   nil,
 		logLevel: LogLevelInfo, // Default log level is Info
 		auth:     auth,
+		header:   nil,
 	}
 	for _, option := range opts {
 		option(opt)

@@ -200,6 +200,7 @@ type oauthOption struct {
 	baseURL    string
 	wwwURL     string
 	httpClient HTTPClient
+	header     map[string]string
 }
 
 type OAuthClientOption func(*oauthOption)
@@ -224,12 +225,19 @@ func WithAuthHttpClient(client HTTPClient) OAuthClientOption {
 	}
 }
 
+func WithAuthHeader(header map[string]string) OAuthClientOption {
+	return func(opt *oauthOption) {
+		opt.header = header
+	}
+}
+
 // newOAuthClient creates a new OAuth core
 func newOAuthClient(clientID, clientSecret string, opts ...OAuthClientOption) (*OAuthClient, error) {
 	initSettings := &oauthOption{
 		baseURL:    ComBaseURL,
 		wwwURL:     "",
 		httpClient: nil,
+		header:     nil,
 	}
 
 	for _, opt := range opts {
@@ -266,6 +274,7 @@ func newOAuthClient(clientID, clientSecret string, opts ...OAuthClientOption) (*
 		core: newCore(&clientOption{
 			baseURL: initSettings.baseURL,
 			client:  httpClient,
+			header:  initSettings.header,
 		}),
 	}, nil
 }
