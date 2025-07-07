@@ -35,13 +35,73 @@ func TestBots(t *testing.T) {
 				SuggestedQuestions: []string{"Q1", "Q2"},
 			},
 			ModelInfoConfig: &BotModelInfoConfig{
-				ModelID: "test_model_id",
+				ModelID:        "test_model_id",
+				ResponseFormat: ResponseFormatJSON,
+				Parameters: map[string]string{
+					"thinking_type": "enable",
+				},
 			},
 		})
 		as.Nil(err)
 		as.NotNil(resp)
 		as.NotEmpty(resp.Response().LogID())
 		as.Equal(botID, resp.BotID)
+	})
+
+	t.Run("Create bot with thinking_type parameters", func(t *testing.T) {
+		botID := randomString(10)
+		bots := newBots(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			as.Equal(http.MethodPost, req.Method)
+			as.Equal("/v1/bot/create", req.URL.Path)
+			return mockResponse(http.StatusOK, &createBotsResp{
+				Data: &CreateBotsResp{
+					BotID: botID,
+				},
+			})
+		})))
+		resp, err := bots.Create(context.Background(), &CreateBotsReq{
+			SpaceID:     "test_space_id",
+			Name:        "Thinking Bot",
+			Description: "Bot with thinking capabilities",
+			IconFileID:  "test_icon_id",
+			ModelInfoConfig: &BotModelInfoConfig{
+				ModelID:        "doubao-pro-128k",
+				ResponseFormat: ResponseFormatMarkdown,
+				Temperature:    0.7,
+				MaxTokens:      4000,
+				Parameters: map[string]string{
+					"thinking_type":          "enable",
+					"thinking_budget_tokens": "2000",
+				},
+			},
+		})
+		as.Nil(err)
+		as.NotNil(resp)
+		as.NotEmpty(resp.Response().LogID())
+		as.Equal(botID, resp.BotID)
+	})
+
+	t.Run("Update bot with different thinking parameters", func(t *testing.T) {
+		bots := newBots(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			as.Equal(http.MethodPost, req.Method)
+			as.Equal("/v1/bot/update", req.URL.Path)
+			return mockResponse(http.StatusOK, &updateBotsResp{})
+		})))
+		resp, err := bots.Update(context.Background(), &UpdateBotsReq{
+			BotID:       "test_bot_id",
+			Name:        "Updated Thinking Bot",
+			Description: "Updated bot with auto thinking",
+			ModelInfoConfig: &BotModelInfoConfig{
+				ModelID:        "claude-3-5-sonnet",
+				ResponseFormat: ResponseFormatText,
+				Parameters: map[string]string{
+					"thinking_type": "auto",
+				},
+			},
+		})
+		as.Nil(err)
+		as.NotNil(resp)
+		as.NotEmpty(resp.Response().LogID())
 	})
 
 	t.Run("update bot", func(t *testing.T) {
@@ -232,5 +292,14 @@ func TestBotMode(t *testing.T) {
 	t.Run("BotMode constants", func(t *testing.T) {
 		as.Equal(BotMode(1), BotModeMultiAgent)
 		as.Equal(BotMode(0), BotModeSingleAgentWorkflow)
+	})
+}
+
+func TestResponseFormat(t *testing.T) {
+	as := assert.New(t)
+	t.Run("ResponseFormat constants", func(t *testing.T) {
+		as.Equal("text", ResponseFormatText)
+		as.Equal("json", ResponseFormatJSON)
+		as.Equal("markdown", ResponseFormatMarkdown)
 	})
 }

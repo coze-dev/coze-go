@@ -104,6 +104,13 @@ const (
 	BotModeSingleAgentWorkflow BotMode = 0
 )
 
+// ResponseFormat constants for bot model configuration
+const (
+	ResponseFormatText     = "text"
+	ResponseFormatJSON     = "json"
+	ResponseFormatMarkdown = "markdown"
+)
+
 // Bot represents complete bot information
 type Bot struct {
 	BotID          string             `json:"bot_id"`
@@ -143,15 +150,20 @@ type BotModelInfo struct {
 }
 
 type BotModelInfoConfig struct {
-	TopK             int     `json:"top_k,omitempty"`
-	TopP             float64 `json:"top_p,omitempty"`
-	ModelID          string  `json:"model_id"`
-	MaxTokens        int     `json:"max_tokens,omitempty"`
-	Temperature      float64 `json:"temperature,omitempty"`
-	ContextRound     int     `json:"context_round,omitempty"`
-	ResponseFormat   string  `json:"response_format,omitempty"` // text,markdown,json
-	PresencePenalty  float64 `json:"presence_penalty,omitempty"`
-	FrequencyPenalty float64 `json:"frequency_penalty,omitempty"`
+	TopK             int               `json:"top_k,omitempty"`
+	TopP             float64           `json:"top_p,omitempty"`
+	ModelID          string            `json:"model_id"`
+	MaxTokens        int               `json:"max_tokens,omitempty"`
+	Temperature      float64           `json:"temperature,omitempty"`
+	ContextRound     int               `json:"context_round,omitempty"`
+	ResponseFormat   string            `json:"response_format,omitempty"` // text,markdown,json
+	PresencePenalty  float64           `json:"presence_penalty,omitempty"`
+	FrequencyPenalty float64           `json:"frequency_penalty,omitempty"`
+	// Parameters holds model-specific configuration options
+	// claude: {"thinking_type": "disabled/enable", "thinking_budget_tokens": "2000"}
+	// gemini: {"thinking_type": "disabled/enable"}
+	// doubao: {"thinking_type": "auto/disabled/enable"}
+	Parameters       map[string]string `json:"parameters,omitempty"`
 }
 
 // WorkflowIDList represents workflow ID information
