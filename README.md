@@ -40,6 +40,7 @@ go get github.com/coze-dev/coze-go
 | non-stream workflow chat      | [non_stream_workflow_run_example.go](examples/workflows/runs/create/main.go)            |
 | stream workflow chat          | [stream_workflow_run_example.go](examples/workflows/runs/stream/main.go)                |
 | async workflow run            | [async_workflow_run_example.go](examples/workflows/runs/async_run/main.go)              |
+| list workflows                | [list_workflows_example.go](examples/workflows/list/main.go)                            |
 | conversation                  | [conversation_example.go](examples/conversations/crud/main.go)                          |
 | list conversation             | [list_conversation_example.go](examples/conversations/list/main.go)                     |
 | workspace                     | [list_workspace_example.go](examples/workspaces/list/main.go)                           |
