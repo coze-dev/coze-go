@@ -5,6 +5,39 @@ import (
 	"net/http"
 )
 
+// Create adds enterprise members
+func (r *enterprisesMembers) Create(ctx context.Context, req *CreateEnterpriseMemberReq) (*CreateEnterpriseMemberResp, error) {
+	response := new(createEnterpriseMemberResp)
+	err := r.core.rawRequest(ctx, &RawRequestReq{
+		Method: http.MethodPost,
+		URL:    "/v1/enterprises/:enterprise_id/members",
+		Body:   req,
+	}, response)
+	return response.Data, err
+}
+
+// Delete removes an enterprise member
+func (r *enterprisesMembers) Delete(ctx context.Context, req *DeleteEnterpriseMemberReq) (*DeleteEnterpriseMemberResp, error) {
+	response := new(deleteEnterpriseMemberResp)
+	err := r.core.rawRequest(ctx, &RawRequestReq{
+		Method: http.MethodDelete,
+		URL:    "/v1/enterprises/:enterprise_id/members/:user_id",
+		Body:   req,
+	}, response)
+	return response.Data, err
+}
+
+// Update modifies an enterprise member's role
+func (r *enterprisesMembers) Update(ctx context.Context, req *UpdateEnterpriseMemberReq) (*UpdateEnterpriseMemberResp, error) {
+	response := new(updateEnterpriseMemberResp)
+	err := r.core.rawRequest(ctx, &RawRequestReq{
+		Method: http.MethodPut,
+		URL:    "/v1/enterprises/:enterprise_id/members/:user_id",
+		Body:   req,
+	}, response)
+	return response.Data, err
+}
+
 // EnterpriseMemberRole represents the role of an enterprise member
 type EnterpriseMemberRole string
 
@@ -54,39 +87,6 @@ type UpdateEnterpriseMemberReq struct {
 // UpdateEnterpriseMemberResp represents the response from updating an enterprise member
 type UpdateEnterpriseMemberResp struct {
 	baseModel
-}
-
-// Create adds enterprise members
-func (r *enterprisesMembers) Create(ctx context.Context, req *CreateEnterpriseMemberReq) (*CreateEnterpriseMemberResp, error) {
-	response := new(createEnterpriseMemberResp)
-	err := r.core.rawRequest(ctx, &RawRequestReq{
-		Method: http.MethodPost,
-		URL:    "/v1/enterprises/:enterprise_id/members",
-		Body:   req,
-	}, response)
-	return response.Data, err
-}
-
-// Delete removes an enterprise member
-func (r *enterprisesMembers) Delete(ctx context.Context, req *DeleteEnterpriseMemberReq) (*DeleteEnterpriseMemberResp, error) {
-	response := new(deleteEnterpriseMemberResp)
-	err := r.core.rawRequest(ctx, &RawRequestReq{
-		Method: http.MethodDelete,
-		URL:    "/v1/enterprises/:enterprise_id/members/:user_id",
-		Body:   req,
-	}, response)
-	return response.Data, err
-}
-
-// Update modifies an enterprise member's role
-func (r *enterprisesMembers) Update(ctx context.Context, req *UpdateEnterpriseMemberReq) (*UpdateEnterpriseMemberResp, error) {
-	response := new(updateEnterpriseMemberResp)
-	err := r.core.rawRequest(ctx, &RawRequestReq{
-		Method: http.MethodPut,
-		URL:    "/v1/enterprises/:enterprise_id/members/:user_id",
-		Body:   req,
-	}, response)
-	return response.Data, err
 }
 
 // createEnterpriseMemberResp represents the response for creating enterprise members
