@@ -34,9 +34,9 @@ type CreateEnterpriseMemberResp struct {
 
 // DeleteEnterpriseMemberReq represents the request to delete an enterprise member
 type DeleteEnterpriseMemberReq struct {
-	EnterpriseID     string `path:"enterprise_id" json:"-"`
-	UserID           string `path:"user_id" json:"-"`
-	ReceiverUserID   string `json:"receiver_user_id"`
+	EnterpriseID   string `path:"enterprise_id" json:"-"`
+	UserID         string `path:"user_id" json:"-"`
+	ReceiverUserID string `json:"receiver_user_id"`
 }
 
 // DeleteEnterpriseMemberResp represents the response from deleting an enterprise member
