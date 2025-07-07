@@ -53,7 +53,7 @@ func TestAudioLive(t *testing.T) {
 				as.Equal(expectedStreamInfos[i].Name, streamInfo.Name)
 				as.Equal(expectedStreamInfos[i].LiveType, streamInfo.LiveType)
 			}
-			as.NotEmpty(resp.LogID())
+			as.NotEmpty(resp.Response().LogID())
 		})
 
 		t.Run("empty_response", func(t *testing.T) {

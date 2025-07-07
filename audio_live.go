@@ -5,6 +5,18 @@ import (
 	"net/http"
 )
 
+// Retrieve retrieves live stream information
+func (r *audioLive) Retrieve(ctx context.Context, req *RetrieveAudioLiveReq) (*LiveInfo, error) {
+	request := &RawRequestReq{
+		Method: http.MethodGet,
+		URL:    "/v1/audio/live/:live_id",
+		Body:   req,
+	}
+	response := new(retrieveAudioLiveResp)
+	err := r.core.rawRequest(ctx, request, response)
+	return response.Data, err
+}
+
 // LiveType represents the type of live stream
 type LiveType string
 
@@ -37,7 +49,7 @@ type LiveInfo struct {
 
 // RetrieveAudioLiveReq represents the request for retrieving live information
 type RetrieveAudioLiveReq struct {
-	LiveID string `path:"live_id"`
+	LiveID string `path:"live_id" json:"-"`
 }
 
 type retrieveAudioLiveResp struct {
@@ -52,16 +64,4 @@ type audioLive struct {
 
 func newAudioLive(core *core) *audioLive {
 	return &audioLive{core: core}
-}
-
-// Retrieve retrieves live stream information
-func (r *audioLive) Retrieve(ctx context.Context, req *RetrieveAudioLiveReq) (*LiveInfo, error) {
-	request := &RawRequestReq{
-		Method: http.MethodGet,
-		URL:    "/v1/audio/live/:live_id",
-		Body:   req,
-	}
-	response := new(retrieveAudioLiveResp)
-	err := r.core.rawRequest(ctx, request, response)
-	return response.Data, err
 }
