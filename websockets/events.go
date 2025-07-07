@@ -2,7 +2,6 @@ package websockets
 
 import (
 	"encoding/json"
-	"time"
 )
 
 // WebSocketEvent represents a base WebSocket event

@@ -1,20 +1,20 @@
 package websockets
 
 import (
+	"context"
 	"fmt"
-	"net/http"
 )
 
 // CozeAuth adapts the coze-go Auth interface to work with WebSocket connections
 type CozeAuth struct {
 	authProvider interface {
-		Auth(req *http.Request) error
+		Token(ctx context.Context) (string, error)
 	}
 }
 
 // NewCozeAuth creates a new CozeAuth adapter
 func NewCozeAuth(authProvider interface {
-	Auth(req *http.Request) error
+	Token(ctx context.Context) (string, error)
 }) *CozeAuth {
 	return &CozeAuth{
 		authProvider: authProvider,
@@ -23,22 +23,11 @@ func NewCozeAuth(authProvider interface {
 
 // GetAuthHeader returns the authorization header value
 func (a *CozeAuth) GetAuthHeader() (string, error) {
-	// Create a dummy request to get the auth header
-	req, err := http.NewRequest("GET", "https://api.coze.com", nil)
+	// Get token from auth provider
+	token, err := a.authProvider.Token(context.Background())
 	if err != nil {
-		return "", fmt.Errorf("failed to create request: %w", err)
+		return "", fmt.Errorf("failed to get token: %w", err)
 	}
 	
-	// Apply authentication
-	if err := a.authProvider.Auth(req); err != nil {
-		return "", fmt.Errorf("failed to authenticate: %w", err)
-	}
-	
-	// Get the authorization header
-	authHeader := req.Header.Get("Authorization")
-	if authHeader == "" {
-		return "", fmt.Errorf("no authorization header found")
-	}
-	
-	return authHeader, nil
+	return "Bearer " + token, nil
 }
