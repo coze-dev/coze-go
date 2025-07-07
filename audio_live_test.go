@@ -58,7 +58,7 @@ func TestAudioLive(t *testing.T) {
 
 		t.Run("empty_response", func(t *testing.T) {
 			liveID := randomString(10)
-			
+
 			live := newAudioLive(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 				as.Equal(http.MethodGet, req.Method)
 				as.Equal("/v1/audio/live/"+liveID, req.URL.Path)
@@ -82,7 +82,7 @@ func TestAudioLive(t *testing.T) {
 
 		t.Run("error", func(t *testing.T) {
 			liveID := randomString(10)
-			
+
 			live := newAudioLive(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 				as.Equal(http.MethodGet, req.Method)
 				as.Equal("/v1/audio/live/"+liveID, req.URL.Path)

@@ -18,7 +18,7 @@ func main() {
 
 	ctx := context.Background()
 	liveID := os.Getenv("LIVE_ID")
-	
+
 	// Retrieve live information
 	liveInfo, err := cozeCli.Audio.Live.Retrieve(ctx, &coze.RetrieveAudioLiveReq{
 		LiveID: liveID,
@@ -31,7 +31,7 @@ func main() {
 	fmt.Printf("Live Info:\n")
 	fmt.Printf("App ID: %s\n", liveInfo.AppID)
 	fmt.Printf("Number of streams: %d\n", len(liveInfo.StreamInfos))
-	
+
 	for i, stream := range liveInfo.StreamInfos {
 		fmt.Printf("Stream %d:\n", i+1)
 		fmt.Printf("  Stream ID: %s\n", stream.StreamID)

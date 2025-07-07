@@ -37,6 +37,7 @@ go get github.com/coze-dev/coze-go
 | stream chat                   | [stream_chat_example.go](examples/chats/chat_with_image/main.go)                        |
 | chat with local plugin        | [submit_tool_output_example.go](examples/chats/submit_tool_output/main.go)              |
 | chat with image               | [chat_with_image_example.go](examples/chats/chat_with_image/main.go)                    |
+| audio live retrieve           | [audio_live_retrieve_example.go](examples/audio/live/retrieve/main.go)                  |
 | non-stream workflow chat      | [non_stream_workflow_run_example.go](examples/workflows/runs/create/main.go)            |
 | stream workflow chat          | [stream_workflow_run_example.go](examples/workflows/runs/stream/main.go)                |
 | async workflow run            | [async_workflow_run_example.go](examples/workflows/runs/async_run/main.go)              |
