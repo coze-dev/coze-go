@@ -17,6 +17,7 @@ type CozeAPI struct {
 	Templates     *templates
 	Users         *users
 	Variables     *variables
+	Enterprises   *enterprises
 	baseURL       string
 }
 
@@ -96,6 +97,7 @@ func NewCozeAPI(auth Auth, opts ...CozeAPIOption) CozeAPI {
 		Templates:     newTemplates(core),
 		Users:         newUsers(core),
 		Variables:     newVariables(core),
+		Enterprises:   newEnterprises(core),
 		baseURL:       opt.baseURL,
 	}
 	return cozeClient
