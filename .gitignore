@@ -31,3 +31,9 @@ integrations/
 debug/
 coverage.html
 test.mp3
+
+# Example binaries
+examples/*/main
+examples/*/*/main
+examples/*/*/*/main
+examples/*/thinking_type/thinking_type
