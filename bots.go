@@ -51,14 +51,10 @@ func (r *bots) Publish(ctx context.Context, req *PublishBotsReq) (*PublishBotsRe
 //
 // docs: https://www.coze.cn/open/docs/developer_guides/get_metadata
 func (r *bots) Retrieve(ctx context.Context, req *RetrieveBotsReq) (*RetrieveBotsResp, error) {
-	request := &RawRequestReq{
-		Method: http.MethodGet,
-		URL:    "/v1/bot/get_online_info",
-		Body:   req,
+	if req.UseAPIVersion == 2 {
+		return r.retrieveV2(ctx, req)
 	}
-	response := new(retrieveBotsResp)
-	err := r.core.rawRequest(ctx, request, response)
-	return response.Data, err
+	return r.retrieveV1(ctx, req)
 }
 
 // List 查看已发布智能体列表（即将下线）
@@ -119,6 +115,7 @@ type Bot struct {
 	PluginInfoList []*BotPluginInfo   `json:"plugin_info_list,omitempty"`
 	ModelInfo      *BotModelInfo      `json:"model_info,omitempty"`
 	FolderID       *string            `json:"folder_id,omitempty"`
+	OwnerUserID    *string            `json:"owner_user_id,omitempty"`
 }
 
 // SimpleBot represents simplified bot information
@@ -229,13 +226,9 @@ type ListBotsReq struct {
 
 // RetrieveBotsReq represents the request structure for retrieving a bot
 type RetrieveBotsReq struct {
-	BotID string `query:"bot_id" json:"-"` // Bot ID
-}
-
-// RetrieveBotsResp response structure for retrieving a bot
-type retrieveBotsResp struct {
-	baseResponse
-	Data *RetrieveBotsResp `json:"data"`
+	BotID         string `query:"bot_id" json:"-"` // Bot ID
+	IsPublished   *bool  `json:"is_published,omitempty"`
+	UseAPIVersion int    `json:"-"`
 }
 
 type RetrieveBotsResp struct {
@@ -268,6 +261,54 @@ type createBotsResp struct {
 type publishBotsResp struct {
 	baseResponse
 	Data *PublishBotsResp `json:"data"`
+}
+
+func (r *bots) retrieveV1(ctx context.Context, req *RetrieveBotsReq) (*RetrieveBotsResp, error) {
+	request := &RawRequestReq{
+		Method: http.MethodGet,
+		URL:    "/v1/bot/get_online_info",
+		Body:   req.toReq(),
+	}
+	response := new(retrieveBotsResp)
+	err := r.core.rawRequest(ctx, request, response)
+	return response.Data, err
+}
+
+func (r *bots) retrieveV2(ctx context.Context, req *RetrieveBotsReq) (*RetrieveBotsResp, error) {
+	request := &RawRequestReq{
+		Method: http.MethodGet,
+		URL:    "/v1/bots/:bot_id",
+		Body:   req.toReq(),
+	}
+	response := new(retrieveBotsResp)
+	err := r.core.rawRequest(ctx, request, response)
+	return response.Data, err
+}
+
+func (r RetrieveBotsReq) toReq() any {
+	if r.UseAPIVersion == 2 {
+		return &retrieveBotsReqV2{
+			BotID:       r.BotID,
+			IsPublished: r.IsPublished,
+		}
+	}
+	return &retrieveBotsReqV1{
+		BotID: r.BotID,
+	}
+}
+
+type retrieveBotsReqV1 struct {
+	BotID string `query:"bot_id" json:"-"`
+}
+
+type retrieveBotsReqV2 struct {
+	BotID       string `path:"bot_id" json:"-"`
+	IsPublished *bool  `query:"is_published" json:"-"`
+}
+
+type retrieveBotsResp struct {
+	baseResponse
+	Data *RetrieveBotsResp `json:"data"`
 }
 
 type updateBotsResp struct {
