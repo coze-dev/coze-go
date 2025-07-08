@@ -82,7 +82,6 @@ func TestFolders(t *testing.T) {
 	})
 
 	t.Run("retrieve", func(t *testing.T) {
-
 		t.Run("retrieve success", func(t *testing.T) {
 			id := randomString(10)
 			folders := newFolders(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
