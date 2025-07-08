@@ -118,15 +118,17 @@ type Bot struct {
 	BotMode        BotMode            `json:"bot_mode"`
 	PluginInfoList []*BotPluginInfo   `json:"plugin_info_list,omitempty"`
 	ModelInfo      *BotModelInfo      `json:"model_info,omitempty"`
+	FolderID       *string            `json:"folder_id,omitempty"`
 }
 
 // SimpleBot represents simplified bot information
 type SimpleBot struct {
-	BotID       string `json:"bot_id"`
-	BotName     string `json:"bot_name"`
-	Description string `json:"description,omitempty"`
-	IconURL     string `json:"icon_url,omitempty"`
-	PublishTime string `json:"publish_time,omitempty"`
+	BotID       string  `json:"bot_id"`
+	BotName     string  `json:"bot_name"`
+	Description string  `json:"description,omitempty"`
+	IconURL     string  `json:"icon_url,omitempty"`
+	PublishTime string  `json:"publish_time,omitempty"`
+	FolderID    *string `json:"folder_id,omitempty"`
 }
 
 // BotKnowledge represents bot knowledge base configuration

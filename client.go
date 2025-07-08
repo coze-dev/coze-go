@@ -14,6 +14,7 @@ type CozeAPI struct {
 	Workspaces    *workspace
 	Datasets      *datasets
 	Files         *files
+	Folders       *folders
 	Templates     *templates
 	Users         *users
 	Variables     *variables
@@ -94,6 +95,7 @@ func NewCozeAPI(auth Auth, opts ...CozeAPIOption) CozeAPI {
 		Workspaces:    newWorkspace(core),
 		Datasets:      newDatasets(core),
 		Files:         newFiles(core),
+		Folders:       newFolders(core),
 		Templates:     newTemplates(core),
 		Users:         newUsers(core),
 		Variables:     newVariables(core),
