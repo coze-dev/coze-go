@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func (r *folders) List(ctx context.Context, req *ListFoldersReq) (NumberPaged[SimpleFolder], error) {
+func (r *folders) List(ctx context.Context, req *ListFoldersReq, options ...CozeAPIOption) (NumberPaged[SimpleFolder], error) {
 	if req.PageSize == 0 {
 		req.PageSize = 20
 	}
@@ -16,9 +16,10 @@ func (r *folders) List(ctx context.Context, req *ListFoldersReq) (NumberPaged[Si
 		func(request *pageRequest) (*pageResponse[SimpleFolder], error) {
 			response := new(listFoldersResp)
 			if err := r.core.rawRequest(ctx, &RawRequestReq{
-				Method: http.MethodGet,
-				URL:    "/v1/folders",
-				Body:   req.toReq(request),
+				Method:  http.MethodGet,
+				URL:     "/v1/folders",
+				Body:    req.toReq(request),
+				options: options,
 			}, response); err != nil {
 				return nil, err
 			}
@@ -32,12 +33,13 @@ func (r *folders) List(ctx context.Context, req *ListFoldersReq) (NumberPaged[Si
 		}, req.PageSize, req.PageNum)
 }
 
-func (r *folders) Retrieve(ctx context.Context, req *RetrieveFolderReq) (*SimpleFolder, error) {
+func (r *folders) Retrieve(ctx context.Context, req *RetrieveFolderReq, options ...CozeAPIOption) (*SimpleFolder, error) {
 	resp := new(retrieveFolderResp)
 	err := r.core.rawRequest(ctx, &RawRequestReq{
-		Method: http.MethodGet,
-		URL:    "/v1/folders/:folder_id",
-		Body:   req,
+		Method:  http.MethodGet,
+		URL:     "/v1/folders/:folder_id",
+		Body:    req,
+		options: options,
 	}, resp)
 	return resp.Data, err
 }

@@ -29,6 +29,7 @@ type clientOption struct {
 	logger      Logger
 	auth        Auth
 	enableLogID bool
+	headers     http.Header
 }
 
 type CozeAPIOption func(*clientOption)
@@ -64,6 +65,12 @@ func WithLogger(logger Logger) CozeAPIOption {
 func WithEnableLogID(enableLogID bool) CozeAPIOption {
 	return func(opt *clientOption) {
 		opt.enableLogID = enableLogID
+	}
+}
+
+func WithHeaders(headers http.Header) CozeAPIOption {
+	return func(opt *clientOption) {
+		opt.headers = headers
 	}
 }
 
