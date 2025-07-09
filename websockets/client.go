@@ -14,12 +14,11 @@ import (
 
 // WebSocketClient is the base WebSocket client
 type WebSocketClient struct {
-	baseURL     string
-	path        string
-	auth        Auth
+	opt *WebSocketClientOption
+
 	conn        *websocket.Conn
-	sendChan    chan []byte
-	receiveChan chan *WebSocketEvent
+	sendChan    chan []byte          // 发送队列, 长度 100
+	receiveChan chan *WebSocketEvent // 接收队列, 长度 100
 	closeChan   chan struct{}
 	handlers    map[WebSocketEventType]EventHandler
 	mu          sync.RWMutex
@@ -28,51 +27,44 @@ type WebSocketClient struct {
 	cancel      context.CancelFunc
 }
 
-// Auth interface for authentication
+type WebSocketClientOption struct {
+	BaseURL             string
+	Path                string
+	Auth                Auth
+	SendChanCapacity    int           // 默认 1000
+	ReceiveChanCapacity int           // 默认 1000
+	HandshakeTimeout    time.Duration // 默认 3s
+}
+
 type Auth interface {
-	GetAuthHeader() (string, error)
+	Token(ctx context.Context) (string, error)
 }
 
 // EventHandler represents a WebSocket event handler
 type EventHandler func(event *WebSocketEvent) error
 
-// WebSocketClientOption configures the WebSocket client
-type WebSocketClientOption func(*WebSocketClient)
-
-// WithEventHandler adds an event handler
-func WithEventHandler(eventType WebSocketEventType, handler EventHandler) WebSocketClientOption {
-	return func(c *WebSocketClient) {
-		c.handlers[eventType] = handler
-	}
-}
-
-// WithEventHandlers adds multiple event handlers
-func WithEventHandlers(handlers map[WebSocketEventType]EventHandler) WebSocketClientOption {
-	return func(c *WebSocketClient) {
-		for eventType, handler := range handlers {
-			c.handlers[eventType] = handler
-		}
-	}
-}
-
 // NewWebSocketClient creates a new WebSocket client
-func NewWebSocketClient(baseURL, path string, auth Auth, opts ...WebSocketClientOption) *WebSocketClient {
+func NewWebSocketClient(opt *WebSocketClientOption) *WebSocketClient {
 	ctx, cancel := context.WithCancel(context.Background())
 
+	if opt.ReceiveChanCapacity == 0 {
+		opt.ReceiveChanCapacity = 1000
+	}
+	if opt.SendChanCapacity == 0 {
+		opt.SendChanCapacity = 1000
+	}
+	if opt.HandshakeTimeout == 0 {
+		opt.HandshakeTimeout = 3 * time.Second
+	}
+
 	client := &WebSocketClient{
-		baseURL:     baseURL,
-		path:        path,
-		auth:        auth,
-		sendChan:    make(chan []byte, 100),
-		receiveChan: make(chan *WebSocketEvent, 100),
+		opt:         opt,
+		sendChan:    make(chan []byte, opt.SendChanCapacity),
+		receiveChan: make(chan *WebSocketEvent, opt.ReceiveChanCapacity),
 		closeChan:   make(chan struct{}),
 		handlers:    make(map[WebSocketEventType]EventHandler),
 		ctx:         ctx,
 		cancel:      cancel,
-	}
-
-	for _, opt := range opts {
-		opt(client)
 	}
 
 	return client
@@ -88,7 +80,7 @@ func (c *WebSocketClient) Connect() error {
 	}
 
 	// Build WebSocket URL
-	u, err := url.Parse(c.baseURL)
+	u, err := url.Parse(c.opt.BaseURL)
 	if err != nil {
 		return fmt.Errorf("invalid base URL: %w", err)
 	}
@@ -100,22 +92,22 @@ func (c *WebSocketClient) Connect() error {
 		u.Scheme = "wss"
 	}
 
-	u.Path = c.path
+	u.Path = c.opt.Path
 
 	// Get auth header
-	authHeader, err := c.auth.GetAuthHeader()
+	accessToken, err := c.opt.Auth.Token(c.ctx)
 	if err != nil {
 		return fmt.Errorf("failed to get auth header: %w", err)
 	}
 
 	// Setup headers
 	headers := http.Header{}
-	headers.Set("Authorization", authHeader)
-	headers.Set("User-Agent", "coze-go/1.0")
+	headers.Set("Authorization", "Bearer "+accessToken)
+	headers.Set("User-Agent", "coze-go/1.0") // todo
 
 	// Establish connection
 	dialer := websocket.Dialer{
-		HandshakeTimeout: 10 * time.Second,
+		HandshakeTimeout: c.opt.HandshakeTimeout,
 	}
 
 	conn, _, err := dialer.Dial(u.String(), headers)
@@ -147,14 +139,15 @@ func (c *WebSocketClient) Close() error {
 	c.cancel()
 
 	// Close connection
+	var err error
 	if c.conn != nil {
-		c.conn.Close()
+		err = c.conn.Close()
 	}
 
 	// Close channels
 	close(c.closeChan)
 
-	return nil
+	return err
 }
 
 // IsConnected returns whether the client is connected
@@ -165,9 +158,9 @@ func (c *WebSocketClient) IsConnected() bool {
 }
 
 // SendEvent sends an event to the WebSocket
-func (c *WebSocketClient) SendEvent(event interface{}) error {
+func (c *WebSocketClient) SendEvent(event any) error {
 	if !c.IsConnected() {
-		return fmt.Errorf("not connected")
+		return fmt.Errorf("websocket not connected")
 	}
 
 	data, err := json.Marshal(event)
@@ -253,7 +246,6 @@ func (c *WebSocketClient) sendLoop() {
 		select {
 		case data := <-c.sendChan:
 			if err := c.conn.WriteMessage(websocket.TextMessage, data); err != nil {
-				// Handle error
 				c.handleError(fmt.Errorf("failed to send message: %w", err))
 				return
 			}
@@ -314,10 +306,10 @@ func (c *WebSocketClient) handleEvents() {
 // handleError handles errors
 func (c *WebSocketClient) handleError(err error) {
 	c.mu.RLock()
-	handler, exists := c.handlers[EventTypeError]
+	handler, ok := c.handlers[EventTypeError]
 	c.mu.RUnlock()
 
-	if exists && handler != nil {
+	if ok && handler != nil {
 		errorEvent := &WebSocketEvent{
 			EventType: EventTypeError,
 			Data:      []byte(fmt.Sprintf(`{"error": "%s"}`, err.Error())),

@@ -25,9 +25,11 @@ func WithOutputAudio(outputAudio *OutputAudio) SpeechClientOption {
 // NewSpeechClient creates a new speech WebSocket client
 func NewSpeechClient(baseURL string, auth Auth, opts ...SpeechClientOption) *SpeechClient {
 	wsClient := NewWebSocketClient(
-		baseURL,
-		"v1/audio/speech",
-		auth,
+		&WebSocketClientOption{
+			BaseURL: baseURL,
+			Path:    "/v1/audio/speech",
+			Auth:    auth,
+		},
 	)
 
 	client := &SpeechClient{

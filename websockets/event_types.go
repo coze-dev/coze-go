@@ -5,12 +5,14 @@ type WebSocketEventType string
 
 // Common WebSocket events
 const (
-	// Common events
+	// common events
+
 	EventTypeClientError WebSocketEventType = "client_error"
 	EventTypeClosed      WebSocketEventType = "closed"
 	EventTypeError       WebSocketEventType = "error"
 
-	// Audio speech events
+	// audio speech events
+
 	EventTypeSpeechUpdate             WebSocketEventType = "speech.update"
 	EventTypeInputTextBufferAppend    WebSocketEventType = "input_text_buffer.append"
 	EventTypeInputTextBufferComplete  WebSocketEventType = "input_text_buffer.complete"
@@ -20,7 +22,8 @@ const (
 	EventTypeSpeechAudioUpdate        WebSocketEventType = "speech.audio.update"
 	EventTypeSpeechAudioCompleted     WebSocketEventType = "speech.audio.completed"
 
-	// Audio transcription events
+	// audio transcription events
+
 	EventTypeTranscriptionsUpdate           WebSocketEventType = "transcriptions.update"
 	EventTypeInputAudioBufferAppend         WebSocketEventType = "input_audio_buffer.append"
 	EventTypeInputAudioBufferComplete       WebSocketEventType = "input_audio_buffer.complete"
@@ -32,7 +35,8 @@ const (
 	EventTypeTranscriptionsMessageUpdate    WebSocketEventType = "transcriptions.message.update"
 	EventTypeTranscriptionsMessageCompleted WebSocketEventType = "transcriptions.message.completed"
 
-	// Chat events
+	// chat events
+
 	EventTypeChatUpdate                           WebSocketEventType = "chat.update"
 	EventTypeConversationMessageCreate            WebSocketEventType = "conversation.message.create"
 	EventTypeConversationClear                    WebSocketEventType = "conversation.clear"

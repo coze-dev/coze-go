@@ -25,9 +25,11 @@ func WithInputAudio(inputAudio *InputAudio) TranscriptionsClientOption {
 // NewTranscriptionsClient creates a new transcriptions WebSocket client
 func NewTranscriptionsClient(baseURL string, auth Auth, opts ...TranscriptionsClientOption) *TranscriptionsClient {
 	wsClient := NewWebSocketClient(
-		baseURL,
-		"v1/audio/transcriptions",
-		auth,
+		&WebSocketClientOption{
+			BaseURL: baseURL,
+			Path:    "/v1/audio/transcriptions",
+			Auth:    auth,
+		},
 	)
 
 	client := &TranscriptionsClient{

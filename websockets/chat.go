@@ -40,9 +40,11 @@ func WithChatOutputAudio(outputAudio *OutputAudio) ChatClientOption {
 // NewChatClient creates a new chat WebSocket client
 func NewChatClient(baseURL string, auth Auth, opts ...ChatClientOption) *ChatClient {
 	wsClient := NewWebSocketClient(
-		baseURL,
-		"v1/chat",
-		auth,
+		&WebSocketClientOption{
+			BaseURL: baseURL,
+			Path:    "/v1/chat",
+			Auth:    auth,
+		},
 	)
 
 	client := &ChatClient{

@@ -97,9 +97,6 @@ func NewCozeAPI(auth Auth, opts ...CozeAPIOption) CozeAPI {
 	core := newCore(opt)
 	setLevel(opt.logLevel)
 
-	// Create auth adapter for WebSocket connections
-	wsAuth := websockets.NewCozeAuth(opt.auth)
-
 	cozeClient := CozeAPI{
 		Audio:         newAudio(core),
 		Bots:          newBots(core),
@@ -115,7 +112,7 @@ func NewCozeAPI(auth Auth, opts ...CozeAPIOption) CozeAPI {
 		Variables:     newVariables(core),
 		Enterprises:   newEnterprises(core),
 		Apps:          newApps(core),
-		WebSockets:    websockets.NewWebSocketsClient(opt.baseURL, wsAuth),
+		WebSockets:    websockets.NewWebSocketsClient(opt.baseURL, opt.auth),
 		baseURL:       opt.baseURL,
 	}
 	return cozeClient
