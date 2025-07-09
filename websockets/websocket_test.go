@@ -63,7 +63,7 @@ package websockets
 // 	mockAuth := &MockAuth{}
 //
 // 	// Test WebSocketsClient creation
-// 	client := NewWebSocketsClient("https://api.coze.com", mockAuth)
+// 	client := NewWebSockets("https://api.coze.com", mockAuth)
 // 	assert.NotNil(t, client)
 // 	assert.NotNil(t, client.Audio)
 // 	assert.NotNil(t, client.Chat)
@@ -181,14 +181,14 @@ package websockets
 // 	mockAuth := &MockAuth{}
 //
 // 	// Test HTTP to WebSocket URL conversion
-// 	client := NewWebSocketsClient("http://api.coze.com", mockAuth)
+// 	client := NewWebSockets("http://api.coze.com", mockAuth)
 // 	assert.Equal(t, "ws://api.coze.com", client.baseURL)
 //
 // 	// Test HTTPS to WebSocket URL conversion
-// 	client = NewWebSocketsClient("https://api.coze.com", mockAuth)
+// 	client = NewWebSockets("https://api.coze.com", mockAuth)
 // 	assert.Equal(t, "wss://api.coze.com", client.baseURL)
 //
 // 	// Test WebSocket URL remains unchanged
-// 	client = NewWebSocketsClient("wss://api.coze.com", mockAuth)
+// 	client = NewWebSockets("wss://api.coze.com", mockAuth)
 // 	assert.Equal(t, "wss://api.coze.com", client.baseURL)
 // }

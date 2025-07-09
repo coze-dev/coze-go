@@ -112,7 +112,7 @@ func NewCozeAPI(auth Auth, opts ...CozeAPIOption) CozeAPI {
 		Variables:     newVariables(core),
 		Enterprises:   newEnterprises(core),
 		Apps:          newApps(core),
-		WebSockets:    websockets.NewWebSocketsClient(opt.baseURL, opt.auth),
+		WebSockets:    websockets.NewWebSockets(opt.baseURL, opt.auth),
 		baseURL:       opt.baseURL,
 	}
 	return cozeClient

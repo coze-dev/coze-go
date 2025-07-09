@@ -8,20 +8,8 @@ type WebSocketsClient struct {
 	Chat    *ChatClientBuilder
 }
 
-// AudioClient provides access to audio WebSocket services
-type AudioClient struct {
-	baseURL string
-	auth    Auth
-}
-
-// ChatClientBuilder provides methods to create chat clients
-type ChatClientBuilder struct {
-	baseURL string
-	auth    Auth
-}
-
-// NewWebSocketsClient creates a new WebSockets client
-func NewWebSocketsClient(baseURL string, auth Auth) *WebSocketsClient {
+// NewWebSockets creates a new WebSockets client
+func NewWebSockets(baseURL string, auth Auth) *WebSocketsClient {
 	// Convert HTTP URL to WebSocket URL
 	wsURL := baseURL
 	if baseURL[:7] == "http://" {
