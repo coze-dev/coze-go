@@ -16,9 +16,12 @@ type CozeAPI struct {
 	Workspaces    *workspace
 	Datasets      *datasets
 	Files         *files
+	Folders       *folders
 	Templates     *templates
 	Users         *users
 	Variables     *variables
+	Enterprises   *enterprises
+	Apps          *apps
 	WebSockets    *websockets.WebSocketsClient
 	baseURL       string
 }
@@ -30,6 +33,7 @@ type clientOption struct {
 	logger      Logger
 	auth        Auth
 	enableLogID bool
+	headers     http.Header
 }
 
 type CozeAPIOption func(*clientOption)
@@ -68,6 +72,12 @@ func WithEnableLogID(enableLogID bool) CozeAPIOption {
 	}
 }
 
+func WithHeaders(headers http.Header) CozeAPIOption {
+	return func(opt *clientOption) {
+		opt.headers = headers
+	}
+}
+
 func NewCozeAPI(auth Auth, opts ...CozeAPIOption) CozeAPI {
 	opt := &clientOption{
 		baseURL:  ComBaseURL,
@@ -99,9 +109,12 @@ func NewCozeAPI(auth Auth, opts ...CozeAPIOption) CozeAPI {
 		Workspaces:    newWorkspace(core),
 		Datasets:      newDatasets(core),
 		Files:         newFiles(core),
+		Folders:       newFolders(core),
 		Templates:     newTemplates(core),
 		Users:         newUsers(core),
 		Variables:     newVariables(core),
+		Enterprises:   newEnterprises(core),
+		Apps:          newApps(core),
 		WebSockets:    websockets.NewWebSocketsClient(opt.baseURL, wsAuth),
 		baseURL:       opt.baseURL,
 	}

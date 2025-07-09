@@ -135,6 +135,30 @@ func TestAudioVoiceprintGroup(t *testing.T) {
 			as.Equal(groupID, resp.Items()[0].ID)
 			as.NotEmpty(resp.Response().LogID())
 		})
+		t.Run("empty req", func(t *testing.T) {
+			groupID := randomString(10)
+			groups := newAudioVoiceprintGroups(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+				as.Equal(http.MethodGet, req.Method)
+				as.Equal("/v1/audio/voiceprint_groups", req.URL.Path)
+				return mockResponse(http.StatusOK, &listVoicePrintGroupResp{
+					Data: &ListVoicePrintGroupResp{
+						Items: []*VoicePrintGroup{
+							{
+								ID:   groupID,
+								Name: "test_group",
+								Desc: "test_desc",
+							},
+						},
+					},
+				})
+			})))
+			resp, err := groups.List(context.Background(), &ListVoicePrintGroupReq{})
+			as.Nil(err)
+			as.NotNil(resp)
+			as.Len(resp.Items(), 1)
+			as.Equal(groupID, resp.Items()[0].ID)
+			as.NotEmpty(resp.Response().LogID())
+		})
 		t.Run("error", func(t *testing.T) {
 			groups := newAudioVoiceprintGroups(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 				return nil, errors.New("test error")

@@ -90,11 +90,15 @@ func (r *conversationsMessages) Delete(ctx context.Context, req *DeleteConversat
 }
 
 type conversationsMessages struct {
-	core *core
+	core     *core
+	Feedback *conversationsMessagesFeedback
 }
 
 func newConversationMessage(core *core) *conversationsMessages {
-	return &conversationsMessages{core: core}
+	return &conversationsMessages{
+		core:     core,
+		Feedback: newConversationsMessagesFeedback(core),
+	}
 }
 
 // CreateMessageReq represents request for creating message
