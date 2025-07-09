@@ -29,15 +29,15 @@ func NewSpeechClient(baseURL string, auth Auth, opts ...SpeechClientOption) *Spe
 		"v1/audio/speech",
 		auth,
 	)
-	
+
 	client := &SpeechClient{
 		wsClient: wsClient,
 	}
-	
+
 	for _, opt := range opts {
 		opt(client)
 	}
-	
+
 	return client
 }
 
@@ -64,7 +64,7 @@ func (c *SpeechClient) UpdateSpeech(outputAudio *OutputAudio) error {
 			OutputAudio: outputAudio,
 		},
 	}
-	
+
 	return c.wsClient.SendEvent(event)
 }
 
@@ -76,7 +76,7 @@ func (c *SpeechClient) AppendTextBuffer(text string) error {
 			Delta: text,
 		},
 	}
-	
+
 	return c.wsClient.SendEvent(event)
 }
 
@@ -85,7 +85,7 @@ func (c *SpeechClient) CompleteTextBuffer() error {
 	event := InputTextBufferCompleteEvent{
 		EventType: EventTypeInputTextBufferComplete,
 	}
-	
+
 	return c.wsClient.SendEvent(event)
 }
 
@@ -110,13 +110,13 @@ func (c *SpeechClient) WaitForSpeechCreated(timeout time.Duration) (*WebSocketEv
 
 // SpeechEventHandler provides default handlers for speech events
 type SpeechEventHandler struct {
-	OnSpeechCreated           func(*SpeechCreatedEvent) error
-	OnSpeechUpdated           func(*WebSocketEvent) error
+	OnSpeechCreated            func(*SpeechCreatedEvent) error
+	OnSpeechUpdated            func(*WebSocketEvent) error
 	OnInputTextBufferCompleted func(*WebSocketEvent) error
-	OnSpeechAudioUpdate       func(*SpeechAudioUpdateEvent) error
-	OnSpeechAudioCompleted    func(*SpeechAudioCompletedEvent) error
-	OnError                   func(error) error
-	OnClosed                  func() error
+	OnSpeechAudioUpdate        func(*SpeechAudioUpdateEvent) error
+	OnSpeechAudioCompleted     func(*SpeechAudioCompletedEvent) error
+	OnError                    func(error) error
+	OnClosed                   func() error
 }
 
 // RegisterHandlers registers all handlers with the client
@@ -133,15 +133,15 @@ func (h *SpeechEventHandler) RegisterHandlers(client *SpeechClient) {
 			return h.OnSpeechCreated(&speechEvent)
 		})
 	}
-	
+
 	if h.OnSpeechUpdated != nil {
 		client.OnEvent(EventTypeSpeechUpdated, h.OnSpeechUpdated)
 	}
-	
+
 	if h.OnInputTextBufferCompleted != nil {
 		client.OnEvent(EventTypeInputTextBufferCompleted, h.OnInputTextBufferCompleted)
 	}
-	
+
 	if h.OnSpeechAudioUpdate != nil {
 		client.OnEvent(EventTypeSpeechAudioUpdate, func(event *WebSocketEvent) error {
 			var audioEvent SpeechAudioUpdateEvent
@@ -154,7 +154,7 @@ func (h *SpeechEventHandler) RegisterHandlers(client *SpeechClient) {
 			return h.OnSpeechAudioUpdate(&audioEvent)
 		})
 	}
-	
+
 	if h.OnSpeechAudioCompleted != nil {
 		client.OnEvent(EventTypeSpeechAudioCompleted, func(event *WebSocketEvent) error {
 			var completedEvent SpeechAudioCompletedEvent
@@ -167,13 +167,13 @@ func (h *SpeechEventHandler) RegisterHandlers(client *SpeechClient) {
 			return h.OnSpeechAudioCompleted(&completedEvent)
 		})
 	}
-	
+
 	if h.OnError != nil {
 		client.OnEvent(EventTypeError, func(event *WebSocketEvent) error {
 			return h.OnError(fmt.Errorf("WebSocket error: %s", string(event.Data)))
 		})
 	}
-	
+
 	if h.OnClosed != nil {
 		client.OnEvent(EventTypeClosed, func(event *WebSocketEvent) error {
 			return h.OnClosed()

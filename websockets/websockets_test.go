@@ -59,7 +59,7 @@ func TestChatClientCreation(t *testing.T) {
 
 func TestWebSocketsClientCreation(t *testing.T) {
 	mockAuth := &MockAuth{}
-	
+
 	// Test WebSocketsClient creation
 	client := NewWebSocketsClient("https://api.coze.com", mockAuth)
 	assert.NotNil(t, client)
@@ -73,7 +73,7 @@ func TestEventHandlerRegistration(t *testing.T) {
 	mockAuth.On("GetAuthHeader").Return("Bearer test-token", nil)
 
 	speechClient := NewSpeechClient("wss://api.coze.com", mockAuth)
-	
+
 	called := false
 	handler := &SpeechEventHandler{
 		OnError: func(err error) error {
@@ -81,19 +81,19 @@ func TestEventHandlerRegistration(t *testing.T) {
 			return nil
 		},
 	}
-	
+
 	// Register handlers
 	handler.RegisterHandlers(speechClient)
-	
+
 	// Simulate an error event
 	errorEvent := &WebSocketEvent{
 		EventType: EventTypeError,
 		Data:      []byte(`{"error": "test error"}`),
 	}
-	
+
 	// Get the registered handler and call it
 	speechClient.wsClient.handlers[EventTypeError](errorEvent)
-	
+
 	assert.True(t, called)
 }
 
@@ -112,26 +112,26 @@ func TestEventStructures(t *testing.T) {
 		SpeechRate: 0,
 		VoiceID:    "test-voice",
 	}
-	
+
 	speechUpdateData := &SpeechUpdateData{
 		OutputAudio: outputAudio,
 	}
-	
+
 	assert.Equal(t, "pcm", speechUpdateData.OutputAudio.Codec)
 	assert.Equal(t, "test-voice", speechUpdateData.OutputAudio.VoiceID)
-	
+
 	// Test InputTextBufferAppendData structure
 	textData := &InputTextBufferAppendData{
 		Delta: "Hello World",
 	}
-	
+
 	assert.Equal(t, "Hello World", textData.Delta)
-	
+
 	// Test ConversationAudioDeltaData structure
 	audioData := &ConversationAudioDeltaData{
 		Content: "test-audio-content",
 	}
-	
+
 	audio := audioData.GetAudio()
 	assert.Equal(t, []byte("test-audio-content"), audio)
 }
@@ -141,7 +141,7 @@ func TestChatClientMethods(t *testing.T) {
 	mockAuth.On("GetAuthHeader").Return("Bearer test-token", nil)
 
 	chatClient := NewChatClient("wss://api.coze.com", mockAuth, WithBotID("test-bot"))
-	
+
 	// Test configuration methods exist and don't panic
 	assert.NotPanics(t, func() {
 		// These would normally send events, but we're just testing the method exists
@@ -157,15 +157,15 @@ func TestWebSocketClientOptions(t *testing.T) {
 	mockAuth.On("GetAuthHeader").Return("Bearer test-token", nil)
 
 	// Test speech client with options
-	speechClient := NewSpeechClient("wss://api.coze.com", mockAuth, 
+	speechClient := NewSpeechClient("wss://api.coze.com", mockAuth,
 		WithOutputAudio(&OutputAudio{Codec: "pcm"}))
 	assert.NotNil(t, speechClient)
-	
+
 	// Test transcriptions client with options
 	transcriptionsClient := NewTranscriptionsClient("wss://api.coze.com", mockAuth,
 		WithInputAudio(&InputAudio{Format: "wav"}))
 	assert.NotNil(t, transcriptionsClient)
-	
+
 	// Test chat client with options
 	chatClient := NewChatClient("wss://api.coze.com", mockAuth,
 		WithBotID("test-bot"),
@@ -177,15 +177,15 @@ func TestWebSocketClientOptions(t *testing.T) {
 
 func TestURLConversion(t *testing.T) {
 	mockAuth := &MockAuth{}
-	
+
 	// Test HTTP to WebSocket URL conversion
 	client := NewWebSocketsClient("http://api.coze.com", mockAuth)
 	assert.Equal(t, "ws://api.coze.com", client.baseURL)
-	
+
 	// Test HTTPS to WebSocket URL conversion
 	client = NewWebSocketsClient("https://api.coze.com", mockAuth)
 	assert.Equal(t, "wss://api.coze.com", client.baseURL)
-	
+
 	// Test WebSocket URL remains unchanged
 	client = NewWebSocketsClient("wss://api.coze.com", mockAuth)
 	assert.Equal(t, "wss://api.coze.com", client.baseURL)

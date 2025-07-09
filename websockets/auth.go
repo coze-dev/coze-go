@@ -15,7 +15,8 @@ type CozeAuth struct {
 // NewCozeAuth creates a new CozeAuth adapter
 func NewCozeAuth(authProvider interface {
 	Token(ctx context.Context) (string, error)
-}) *CozeAuth {
+},
+) *CozeAuth {
 	return &CozeAuth{
 		authProvider: authProvider,
 	}
@@ -28,6 +29,6 @@ func (a *CozeAuth) GetAuthHeader() (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to get token: %w", err)
 	}
-	
+
 	return "Bearer " + token, nil
 }

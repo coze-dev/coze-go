@@ -70,7 +70,7 @@ func main() {
 	// Send text to be converted to speech
 	text := "Hello, this is a test of the WebSocket speech functionality!"
 	fmt.Printf("Sending text: %s\n", text)
-	
+
 	if err := speechClient.AppendTextBuffer(text); err != nil {
 		log.Fatalf("Failed to append text: %v", err)
 	}

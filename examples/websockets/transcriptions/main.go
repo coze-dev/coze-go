@@ -71,7 +71,7 @@ func main() {
 	// For this example, we'll just send some dummy data
 	fmt.Println("Sending audio data...")
 	audioData := []byte("This is simulated audio data for transcription testing")
-	
+
 	if err := transcriptionsClient.AppendAudioBuffer(audioData); err != nil {
 		log.Fatalf("Failed to append audio: %v", err)
 	}

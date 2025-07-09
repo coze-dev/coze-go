@@ -34,8 +34,8 @@ type ErrorData struct {
 
 // LimitConfig configures audio limits
 type LimitConfig struct {
-	Period       int `json:"period,omitempty"`
-	MaxFrameNum  int `json:"max_frame_num,omitempty"`
+	Period      int `json:"period,omitempty"`
+	MaxFrameNum int `json:"max_frame_num,omitempty"`
 }
 
 // InputAudio configuration for audio input
@@ -49,10 +49,10 @@ type InputAudio struct {
 
 // OpusConfig configures Opus audio output
 type OpusConfig struct {
-	Bitrate      int          `json:"bitrate,omitempty"`
-	UseCBR       bool         `json:"use_cbr,omitempty"`
-	FrameSizeMs  float64      `json:"frame_size_ms,omitempty"`
-	LimitConfig  *LimitConfig `json:"limit_config,omitempty"`
+	Bitrate     int          `json:"bitrate,omitempty"`
+	UseCBR      bool         `json:"use_cbr,omitempty"`
+	FrameSizeMs float64      `json:"frame_size_ms,omitempty"`
+	LimitConfig *LimitConfig `json:"limit_config,omitempty"`
 }
 
 // PCMConfig configures PCM audio output
@@ -134,9 +134,9 @@ type SpeechAudioUpdateData struct {
 
 // SpeechAudioCompletedEvent represents speech audio completed event
 type SpeechAudioCompletedEvent struct {
-	EventType WebSocketEventType `json:"event_type"`
-	ID        string             `json:"id,omitempty"`
-	Detail    *EventDetail       `json:"detail,omitempty"`
+	EventType WebSocketEventType        `json:"event_type"`
+	ID        string                    `json:"id,omitempty"`
+	Detail    *EventDetail              `json:"detail,omitempty"`
 	Data      *SpeechAudioCompletedData `json:"data,omitempty"`
 }
 
@@ -291,10 +291,10 @@ type ConversationChatCompletedData struct {
 
 // ConversationChatRequiresActionEvent represents conversation chat requires action event
 type ConversationChatRequiresActionEvent struct {
-	EventType WebSocketEventType                   `json:"event_type"`
-	ID        string                               `json:"id,omitempty"`
-	Detail    *EventDetail                         `json:"detail,omitempty"`
-	Data      *ConversationChatRequiresActionData  `json:"data,omitempty"`
+	EventType WebSocketEventType                  `json:"event_type"`
+	ID        string                              `json:"id,omitempty"`
+	Detail    *EventDetail                        `json:"detail,omitempty"`
+	Data      *ConversationChatRequiresActionData `json:"data,omitempty"`
 }
 
 // ConversationChatRequiresActionData contains tool call requirements
@@ -305,8 +305,8 @@ type ConversationChatRequiresActionData struct {
 
 // RequiredAction represents a required action
 type RequiredAction struct {
-	Type              string                     `json:"type"`
-	SubmitToolOutputs *SubmitToolOutputsAction   `json:"submit_tool_outputs,omitempty"`
+	Type              string                   `json:"type"`
+	SubmitToolOutputs *SubmitToolOutputsAction `json:"submit_tool_outputs,omitempty"`
 }
 
 // SubmitToolOutputsAction represents tool outputs action
@@ -329,10 +329,10 @@ type Function struct {
 
 // ConversationChatSubmitToolOutputsEvent represents tool outputs submission event
 type ConversationChatSubmitToolOutputsEvent struct {
-	EventType WebSocketEventType                      `json:"event_type"`
-	ID        string                                  `json:"id,omitempty"`
-	Detail    *EventDetail                            `json:"detail,omitempty"`
-	Data      *ConversationChatSubmitToolOutputsData  `json:"data,omitempty"`
+	EventType WebSocketEventType                     `json:"event_type"`
+	ID        string                                 `json:"id,omitempty"`
+	Detail    *EventDetail                           `json:"detail,omitempty"`
+	Data      *ConversationChatSubmitToolOutputsData `json:"data,omitempty"`
 }
 
 // ConversationChatSubmitToolOutputsData contains tool outputs
@@ -362,9 +362,9 @@ type ConversationChatCancelData struct {
 
 // ConversationChatCanceledEvent represents conversation chat canceled event
 type ConversationChatCanceledEvent struct {
-	EventType WebSocketEventType           `json:"event_type"`
-	ID        string                       `json:"id,omitempty"`
-	Detail    *EventDetail                 `json:"detail,omitempty"`
+	EventType WebSocketEventType            `json:"event_type"`
+	ID        string                        `json:"id,omitempty"`
+	Detail    *EventDetail                  `json:"detail,omitempty"`
 	Data      *ConversationChatCanceledData `json:"data,omitempty"`
 }
 

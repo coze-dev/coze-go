@@ -29,7 +29,7 @@ func NewWebSocketsClient(baseURL string, auth Auth) *WebSocketsClient {
 	} else if baseURL[:8] == "https://" {
 		wsURL = "wss://" + baseURL[8:]
 	}
-	
+
 	return &WebSocketsClient{
 		baseURL: wsURL,
 		auth:    auth,

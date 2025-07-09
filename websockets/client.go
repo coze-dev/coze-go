@@ -58,7 +58,7 @@ func WithEventHandlers(handlers map[WebSocketEventType]EventHandler) WebSocketCl
 // NewWebSocketClient creates a new WebSocket client
 func NewWebSocketClient(baseURL, path string, auth Auth, opts ...WebSocketClientOption) *WebSocketClient {
 	ctx, cancel := context.WithCancel(context.Background())
-	
+
 	client := &WebSocketClient{
 		baseURL:     baseURL,
 		path:        path,
@@ -70,11 +70,11 @@ func NewWebSocketClient(baseURL, path string, auth Auth, opts ...WebSocketClient
 		ctx:         ctx,
 		cancel:      cancel,
 	}
-	
+
 	for _, opt := range opts {
 		opt(client)
 	}
-	
+
 	return client
 }
 
@@ -82,55 +82,55 @@ func NewWebSocketClient(baseURL, path string, auth Auth, opts ...WebSocketClient
 func (c *WebSocketClient) Connect() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	
+
 	if c.connected {
 		return fmt.Errorf("already connected")
 	}
-	
+
 	// Build WebSocket URL
 	u, err := url.Parse(c.baseURL)
 	if err != nil {
 		return fmt.Errorf("invalid base URL: %w", err)
 	}
-	
+
 	// Convert HTTP URL to WebSocket URL
 	if u.Scheme == "http" {
 		u.Scheme = "ws"
 	} else if u.Scheme == "https" {
 		u.Scheme = "wss"
 	}
-	
+
 	u.Path = c.path
-	
+
 	// Get auth header
 	authHeader, err := c.auth.GetAuthHeader()
 	if err != nil {
 		return fmt.Errorf("failed to get auth header: %w", err)
 	}
-	
+
 	// Setup headers
 	headers := http.Header{}
 	headers.Set("Authorization", authHeader)
 	headers.Set("User-Agent", "coze-go/1.0")
-	
+
 	// Establish connection
 	dialer := websocket.Dialer{
 		HandshakeTimeout: 10 * time.Second,
 	}
-	
+
 	conn, _, err := dialer.Dial(u.String(), headers)
 	if err != nil {
 		return fmt.Errorf("failed to connect to WebSocket: %w", err)
 	}
-	
+
 	c.conn = conn
 	c.connected = true
-	
+
 	// Start goroutines
 	go c.sendLoop()
 	go c.receiveLoop()
 	go c.handleEvents()
-	
+
 	return nil
 }
 
@@ -138,22 +138,22 @@ func (c *WebSocketClient) Connect() error {
 func (c *WebSocketClient) Close() error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	
+
 	if !c.connected {
 		return nil
 	}
-	
+
 	c.connected = false
 	c.cancel()
-	
+
 	// Close connection
 	if c.conn != nil {
 		c.conn.Close()
 	}
-	
+
 	// Close channels
 	close(c.closeChan)
-	
+
 	return nil
 }
 
@@ -169,12 +169,12 @@ func (c *WebSocketClient) SendEvent(event interface{}) error {
 	if !c.IsConnected() {
 		return fmt.Errorf("not connected")
 	}
-	
+
 	data, err := json.Marshal(event)
 	if err != nil {
 		return fmt.Errorf("failed to marshal event: %w", err)
 	}
-	
+
 	select {
 	case c.sendChan <- data:
 		return nil
@@ -195,7 +195,7 @@ func (c *WebSocketClient) OnEvent(eventType WebSocketEventType, handler EventHan
 // WaitForEvent waits for specific events
 func (c *WebSocketClient) WaitForEvent(eventTypes []WebSocketEventType, timeout time.Duration) (*WebSocketEvent, error) {
 	eventChan := make(chan *WebSocketEvent, 1)
-	
+
 	// Register temporary handlers
 	handlers := make(map[WebSocketEventType]EventHandler)
 	for _, eventType := range eventTypes {
@@ -207,7 +207,7 @@ func (c *WebSocketClient) WaitForEvent(eventTypes []WebSocketEventType, timeout 
 			return nil
 		}
 	}
-	
+
 	c.mu.Lock()
 	originalHandlers := make(map[WebSocketEventType]EventHandler)
 	for eventType, handler := range handlers {
@@ -215,7 +215,7 @@ func (c *WebSocketClient) WaitForEvent(eventTypes []WebSocketEventType, timeout 
 		c.handlers[eventType] = handler
 	}
 	c.mu.Unlock()
-	
+
 	// Wait for event or timeout
 	select {
 	case event := <-eventChan:
@@ -275,13 +275,13 @@ func (c *WebSocketClient) receiveLoop() {
 				c.handleError(fmt.Errorf("failed to read message: %w", err))
 				return
 			}
-			
+
 			var event WebSocketEvent
 			if err := json.Unmarshal(message, &event); err != nil {
 				c.handleError(fmt.Errorf("failed to unmarshal event: %w", err))
 				continue
 			}
-			
+
 			select {
 			case c.receiveChan <- &event:
 			default:
@@ -299,7 +299,7 @@ func (c *WebSocketClient) handleEvents() {
 			c.mu.RLock()
 			handler, exists := c.handlers[event.EventType]
 			c.mu.RUnlock()
-			
+
 			if exists && handler != nil {
 				if err := handler(event); err != nil {
 					c.handleError(fmt.Errorf("event handler error: %w", err))
@@ -316,7 +316,7 @@ func (c *WebSocketClient) handleError(err error) {
 	c.mu.RLock()
 	handler, exists := c.handlers[EventTypeError]
 	c.mu.RUnlock()
-	
+
 	if exists && handler != nil {
 		errorEvent := &WebSocketEvent{
 			EventType: EventTypeError,

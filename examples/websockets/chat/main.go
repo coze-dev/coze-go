@@ -63,12 +63,12 @@ func main() {
 		},
 		OnConversationChatRequiresAction: func(event *websockets.ConversationChatRequiresActionEvent) error {
 			fmt.Printf("Chat requires action: %s\n", event.Data.ChatID)
-			
+
 			// Example: Handle tool call requirements
 			if event.Data.RequiredAction != nil && event.Data.RequiredAction.SubmitToolOutputs != nil {
 				for _, toolCall := range event.Data.RequiredAction.SubmitToolOutputs.ToolCalls {
 					fmt.Printf("Tool call required: %s (%s)\n", toolCall.Function.Name, toolCall.ID)
-					
+
 					// In a real implementation, you would execute the tool and get the result
 					// For this example, we'll just return a dummy result
 					toolOutputs := []websockets.ToolOutput{
@@ -77,7 +77,7 @@ func main() {
 							Output:     "Tool execution result: success",
 						},
 					}
-					
+
 					// Submit tool outputs
 					if err := chatClient.SubmitToolOutputs(event.Data.ChatID, toolOutputs); err != nil {
 						fmt.Printf("Failed to submit tool outputs: %v\n", err)
@@ -118,7 +118,7 @@ func main() {
 	// Send a message
 	message := "Hello! How are you today?"
 	fmt.Printf("Sending message: %s\n", message)
-	
+
 	if err := chatClient.CreateMessage(message); err != nil {
 		log.Fatalf("Failed to create message: %v", err)
 	}
