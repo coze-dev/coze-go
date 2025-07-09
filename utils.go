@@ -17,15 +17,6 @@ func ptr[T any](s T) *T {
 	return &s
 }
 
-func in[T comparable](s T, list ...T) bool {
-	for _, item := range list {
-		if s == item {
-			return true
-		}
-	}
-	return false
-}
-
 func ptrNotZero[T comparable](s T) *T {
 	var zero T
 	if s == zero {
