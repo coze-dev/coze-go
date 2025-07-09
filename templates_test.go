@@ -25,13 +25,18 @@ func TestTemplates(t *testing.T) {
 			})
 		})))
 
-		resp, err := templates.Duplicate(context.Background(), templateID, &DuplicateTemplateReq{
-			WorkspaceID: workspaceID,
-		})
-		as.Nil(err)
-		as.NotNil(resp)
-		as.NotEmpty(resp.Response().LogID())
-		as.Equal(templateID, resp.EntityID)
-		as.Equal(TemplateEntityTypeAgent, resp.EntityType)
+		for _, req := range []*DuplicateTemplateReq{
+			nil,
+			{
+				WorkspaceID: workspaceID,
+			},
+		} {
+			resp, err := templates.Duplicate(context.Background(), templateID, req)
+			as.Nil(err)
+			as.NotNil(resp)
+			as.NotEmpty(resp.Response().LogID())
+			as.Equal(templateID, resp.EntityID)
+			as.Equal(TemplateEntityTypeAgent, resp.EntityType)
+		}
 	})
 }
