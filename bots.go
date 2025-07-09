@@ -137,20 +137,22 @@ type BotKnowledge struct {
 
 // BotModelInfo represents bot model information
 type BotModelInfo struct {
-	ModelID   string `json:"model_id"`
-	ModelName string `json:"model_name"`
+	ModelID    string            `json:"model_id"`
+	ModelName  string            `json:"model_name"`
+	Parameters map[string]string `json:"parameters,omitempty"`
 }
 
 type BotModelInfoConfig struct {
-	TopK             int     `json:"top_k,omitempty"`
-	TopP             float64 `json:"top_p,omitempty"`
-	ModelID          string  `json:"model_id"`
-	MaxTokens        int     `json:"max_tokens,omitempty"`
-	Temperature      float64 `json:"temperature,omitempty"`
-	ContextRound     int     `json:"context_round,omitempty"`
-	ResponseFormat   string  `json:"response_format,omitempty"` // text,markdown,json
-	PresencePenalty  float64 `json:"presence_penalty,omitempty"`
-	FrequencyPenalty float64 `json:"frequency_penalty,omitempty"`
+	TopK             int               `json:"top_k,omitempty"`
+	TopP             float64           `json:"top_p,omitempty"`
+	ModelID          string            `json:"model_id"`
+	MaxTokens        int               `json:"max_tokens,omitempty"`
+	Temperature      float64           `json:"temperature,omitempty"`
+	ContextRound     int               `json:"context_round,omitempty"`
+	ResponseFormat   string            `json:"response_format,omitempty"` // text,markdown,json
+	PresencePenalty  float64           `json:"presence_penalty,omitempty"`
+	FrequencyPenalty float64           `json:"frequency_penalty,omitempty"`
+	Parameters       map[string]string `json:"parameters,omitempty"`
 }
 
 // WorkflowIDList represents workflow ID information
