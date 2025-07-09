@@ -6,11 +6,12 @@ import (
 )
 
 // Create adds feedback to a conversation message
-func (r *conversationsMessagesFeedback) Create(ctx context.Context, req *CreateConversationMessageFeedbackReq) (*CreateConversationMessageFeedbackResp, error) {
+func (r *conversationsMessagesFeedback) Create(ctx context.Context, req *CreateConversationMessageFeedbackReq, options ...CozeAPIOption) (*CreateConversationMessageFeedbackResp, error) {
 	request := &RawRequestReq{
-		Method: http.MethodPost,
-		URL:    "/v1/conversations/:conversation_id/messages/:message_id/feedback",
-		Body:   req,
+		Method:  http.MethodPost,
+		URL:     "/v1/conversations/:conversation_id/messages/:message_id/feedback",
+		Body:    req,
+		options: options,
 	}
 	response := new(createConversationMessageFeedbackResp)
 	err := r.core.rawRequest(ctx, request, response)
@@ -18,11 +19,12 @@ func (r *conversationsMessagesFeedback) Create(ctx context.Context, req *CreateC
 }
 
 // Delete removes feedback from a conversation message
-func (r *conversationsMessagesFeedback) Delete(ctx context.Context, req *DeleteConversationMessageFeedbackReq) (*DeleteConversationMessageFeedbackResp, error) {
+func (r *conversationsMessagesFeedback) Delete(ctx context.Context, req *DeleteConversationMessageFeedbackReq, options ...CozeAPIOption) (*DeleteConversationMessageFeedbackResp, error) {
 	request := &RawRequestReq{
-		Method: http.MethodDelete,
-		URL:    "/v1/conversations/:conversation_id/messages/:message_id/feedback",
-		Body:   req,
+		Method:  http.MethodDelete,
+		URL:     "/v1/conversations/:conversation_id/messages/:message_id/feedback",
+		Body:    req,
+		options: options,
 	}
 	response := new(deleteConversationMessageFeedbackResp)
 	err := r.core.rawRequest(ctx, request, response)
