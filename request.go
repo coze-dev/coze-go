@@ -31,6 +31,7 @@ type RawRequestReq struct {
 	IsFile      bool        // send body data as a file
 	NoNeedToken bool
 	Headers     map[string]string
+	options     []CozeAPIOption
 }
 
 func (r *core) rawRequest(ctx context.Context, req *RawRequestReq, resp interface{}) (err error) {
@@ -231,6 +232,15 @@ func (r *rawHttpRequest) parseHeader(ctx context.Context, ins *core, req *RawReq
 	// req
 	for k, v := range req.Headers {
 		r.Headers[k] = v
+	}
+	if len(req.options) > 0 {
+		opt := &clientOption{}
+		for _, o := range req.options {
+			o(opt)
+		}
+		for k, v := range opt.headers {
+			r.Headers[k] = v[0]
+		}
 	}
 
 	// logid

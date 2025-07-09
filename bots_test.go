@@ -97,62 +97,69 @@ func TestBots(t *testing.T) {
 	})
 
 	t.Run("retrieve bot", func(t *testing.T) {
-		botID := randomString(10)
-		bots := newBots(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
-			as.Equal(http.MethodGet, req.Method)
-			as.Equal("/v1/bot/get_online_info", req.URL.Path)
-			as.Equal(botID, req.URL.Query().Get("bot_id"))
-			return mockResponse(http.StatusOK, &retrieveBotsResp{
-				Data: &RetrieveBotsResp{
-					Bot: Bot{
-						BotID:       botID,
-						Name:        "Test Bot",
-						Description: "Test Description",
-						IconURL:     "https://example.com/icon.png",
-						CreateTime:  1234567890,
-						UpdateTime:  1234567891,
-						Version:     "1.0.0",
-						BotMode:     BotModeMultiAgent,
-						PromptInfo: &BotPromptInfo{
-							Prompt: "Test Prompt",
-						},
-						OnboardingInfo: &BotOnboardingInfo{
-							Prologue:           "Test Prologue",
-							SuggestedQuestions: []string{"Q1", "Q2"},
-						},
-						PluginInfoList: []*BotPluginInfo{
-							{
-								PluginID:    "plugin1",
-								Name:        "Plugin 1",
-								Description: "Plugin Description",
-								IconURL:     "https://example.com/plugin-icon.png",
-								APIInfoList: []*BotPluginAPIInfo{
-									{
-										APIID:       "api1",
-										Name:        "API 1",
-										Description: "API Description",
+		for _, apiVersion := range []int{1, 2} {
+			botID := randomString(10)
+			bots := newBots(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+				as.Equal(http.MethodGet, req.Method)
+				if apiVersion == 1 {
+					as.Equal("/v1/bot/get_online_info", req.URL.Path)
+					as.Equal(botID, req.URL.Query().Get("bot_id"))
+				} else {
+					as.Equal("/v1/bots/"+botID, req.URL.Path)
+				}
+				return mockResponse(http.StatusOK, &retrieveBotsResp{
+					Data: &RetrieveBotsResp{
+						Bot: Bot{
+							BotID:       botID,
+							Name:        "Test Bot",
+							Description: "Test Description",
+							IconURL:     "https://example.com/icon.png",
+							CreateTime:  1234567890,
+							UpdateTime:  1234567891,
+							Version:     "1.0.0",
+							BotMode:     BotModeMultiAgent,
+							PromptInfo: &BotPromptInfo{
+								Prompt: "Test Prompt",
+							},
+							OnboardingInfo: &BotOnboardingInfo{
+								Prologue:           "Test Prologue",
+								SuggestedQuestions: []string{"Q1", "Q2"},
+							},
+							PluginInfoList: []*BotPluginInfo{
+								{
+									PluginID:    "plugin1",
+									Name:        "Plugin 1",
+									Description: "Plugin Description",
+									IconURL:     "https://example.com/plugin-icon.png",
+									APIInfoList: []*BotPluginAPIInfo{
+										{
+											APIID:       "api1",
+											Name:        "API 1",
+											Description: "API Description",
+										},
 									},
 								},
 							},
-						},
-						ModelInfo: &BotModelInfo{
-							ModelID:   "model1",
-							ModelName: "Model 1",
+							ModelInfo: &BotModelInfo{
+								ModelID:   "model1",
+								ModelName: "Model 1",
+							},
 						},
 					},
-				},
+				})
+			})))
+			resp, err := bots.Retrieve(context.Background(), &RetrieveBotsReq{
+				BotID:         botID,
+				UseAPIVersion: apiVersion,
 			})
-		})))
-		resp, err := bots.Retrieve(context.Background(), &RetrieveBotsReq{
-			BotID: botID,
-		})
-		as.Nil(err)
-		as.NotNil(resp)
-		as.NotEmpty(resp.Response().LogID())
-		as.Equal(botID, resp.Bot.BotID)
-		as.Equal("Test Bot", resp.Bot.Name)
-		as.Equal("1.0.0", resp.Bot.Version)
-		as.Equal(BotModeMultiAgent, resp.Bot.BotMode)
+			as.Nil(err)
+			as.NotNil(resp)
+			as.NotEmpty(resp.Response().LogID())
+			as.Equal(botID, resp.Bot.BotID)
+			as.Equal("Test Bot", resp.Bot.Name)
+			as.Equal("1.0.0", resp.Bot.Version)
+			as.Equal(BotModeMultiAgent, resp.Bot.BotMode)
+		}
 	})
 
 	t.Run("list bots", func(t *testing.T) {
