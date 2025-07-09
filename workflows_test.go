@@ -3,7 +3,6 @@ package coze
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"testing"
 
@@ -26,7 +25,7 @@ func TestWorkflow(t *testing.T) {
 		t.Run("success", func(t *testing.T) {
 			workflows := newWorkflows(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
 				as.Equal(http.MethodGet, req.Method)
-				as.Equal(fmt.Sprintf("/v1/workflows"), req.URL.Path)
+				as.Equal("/v1/workflows", req.URL.Path)
 				as.Equal("1", req.URL.Query().Get("page_num"))
 				as.Equal("20", req.URL.Query().Get("page_size"))
 				return mockResponse(http.StatusOK, &listWorkflowResp{
