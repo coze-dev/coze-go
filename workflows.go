@@ -33,6 +33,7 @@ func (r *workflows) List(ctx context.Context, req *ListWorkflowReq) (NumberPaged
 }
 
 type ListWorkflowReq struct {
+	WorkspaceID   *string        `query:"workspace_id" json:"-"`
 	WorkflowMode  *WorkflowMode  `query:"workflow_mode" json:"-"`
 	AppID         *string        `query:"app_id" json:"-"`
 	PublishStatus *PublishStatus `query:"publish_status" json:"-"`
@@ -80,6 +81,7 @@ type listWorkflowResp struct {
 
 func (r ListWorkflowReq) toReq(request *pageRequest) *ListWorkflowReq {
 	return &ListWorkflowReq{
+		WorkspaceID:   r.WorkspaceID,
 		WorkflowMode:  r.WorkflowMode,
 		AppID:         r.AppID,
 		PublishStatus: r.PublishStatus,
