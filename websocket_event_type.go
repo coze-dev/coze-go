@@ -1,4 +1,4 @@
-package websockets
+package coze
 
 // WebSocketEventType represents different types of WebSocket events
 type WebSocketEventType string

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/coze-dev/coze-go"
-	"github.com/coze-dev/coze-go/websockets"
 )
 
 func main() {
@@ -35,33 +34,33 @@ func main() {
 
 	// Create chat WebSocket client
 	chatClient := client.WebSockets.Chat.Create(
-		websockets.WithBotID(botID),
+		coze.WithBotID(botID),
 	)
 
 	// Set up event handlers
-	handler := &websockets.ChatEventHandler{
-		OnChatCreated: func(event *websockets.WebSocketEvent) error {
+	handler := &coze.ChatEventHandler{
+		OnChatCreated: func(event *coze.WebSocketEvent) error {
 			fmt.Println("Chat session created")
 			return nil
 		},
-		OnConversationChatCreated: func(event *websockets.ConversationChatCreatedEvent) error {
+		OnConversationChatCreated: func(event *coze.ConversationChatCreatedEvent) error {
 			fmt.Printf("Conversation chat created: %s\n", event.Data.ChatID)
 			return nil
 		},
-		OnConversationMessageDelta: func(event *websockets.ConversationMessageDeltaEvent) error {
+		OnConversationMessageDelta: func(event *coze.ConversationMessageDeltaEvent) error {
 			fmt.Printf("Message delta: %s\n", event.Data.Content)
 			return nil
 		},
-		OnConversationAudioDelta: func(event *websockets.ConversationAudioDeltaEvent) error {
+		OnConversationAudioDelta: func(event *coze.ConversationAudioDeltaEvent) error {
 			audioData := event.Data.GetAudio()
 			fmt.Printf("Audio delta received (length: %d)\n", len(audioData))
 			return nil
 		},
-		OnConversationChatCompleted: func(event *websockets.ConversationChatCompletedEvent) error {
+		OnConversationChatCompleted: func(event *coze.ConversationChatCompletedEvent) error {
 			fmt.Printf("Chat completed: %s\n", event.Data.ChatID)
 			return nil
 		},
-		OnConversationChatRequiresAction: func(event *websockets.ConversationChatRequiresActionEvent) error {
+		OnConversationChatRequiresAction: func(event *coze.ConversationChatRequiresActionEvent) error {
 			fmt.Printf("Chat requires action: %s\n", event.Data.ChatID)
 
 			// Example: Handle tool call requirements
@@ -71,7 +70,7 @@ func main() {
 
 					// In a real implementation, you would execute the tool and get the result
 					// For this example, we'll just return a dummy result
-					toolOutputs := []websockets.ToolOutput{
+					toolOutputs := []coze.ToolOutput{
 						{
 							ToolCallID: toolCall.ID,
 							Output:     "Tool execution result: success",

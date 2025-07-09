@@ -1,4 +1,4 @@
-package websockets
+package coze
 
 //
 // import (
@@ -62,7 +62,7 @@ package websockets
 // func TestWebSocketsClientCreation(t *testing.T) {
 // 	mockAuth := &MockAuth{}
 //
-// 	// Test WebSocketsClient creation
+// 	// Test websockets creation
 // 	client := NewWebSockets("https://api.coze.com", mockAuth)
 // 	assert.NotNil(t, client)
 // 	assert.NotNil(t, client.Audio)

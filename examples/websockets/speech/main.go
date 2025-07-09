@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/coze-dev/coze-go"
-	"github.com/coze-dev/coze-go/websockets"
 )
 
 func main() {
@@ -31,16 +30,16 @@ func main() {
 	speechClient := client.WebSockets.Audio.Speech()
 
 	// Set up event handlers
-	handler := &websockets.SpeechEventHandler{
-		OnSpeechCreated: func(event *websockets.SpeechCreatedEvent) error {
+	handler := &coze.SpeechEventHandler{
+		OnSpeechCreated: func(event *coze.SpeechCreatedEvent) error {
 			fmt.Printf("Speech session created: %s\n", event.Data.SessionID)
 			return nil
 		},
-		OnSpeechAudioUpdate: func(event *websockets.SpeechAudioUpdateEvent) error {
+		OnSpeechAudioUpdate: func(event *coze.SpeechAudioUpdateEvent) error {
 			fmt.Printf("Received audio data chunk (length: %d)\n", len(event.Data.Delta))
 			return nil
 		},
-		OnSpeechAudioCompleted: func(event *websockets.SpeechAudioCompletedEvent) error {
+		OnSpeechAudioCompleted: func(event *coze.SpeechAudioCompletedEvent) error {
 			fmt.Printf("Speech audio completed: %s\n", event.Data.SessionID)
 			return nil
 		},

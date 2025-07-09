@@ -1,4 +1,4 @@
-package websockets
+package coze
 
 import (
 	"encoding/base64"
@@ -361,8 +361,12 @@ func (h *ChatEventHandler) RegisterHandlers(client *ChatClient) {
 	}
 }
 
-// ChatClientBuilder provides methods to create chat clients
-type ChatClientBuilder struct {
-	baseURL string
-	auth    Auth
+type websocketChatBuilder struct {
+	core *core
+}
+
+func newWebsocketChat(core *core) *websocketChatBuilder {
+	return &websocketChatBuilder{
+		core: core,
+	}
 }

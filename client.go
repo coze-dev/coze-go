@@ -3,8 +3,6 @@ package coze
 import (
 	"net/http"
 	"time"
-
-	"github.com/coze-dev/coze-go/websockets"
 )
 
 type CozeAPI struct {
@@ -22,7 +20,7 @@ type CozeAPI struct {
 	Variables     *variables
 	Enterprises   *enterprises
 	Apps          *apps
-	WebSockets    *websockets.WebSocketsClient
+	WebSockets    *websockets
 	baseURL       string
 }
 
@@ -112,7 +110,7 @@ func NewCozeAPI(auth Auth, opts ...CozeAPIOption) CozeAPI {
 		Variables:     newVariables(core),
 		Enterprises:   newEnterprises(core),
 		Apps:          newApps(core),
-		WebSockets:    websockets.NewWebSockets(opt.baseURL, opt.auth),
+		WebSockets:    newWebSockets(core),
 		baseURL:       opt.baseURL,
 	}
 	return cozeClient

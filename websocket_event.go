@@ -1,4 +1,4 @@
-package websockets
+package coze
 
 import (
 	"encoding/json"

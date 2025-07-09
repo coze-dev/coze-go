@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/coze-dev/coze-go"
-	"github.com/coze-dev/coze-go/websockets"
 )
 
 func main() {
@@ -31,16 +30,16 @@ func main() {
 	transcriptionsClient := client.WebSockets.Audio.Transcriptions()
 
 	// Set up event handlers
-	handler := &websockets.TranscriptionsEventHandler{
-		OnTranscriptionsCreated: func(event *websockets.WebSocketEvent) error {
+	handler := &coze.TranscriptionsEventHandler{
+		OnTranscriptionsCreated: func(event *coze.WebSocketEvent) error {
 			fmt.Println("Transcriptions session created")
 			return nil
 		},
-		OnTranscriptionsMessageUpdate: func(event *websockets.TranscriptionsMessageUpdateEvent) error {
+		OnTranscriptionsMessageUpdate: func(event *coze.TranscriptionsMessageUpdateEvent) error {
 			fmt.Printf("Transcription result: %s\n", event.Data.Content)
 			return nil
 		},
-		OnTranscriptionsMessageCompleted: func(event *websockets.WebSocketEvent) error {
+		OnTranscriptionsMessageCompleted: func(event *coze.WebSocketEvent) error {
 			fmt.Println("Transcription completed")
 			return nil
 		},
