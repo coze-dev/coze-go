@@ -67,7 +67,7 @@ func (c *websocketsChat) IsConnected() bool {
 // UpdateChat updates the chat configuration
 func (c *websocketsChat) UpdateChat(botID string, inputAudio *InputAudio, outputAudio *OutputAudio) error {
 	event := WebSocketChatUpdateEvent{
-		EventType: EventTypeChatUpdate,
+		EventType: WebSocketEventTypeChatUpdate,
 		Data: &WebSocketChatUpdateEventData{
 			BotID:       botID,
 			InputAudio:  inputAudio,
@@ -84,7 +84,7 @@ func (c *websocketsChat) AppendAudioBuffer(audioData []byte) error {
 	encoded := base64.StdEncoding.EncodeToString(audioData)
 
 	event := WebSocketInputAudioBufferAppendEvent{
-		EventType: EventTypeInputAudioBufferAppend,
+		EventType: WebSocketEventTypeInputAudioBufferAppend,
 		Data: &WebSocketInputAudioBufferAppendEventData{
 			Delta: encoded,
 		},
@@ -96,7 +96,7 @@ func (c *websocketsChat) AppendAudioBuffer(audioData []byte) error {
 // CompleteAudioBuffer completes the audio buffer input
 func (c *websocketsChat) CompleteAudioBuffer() error {
 	event := WebSocketInputAudioBufferCompleteEvent{
-		EventType: EventTypeInputAudioBufferComplete,
+		EventType: WebSocketEventTypeInputAudioBufferComplete,
 	}
 
 	return c.ws.sendEvent(event)
@@ -105,7 +105,7 @@ func (c *websocketsChat) CompleteAudioBuffer() error {
 // ClearAudioBuffer clears the audio buffer
 func (c *websocketsChat) ClearAudioBuffer() error {
 	event := WebSocketInputAudioBufferClearEvent{
-		EventType: EventTypeInputAudioBufferClear,
+		EventType: WebSocketEventTypeInputAudioBufferClear,
 	}
 
 	return c.ws.sendEvent(event)
@@ -114,7 +114,7 @@ func (c *websocketsChat) ClearAudioBuffer() error {
 // CreateMessage creates a conversation message
 func (c *websocketsChat) CreateMessage(content string) error {
 	event := WebSocketConversationMessageCreateEvent{
-		EventType: EventTypeConversationMessageCreate,
+		EventType: WebSocketEventTypeConversationMessageCreate,
 		Data: &WebSocketConversationMessageCreateEventData{
 			Content: content,
 		},
@@ -127,7 +127,7 @@ func (c *websocketsChat) CreateMessage(content string) error {
 func (c *websocketsChat) ClearConversation() error {
 	return c.ws.sendEvent(WebSocketConversationClearedEvent{
 		baseWebSocketEvent: baseWebSocketEvent{
-			EventType: EventTypeConversationClear,
+			EventType: WebSocketEventTypeConversationClear,
 		},
 	})
 }
@@ -135,7 +135,7 @@ func (c *websocketsChat) ClearConversation() error {
 // SubmitToolOutputs submits tool outputs for a chat
 func (c *websocketsChat) SubmitToolOutputs(chatID string, toolOutputs []ToolOutput) error {
 	event := WebSocketConversationChatSubmitToolOutputsEvent{
-		EventType: EventTypeConversationChatSubmitToolOutputs,
+		EventType: WebSocketEventTypeConversationChatSubmitToolOutputs,
 		Data: &WebSocketConversationChatSubmitToolOutputsEventData{
 			ChatID:      chatID,
 			ToolOutputs: toolOutputs,
@@ -149,7 +149,7 @@ func (c *websocketsChat) SubmitToolOutputs(chatID string, toolOutputs []ToolOutp
 func (c *websocketsChat) CancelChat(chatID string) error {
 	event := WebSocketConversationChatCancelEvent{
 		baseWebSocketEvent: baseWebSocketEvent{
-			EventType: EventTypeConversationChatCancel,
+			EventType: WebSocketEventTypeConversationChatCancel,
 		},
 		Data: &ConversationChatCancelData{
 			ChatID: chatID,
@@ -174,15 +174,15 @@ func (c *websocketsChat) OnEvent(eventType WebSocketEventType, handler EventHand
 // WaitForChatCompleted waits for chat to complete
 func (c *websocketsChat) WaitForChatCompleted(timeout time.Duration) (IWebSocketEvent, error) {
 	return c.ws.WaitForEvent([]WebSocketEventType{
-		EventTypeConversationChatCompleted,
-		EventTypeConversationChatFailed,
+		WebSocketEventTypeConversationChatCompleted,
+		WebSocketEventTypeConversationChatFailed,
 	}, timeout)
 }
 
 // WaitForChatCreated waits for chat to be created
 func (c *websocketsChat) WaitForChatCreated(timeout time.Duration) (IWebSocketEvent, error) {
 	return c.ws.WaitForEvent([]WebSocketEventType{
-		EventTypeConversationChatCreated,
+		WebSocketEventTypeConversationChatCreated,
 	}, timeout)
 }
 
@@ -215,15 +215,15 @@ type ChatEventHandler struct {
 // RegisterHandlers registers all handlers with the client
 func (h *ChatEventHandler) RegisterHandlers(client *websocketsChat) {
 	if h.OnChatCreated != nil {
-		client.OnEvent(EventTypeChatCreated, h.OnChatCreated)
+		client.OnEvent(WebSocketEventTypeChatCreated, h.OnChatCreated)
 	}
 
 	if h.OnChatUpdated != nil {
-		client.OnEvent(EventTypeChatUpdated, h.OnChatUpdated)
+		client.OnEvent(WebSocketEventTypeChatUpdated, h.OnChatUpdated)
 	}
 
 	if h.OnConversationChatCreated != nil {
-		client.OnEvent(EventTypeConversationChatCreated, func(event IWebSocketEvent) error {
+		client.OnEvent(WebSocketEventTypeConversationChatCreated, func(event IWebSocketEvent) error {
 			var chatEvent WebSocketConversationChatCreatedEvent
 			if err := json.Unmarshal(event.Data, &chatEvent.Data); err != nil {
 				return fmt.Errorf("failed to unmarshal conversation chat created event: %w", err)
@@ -236,11 +236,11 @@ func (h *ChatEventHandler) RegisterHandlers(client *websocketsChat) {
 	}
 
 	if h.OnConversationChatInProgress != nil {
-		client.OnEvent(EventTypeConversationChatInProgress, h.OnConversationChatInProgress)
+		client.OnEvent(WebSocketEventTypeConversationChatInProgress, h.OnConversationChatInProgress)
 	}
 
 	if h.OnConversationMessageDelta != nil {
-		client.OnEvent(EventTypeConversationMessageDelta, func(event IWebSocketEvent) error {
+		client.OnEvent(WebSocketEventTypeConversationMessageDelta, func(event IWebSocketEvent) error {
 			var deltaEvent WebSocketConversationMessageDeltaEvent
 			if err := json.Unmarshal(event.Data, &deltaEvent.Data); err != nil {
 				return fmt.Errorf("failed to unmarshal conversation message delta event: %w", err)
@@ -253,11 +253,11 @@ func (h *ChatEventHandler) RegisterHandlers(client *websocketsChat) {
 	}
 
 	if h.OnConversationAudioSentenceStart != nil {
-		client.OnEvent(EventTypeConversationAudioSentenceStart, h.OnConversationAudioSentenceStart)
+		client.OnEvent(WebSocketEventTypeConversationAudioSentenceStart, h.OnConversationAudioSentenceStart)
 	}
 
 	if h.OnConversationAudioDelta != nil {
-		client.OnEvent(EventTypeConversationAudioDelta, func(event IWebSocketEvent) error {
+		client.OnEvent(WebSocketEventTypeConversationAudioDelta, func(event IWebSocketEvent) error {
 			var audioEvent WebSocketConversationAudioDeltaEvent
 			if err := json.Unmarshal(event.Data, &audioEvent.Data); err != nil {
 				return fmt.Errorf("failed to unmarshal conversation audio delta event: %w", err)
@@ -270,15 +270,15 @@ func (h *ChatEventHandler) RegisterHandlers(client *websocketsChat) {
 	}
 
 	if h.OnConversationMessageCompleted != nil {
-		client.OnEvent(EventTypeConversationMessageCompleted, h.OnConversationMessageCompleted)
+		client.OnEvent(WebSocketEventTypeConversationMessageCompleted, h.OnConversationMessageCompleted)
 	}
 
 	if h.OnConversationAudioCompleted != nil {
-		client.OnEvent(EventTypeConversationAudioCompleted, h.OnConversationAudioCompleted)
+		client.OnEvent(WebSocketEventTypeConversationAudioCompleted, h.OnConversationAudioCompleted)
 	}
 
 	if h.OnConversationChatCompleted != nil {
-		client.OnEvent(EventTypeConversationChatCompleted, func(event IWebSocketEvent) error {
+		client.OnEvent(WebSocketEventTypeConversationChatCompleted, func(event IWebSocketEvent) error {
 			var completedEvent WebSocketConversationChatCompletedEvent
 			if err := json.Unmarshal(event.Data, &completedEvent.Data); err != nil {
 				return fmt.Errorf("failed to unmarshal conversation chat completed event: %w", err)
@@ -291,23 +291,23 @@ func (h *ChatEventHandler) RegisterHandlers(client *websocketsChat) {
 	}
 
 	if h.OnConversationChatFailed != nil {
-		client.OnEvent(EventTypeConversationChatFailed, h.OnConversationChatFailed)
+		client.OnEvent(WebSocketEventTypeConversationChatFailed, h.OnConversationChatFailed)
 	}
 
 	if h.OnInputAudioBufferCompleted != nil {
-		client.OnEvent(EventTypeInputAudioBufferCompleted, h.OnInputAudioBufferCompleted)
+		client.OnEvent(WebSocketEventTypeInputAudioBufferCompleted, h.OnInputAudioBufferCompleted)
 	}
 
 	if h.OnInputAudioBufferCleared != nil {
-		client.OnEvent(EventTypeInputAudioBufferCleared, h.OnInputAudioBufferCleared)
+		client.OnEvent(WebSocketEventTypeInputAudioBufferCleared, h.OnInputAudioBufferCleared)
 	}
 
 	if h.OnConversationCleared != nil {
-		client.OnEvent(EventTypeConversationCleared, h.OnConversationCleared)
+		client.OnEvent(WebSocketEventTypeConversationCleared, h.OnConversationCleared)
 	}
 
 	if h.OnConversationChatCanceled != nil {
-		client.OnEvent(EventTypeConversationChatCanceled, func(event IWebSocketEvent) error {
+		client.OnEvent(WebSocketEventTypeConversationChatCanceled, func(event IWebSocketEvent) error {
 			var canceledEvent WebSocketConversationChatCanceledEvent
 			if err := json.Unmarshal(event.Data, &canceledEvent.Data); err != nil {
 				return fmt.Errorf("failed to unmarshal conversation chat canceled event: %w", err)
@@ -320,15 +320,15 @@ func (h *ChatEventHandler) RegisterHandlers(client *websocketsChat) {
 	}
 
 	if h.OnConversationAudioTranscriptUpdate != nil {
-		client.OnEvent(EventTypeConversationAudioTranscriptUpdate, h.OnConversationAudioTranscriptUpdate)
+		client.OnEvent(WebSocketEventTypeConversationAudioTranscriptUpdate, h.OnConversationAudioTranscriptUpdate)
 	}
 
 	if h.OnConversationAudioTranscriptCompleted != nil {
-		client.OnEvent(EventTypeConversationAudioTranscriptCompleted, h.OnConversationAudioTranscriptCompleted)
+		client.OnEvent(WebSocketEventTypeConversationAudioTranscriptCompleted, h.OnConversationAudioTranscriptCompleted)
 	}
 
 	if h.OnConversationChatRequiresAction != nil {
-		client.OnEvent(EventTypeConversationChatRequiresAction, func(event IWebSocketEvent) error {
+		client.OnEvent(WebSocketEventTypeConversationChatRequiresAction, func(event IWebSocketEvent) error {
 			var actionEvent WebSocketConversationChatRequiresActionEvent
 			if err := json.Unmarshal(event.Data, &actionEvent.Data); err != nil {
 				return fmt.Errorf("failed to unmarshal conversation chat requires action event: %w", err)
@@ -341,21 +341,21 @@ func (h *ChatEventHandler) RegisterHandlers(client *websocketsChat) {
 	}
 
 	if h.OnInputAudioBufferSpeechStarted != nil {
-		client.OnEvent(EventTypeInputAudioBufferSpeechStarted, h.OnInputAudioBufferSpeechStarted)
+		client.OnEvent(WebSocketEventTypeInputAudioBufferSpeechStarted, h.OnInputAudioBufferSpeechStarted)
 	}
 
 	if h.OnInputAudioBufferSpeechStopped != nil {
-		client.OnEvent(EventTypeInputAudioBufferSpeechStopped, h.OnInputAudioBufferSpeechStopped)
+		client.OnEvent(WebSocketEventTypeInputAudioBufferSpeechStopped, h.OnInputAudioBufferSpeechStopped)
 	}
 
 	if h.OnError != nil {
-		client.OnEvent(EventTypeError, func(event IWebSocketEvent) error {
+		client.OnEvent(WebSocketEventTypeError, func(event IWebSocketEvent) error {
 			return h.OnError(fmt.Errorf("WebSocket error: %s", string(event.Data)))
 		})
 	}
 
 	if h.OnClosed != nil {
-		client.OnEvent(EventTypeClosed, func(event IWebSocketEvent) error {
+		client.OnEvent(WebSocketEventTypeClosed, func(event IWebSocketEvent) error {
 			return h.OnClosed()
 		})
 	}

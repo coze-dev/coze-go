@@ -307,13 +307,13 @@ func (c *websocketClient) handleEvents() {
 // handleError handles errors
 func (c *websocketClient) handleError(err error) {
 	c.mu.RLock()
-	handler, ok := c.handlers[EventTypeError]
+	handler, ok := c.handlers[WebSocketEventTypeError]
 	c.mu.RUnlock()
 
 	if ok && handler != nil {
 		errorEvent := &WebSocketErrorEvent{
 			baseWebSocketEvent: baseWebSocketEvent{
-				EventType: EventTypeError,
+				EventType: WebSocketEventTypeError,
 			},
 			// todo
 			Data: &WebSocketErrorEventData{

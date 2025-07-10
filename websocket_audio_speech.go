@@ -51,7 +51,7 @@ func (c *SpeechClient) IsConnected() bool {
 // UpdateSpeech updates the speech configuration
 func (c *SpeechClient) UpdateSpeech(outputAudio *OutputAudio) error {
 	event := WebSocketSpeechUpdateEvent{
-		EventType: EventTypeSpeechUpdate,
+		EventType: WebSocketEventTypeSpeechUpdate,
 		Data: &WebSocketSpeechUpdateEventData{
 			OutputAudio: outputAudio,
 		},
@@ -63,7 +63,7 @@ func (c *SpeechClient) UpdateSpeech(outputAudio *OutputAudio) error {
 // AppendTextBuffer appends text to the input buffer
 func (c *SpeechClient) AppendTextBuffer(text string) error {
 	event := WebSocketInputTextBufferAppendEvent{
-		EventType: EventTypeInputTextBufferAppend,
+		EventType: WebSocketEventTypeInputTextBufferAppend,
 		Data: &WebSocketInputTextBufferAppendEventData{
 			Delta: text,
 		},
@@ -75,7 +75,7 @@ func (c *SpeechClient) AppendTextBuffer(text string) error {
 // CompleteTextBuffer completes the text buffer input
 func (c *SpeechClient) CompleteTextBuffer() error {
 	event := WebSocketInputTextBufferCompleteEvent{
-		EventType: EventTypeInputTextBufferComplete,
+		EventType: WebSocketEventTypeInputTextBufferComplete,
 	}
 
 	return c.ws.sendEvent(event)
@@ -89,14 +89,14 @@ func (c *SpeechClient) OnEvent(eventType WebSocketEventType, handler EventHandle
 // WaitForSpeechAudioCompleted waits for speech audio to complete
 func (c *SpeechClient) WaitForSpeechAudioCompleted(timeout time.Duration) (IWebSocketEvent, error) {
 	return c.ws.WaitForEvent([]WebSocketEventType{
-		EventTypeSpeechAudioCompleted,
+		WebSocketEventTypeSpeechAudioCompleted,
 	}, timeout)
 }
 
 // WaitForSpeechCreated waits for speech to be created
 func (c *SpeechClient) WaitForSpeechCreated(timeout time.Duration) (IWebSocketEvent, error) {
 	return c.ws.WaitForEvent([]WebSocketEventType{
-		EventTypeSpeechCreated,
+		WebSocketEventTypeSpeechCreated,
 	}, timeout)
 }
 
@@ -114,7 +114,7 @@ type SpeechEventHandler struct {
 // RegisterHandlers registers all handlers with the client
 func (h *SpeechEventHandler) RegisterHandlers(client *SpeechClient) {
 	if h.OnSpeechCreated != nil {
-		client.OnEvent(EventTypeSpeechCreated, func(event IWebSocketEvent) error {
+		client.OnEvent(WebSocketEventTypeSpeechCreated, func(event IWebSocketEvent) error {
 			var speechEvent WebSocketSpeechCreatedEvent
 			if err := json.Unmarshal(event.Data, &speechEvent.Data); err != nil {
 				return fmt.Errorf("failed to unmarshal speech created event: %w", err)
@@ -127,15 +127,15 @@ func (h *SpeechEventHandler) RegisterHandlers(client *SpeechClient) {
 	}
 
 	if h.OnSpeechUpdated != nil {
-		client.OnEvent(EventTypeSpeechUpdated, h.OnSpeechUpdated)
+		client.OnEvent(WebSocketEventTypeSpeechUpdated, h.OnSpeechUpdated)
 	}
 
 	if h.OnInputTextBufferCompleted != nil {
-		client.OnEvent(EventTypeInputTextBufferCompleted, h.OnInputTextBufferCompleted)
+		client.OnEvent(WebSocketEventTypeInputTextBufferCompleted, h.OnInputTextBufferCompleted)
 	}
 
 	if h.OnSpeechAudioUpdate != nil {
-		client.OnEvent(EventTypeSpeechAudioUpdate, func(event IWebSocketEvent) error {
+		client.OnEvent(WebSocketEventTypeSpeechAudioUpdate, func(event IWebSocketEvent) error {
 			var audioEvent WebSocketSpeechAudioUpdateEvent
 			if err := json.Unmarshal(event.Data, &audioEvent.Data); err != nil {
 				return fmt.Errorf("failed to unmarshal speech audio update event: %w", err)
@@ -148,7 +148,7 @@ func (h *SpeechEventHandler) RegisterHandlers(client *SpeechClient) {
 	}
 
 	if h.OnSpeechAudioCompleted != nil {
-		client.OnEvent(EventTypeSpeechAudioCompleted, func(event IWebSocketEvent) error {
+		client.OnEvent(WebSocketEventTypeSpeechAudioCompleted, func(event IWebSocketEvent) error {
 			var completedEvent WebSocketSpeechAudioCompletedEvent
 			if err := json.Unmarshal(event.Data, &completedEvent.Data); err != nil {
 				return fmt.Errorf("failed to unmarshal speech audio completed event: %w", err)
@@ -161,13 +161,13 @@ func (h *SpeechEventHandler) RegisterHandlers(client *SpeechClient) {
 	}
 
 	if h.OnError != nil {
-		client.OnEvent(EventTypeError, func(event IWebSocketEvent) error {
+		client.OnEvent(WebSocketEventTypeError, func(event IWebSocketEvent) error {
 			return h.OnError(fmt.Errorf("WebSocket error: %s", string(event.Data)))
 		})
 	}
 
 	if h.OnClosed != nil {
-		client.OnEvent(EventTypeClosed, func(event IWebSocketEvent) error {
+		client.OnEvent(WebSocketEventTypeClosed, func(event IWebSocketEvent) error {
 			return h.OnClosed()
 		})
 	}

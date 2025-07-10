@@ -21,11 +21,11 @@ package coze
 //
 // func TestWebSocketEventTypes(t *testing.T) {
 // 	// Test that event types are correctly defined
-// 	assert.Equal(t, "speech.created", string(EventTypeSpeechCreated))
-// 	assert.Equal(t, "speech.audio.update", string(EventTypeSpeechAudioUpdate))
-// 	assert.Equal(t, "conversation.message.delta", string(EventTypeConversationMessageDelta))
-// 	assert.Equal(t, "error", string(EventTypeError))
-// 	assert.Equal(t, "closed", string(EventTypeClosed))
+// 	assert.Equal(t, "speech.created", string(WebSocketEventTypeSpeechCreated))
+// 	assert.Equal(t, "speech.audio.update", string(WebSocketEventTypeSpeechAudioUpdate))
+// 	assert.Equal(t, "conversation.message.delta", string(WebSocketEventTypeConversationMessageDelta))
+// 	assert.Equal(t, "error", string(WebSocketEventTypeError))
+// 	assert.Equal(t, "closed", string(WebSocketEventTypeClosed))
 // }
 //
 // func TestSpeechClientCreation(t *testing.T) {
@@ -89,12 +89,12 @@ package coze
 //
 // 	// Simulate an error event
 // 	errorEvent := &WebSocketEvent{
-// 		EventType: EventTypeError,
+// 		EventType: WebSocketEventTypeError,
 // 		Data:      []byte(`{"error": "test error"}`),
 // 	}
 //
 // 	// Get the registered handler and call it
-// 	speechClient.ws.handlers[EventTypeError](errorEvent)
+// 	speechClient.ws.handlers[WebSocketEventTypeError](errorEvent)
 //
 // 	assert.True(t, called)
 // }
