@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"os"
@@ -33,13 +34,13 @@ func main() {
 	client := coze.NewCozeAPI(auth, coze.WithBaseURL(baseURL))
 
 	// Create chat WebSocket client
-	chatClient := client.WebSockets.Chat.Create(
-		coze.WithBotID(botID),
-	)
+	chatClient := client.WebSockets.Chat.Create(context.Background(), &coze.CreateWebsocketChatReq{
+		BotID: botID,
+	})
 
 	// Set up event handlers
 	handler := &coze.ChatEventHandler{
-		OnChatCreated: func(event *coze.WebSocketEvent) error {
+		OnChatCreated: func(event coze.IWebSocketEvent) error {
 			fmt.Println("Chat session created")
 			return nil
 		},
@@ -96,6 +97,7 @@ func main() {
 	}
 
 	// Register event handlers
+	chatClient.OnEvents(map[coze.WebSocketEventType]coze.EventHandler{})
 	handler.RegisterHandlers(chatClient)
 
 	// Connect to WebSocket
@@ -104,9 +106,6 @@ func main() {
 		log.Fatalf("Failed to connect: %v", err)
 	}
 	defer chatClient.Close()
-
-	// Wait for connection to be established
-	time.Sleep(1 * time.Second)
 
 	// Update chat configuration
 	fmt.Println("Updating chat configuration...")

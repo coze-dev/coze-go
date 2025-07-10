@@ -35,7 +35,7 @@ package coze
 // 	// Test speech client creation
 // 	client := NewSpeechClient("wss://api.coze.com", mockAuth)
 // 	assert.NotNil(t, client)
-// 	assert.NotNil(t, client.wsClient)
+// 	assert.NotNil(t, client.ws)
 // }
 //
 // func TestTranscriptionsClientCreation(t *testing.T) {
@@ -45,7 +45,7 @@ package coze
 // 	// Test transcriptions client creation
 // 	client := NewTranscriptionsClient("wss://api.coze.com", mockAuth)
 // 	assert.NotNil(t, client)
-// 	assert.NotNil(t, client.wsClient)
+// 	assert.NotNil(t, client.ws)
 // }
 //
 // func TestChatClientCreation(t *testing.T) {
@@ -55,7 +55,7 @@ package coze
 // 	// Test chat client creation
 // 	client := NewChatClient("wss://api.coze.com", Auth(mockAuth), WithBotID("test-bot-id"))
 // 	assert.NotNil(t, client)
-// 	assert.NotNil(t, client.wsClient)
+// 	assert.NotNil(t, client.ws)
 // 	assert.Equal(t, "test-bot-id", client.botID)
 // }
 //
@@ -94,7 +94,7 @@ package coze
 // 	}
 //
 // 	// Get the registered handler and call it
-// 	speechClient.wsClient.handlers[EventTypeError](errorEvent)
+// 	speechClient.ws.handlers[EventTypeError](errorEvent)
 //
 // 	assert.True(t, called)
 // }

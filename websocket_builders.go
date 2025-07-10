@@ -6,11 +6,6 @@ func (a *websocketAudio) Speech(opts ...SpeechClientOption) *SpeechClient {
 }
 
 // Transcriptions returns a new transcriptions client
-func (a *websocketAudio) Transcriptions(opts ...TranscriptionsClientOption) *TranscriptionsClient {
+func (a *websocketAudio) Transcriptions() *TranscriptionsClient {
 	return NewTranscriptionsClient(a.baseURL, a.auth, opts...)
-}
-
-// Create returns a new chat client
-func (c *websocketChatBuilder) Create(opts ...ChatClientOption) *ChatClient {
-	return NewChatClient(c.baseURL, c.auth, opts...)
 }

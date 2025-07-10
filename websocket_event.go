@@ -1,29 +1,9 @@
 package coze
 
-import (
-	"encoding/json"
-)
-
-// WebSocketEvent represents a base WebSocket event
-type WebSocketEvent struct {
-	EventType WebSocketEventType `json:"event_type"`
-	ID        string             `json:"id,omitempty"`
-	Detail    *EventDetail       `json:"detail,omitempty"`
-	Data      json.RawMessage    `json:"data,omitempty"`
-}
-
-// EventDetail contains additional event details
-type EventDetail struct {
-	LogID         string `json:"logid,omitempty"`
-	OriginMessage string `json:"origin_message,omitempty"`
-}
-
 // WebSocketErrorEvent represents an error event
 type WebSocketErrorEvent struct {
-	EventType WebSocketEventType `json:"event_type"`
-	ID        string             `json:"id,omitempty"`
-	Detail    *EventDetail       `json:"detail,omitempty"`
-	Data      *ErrorData         `json:"data,omitempty"`
+	baseWebSocketEvent
+	Data *ErrorData `json:"data,omitempty"`
 }
 
 // ErrorData contains error information
@@ -34,84 +14,112 @@ type ErrorData struct {
 
 // LimitConfig configures audio limits
 type LimitConfig struct {
-	Period      int `json:"period,omitempty"`
-	MaxFrameNum int `json:"max_frame_num,omitempty"`
+	// 周期的时长，单位为秒。例如设置为 10 秒，则以 10 秒作为一个周期。
+	Period *int `json:"period,omitempty"`
+	// 周期内，最大返回包数量。
+	MaxFrameNum *int `json:"max_frame_num,omitempty"`
 }
 
 // InputAudio configuration for audio input
 type InputAudio struct {
-	Format     string `json:"format,omitempty"`
-	Codec      string `json:"codec,omitempty"`
-	SampleRate int    `json:"sample_rate,omitempty"`
-	Channel    int    `json:"channel,omitempty"`
-	BitDepth   int    `json:"bit_depth,omitempty"`
+	// 输入音频的格式，支持 pcm、wav、ogg。默认为 wav。
+	Format *string `json:"format,omitempty"`
+	// 输入音频的编码，支持 pcm、opus、g711a、g711u。默认为 pcm。如果音频编码格式为 g711a 或 g711u，format 请设置为 pcm。
+	Codec *string `json:"codec,omitempty"`
+	// 输入音频的采样率，默认是 24000。支持 8000、16000、22050、24000、32000、44100、48000。如果音频编码格式 codec 为 g711a 或 g711u，音频采样率需设置为 8000。
+	SampleRate *int `json:"sample_rate,omitempty"`
+	// 输入音频的声道数，支持 1（单声道）、2（双声道）。默认是 1（单声道）。
+	Channel *int `json:"channel,omitempty"`
+	// 输入音频的位深，默认是 16，支持8、16和24。
+	BitDepth *int `json:"bit_depth,omitempty"`
 }
 
 // OpusConfig configures Opus audio output
 type OpusConfig struct {
-	Bitrate     int          `json:"bitrate,omitempty"`
-	UseCBR      bool         `json:"use_cbr,omitempty"`
-	FrameSizeMs float64      `json:"frame_size_ms,omitempty"`
+	// 输出 opus 的码率，默认 48000。
+	Bitrate *int `json:"bitrate,omitempty"`
+	// 输出 opus 是否使用 CBR 编码，默认为 false。
+	UseCBR *bool `json:"use_cbr,omitempty"`
+	// 输出 opus 的帧长，默认是 10。可选值：2.5、5、10、20、40、60
+	FrameSizeMs *float64 `json:"frame_size_ms,omitempty"`
+	// 输出音频限流配置，默认不限制。
 	LimitConfig *LimitConfig `json:"limit_config,omitempty"`
 }
 
 // PCMConfig configures PCM audio output
 type PCMConfig struct {
-	SampleRate  int          `json:"sample_rate,omitempty"`
-	FrameSizeMs float64      `json:"frame_size_ms,omitempty"`
+	// 输出 pcm 音频的采样率，默认是 24000。支持 8000、16000、22050、24000、32000、44100、48000。
+	SampleRate *int `json:"sample_rate,omitempty"`
+	// 输出每个 pcm 包的时长，单位 ms，默认不限制。
+	FrameSizeMs *float64 `json:"frame_size_ms,omitempty"`
+	// 输出音频限流配置，默认不限制。
 	LimitConfig *LimitConfig `json:"limit_config,omitempty"`
 }
 
 // OutputAudio configuration for audio output
 type OutputAudio struct {
-	Codec      string      `json:"codec,omitempty"`
-	PCMConfig  *PCMConfig  `json:"pcm_config,omitempty"`
+	// Output audio codec, supports pcm, g711a, g711u, opus. Default is pcm.
+	Codec *string `json:"codec,omitempty"`
+	// 当 codec 设置为 pcm、g711a 或 g711u 时，用于配置 PCM 音频参数。当 codec 设置为 opus 时，不需要设置此字段
+	PCMConfig *PCMConfig `json:"pcm_config,omitempty"`
+	// 当 codec 设置为 pcm 时，不需要设置此字段。
 	OpusConfig *OpusConfig `json:"opus_config,omitempty"`
-	SpeechRate int         `json:"speech_rate,omitempty"`
-	VoiceID    string      `json:"voice_id,omitempty"`
+	// 输出音频的语速，取值范围 [-50, 100]，默认为 0。-50 表示 0.5 倍速，100 表示 2 倍速。
+	SpeechRate *int `json:"speech_rate,omitempty"`
+	// 输出音频的音色 ID，默认是柔美女友音色。你可以调用[查看音色列表](https://www.coze.cn/open/docs/developer_guides/list_voices) API 查看当前可用的所有音色 ID。
+	VoiceID *string `json:"voice_id,omitempty"`
 }
 
-// Audio Speech Events
+// v1/audio/speech req
 
-// SpeechUpdateEvent represents a speech update event
+// SpeechUpdateEvent 流式输入文字
+//
+// 流式向服务端提交文字的片段。
+// docs: https://www.coze.cn/open/docs/developer_guides/tts_event#0ba93be3
+// seq:v1/audio/speech:req:1
 type SpeechUpdateEvent struct {
-	EventType WebSocketEventType `json:"event_type"`
-	ID        string             `json:"id,omitempty"`
-	Detail    *EventDetail       `json:"detail,omitempty"`
-	Data      *SpeechUpdateData  `json:"data,omitempty"`
+	baseWebSocketEvent
+	Data *SpeechUpdateData `json:"data,omitempty"`
 }
 
 // SpeechUpdateData contains speech update configuration
 type SpeechUpdateData struct {
+	// 输出音频格式。
 	OutputAudio *OutputAudio `json:"output_audio,omitempty"`
 }
 
-// InputTextBufferAppendEvent represents text buffer append event
+// InputTextBufferAppendEvent 流式输入文字
+//
+// 流式向服务端提交文字的片段。
+// docs: https://www.coze.cn/open/docs/developer_guides/tts_event#0ba93be3
+// seq:v1/audio/speech:req:2
 type InputTextBufferAppendEvent struct {
-	EventType WebSocketEventType         `json:"event_type"`
-	ID        string                     `json:"id,omitempty"`
-	Detail    *EventDetail               `json:"detail,omitempty"`
-	Data      *InputTextBufferAppendData `json:"data,omitempty"`
+	baseWebSocketEvent
+	Data *InputTextBufferAppendData `json:"data,omitempty"`
 }
 
 // InputTextBufferAppendData contains the text delta
 type InputTextBufferAppendData struct {
+	//需要合成语音的文字片段。
 	Delta string `json:"delta"`
 }
 
-// InputTextBufferCompleteEvent represents text buffer complete event
+// InputTextBufferCompleteEvent 提交文字
+//
+// 提交 append 的文本，发送后将收到 input_text_buffer.completed 的下行事件。
+// docs: https://www.coze.cn/open/docs/developer_guides/tts_event#ab24ada9
+// seq:v1/audio/speech:req:3
 type InputTextBufferCompleteEvent struct {
-	EventType WebSocketEventType `json:"event_type"`
-	ID        string             `json:"id,omitempty"`
-	Detail    *EventDetail       `json:"detail,omitempty"`
+	baseWebSocketEvent
 }
 
-// SpeechCreatedEvent represents speech created event
+// SpeechCreatedEvent 语音合成连接成功
+//
+// 语音合成连接成功后，返回此事件。
+// docs: https://www.coze.cn/open/docs/developer_guides/tts_event#23c0993e
+// seq:v1/audio/speech:resp:1
 type SpeechCreatedEvent struct {
-	EventType WebSocketEventType `json:"event_type"`
-	ID        string             `json:"id,omitempty"`
-	Detail    *EventDetail       `json:"detail,omitempty"`
-	Data      *SpeechCreatedData `json:"data,omitempty"`
+	baseWebSocketEvent
 }
 
 // SpeechCreatedData contains speech session information
@@ -119,256 +127,535 @@ type SpeechCreatedData struct {
 	SessionID string `json:"session_id"`
 }
 
-// SpeechAudioUpdateEvent represents speech audio update event
+// SpeechUpdatedEvent 配置更新完成
+//
+// 配置更新成功后，会返回最新的配置。
+// docs: https://www.coze.cn/open/docs/developer_guides/tts_event#a3a59fb4
+// seq:v1/audio/speech:resp:2
+type SpeechUpdatedEvent struct {
+	baseWebSocketEvent
+	Data *SpeechUpdatedData `json:"data,omitempty"`
+}
+
+// SpeechUpdatedData contains speech session information
+type SpeechUpdatedData struct {
+	// 输出音频格式。
+	OutputAudio *OutputAudio `json:"output_audio,omitempty"`
+}
+
+// SpeechAudioUpdateEvent 合成增量语音
+//
+// 语音合成产生增量语音时，返回此事件。
+// docs: https://www.coze.cn/open/docs/developer_guides/tts_event#98163c71
+// seq:v1/audio/speech:resp:4
 type SpeechAudioUpdateEvent struct {
-	EventType WebSocketEventType     `json:"event_type"`
-	ID        string                 `json:"id,omitempty"`
-	Detail    *EventDetail           `json:"detail,omitempty"`
-	Data      *SpeechAudioUpdateData `json:"data,omitempty"`
+	baseWebSocketEvent
+	Data *SpeechAudioUpdateData `json:"data,omitempty"`
 }
 
 // SpeechAudioUpdateData contains audio delta
+// TODO: 这里需要实现自定义的 json unmarshal marshal
 type SpeechAudioUpdateData struct {
-	Delta string `json:"delta"` // Base64 encoded audio
+	// 音频片段。(API 返回的是base64编码的音频片段, SDK 已经自动解码为 bytes)
+	Delta []byte `json:"delta"`
 }
 
-// SpeechAudioCompletedEvent represents speech audio completed event
+// SpeechAudioCompletedEvent 合成完成
+//
+// 语音合成完成后，返回此事件。
+// docs: https://www.coze.cn/open/docs/developer_guides/tts_event#f42e9cb7
+// seq:v1/audio/speech:resp:5
 type SpeechAudioCompletedEvent struct {
-	EventType WebSocketEventType        `json:"event_type"`
-	ID        string                    `json:"id,omitempty"`
-	Detail    *EventDetail              `json:"detail,omitempty"`
-	Data      *SpeechAudioCompletedData `json:"data,omitempty"`
+	baseWebSocketEvent
 }
 
-// SpeechAudioCompletedData contains completion information
-type SpeechAudioCompletedData struct {
-	SessionID string `json:"session_id"`
-}
+// v1/audio/transcriptions
 
-// Audio Transcription Events
+// req
 
-// TranscriptionsUpdateEvent represents transcriptions update event
+// TranscriptionsUpdateEvent 更新语音识别配置
+//
+// 更新语音识别配置。若更新成功，会收到 transcriptions.updated 的下行事件，否则，会收到 error 下行事件。
+// docs: https://www.coze.cn/open/docs/developer_guides/asr_event#a7ca67ab
+// seq:v1/audio/transcriptions:req:1
 type TranscriptionsUpdateEvent struct {
-	EventType WebSocketEventType        `json:"event_type"`
-	ID        string                    `json:"id,omitempty"`
-	Detail    *EventDetail              `json:"detail,omitempty"`
-	Data      *TranscriptionsUpdateData `json:"data,omitempty"`
+	baseWebSocketEvent
+	Data *TranscriptionsUpdateData `json:"data,omitempty"`
 }
 
 // TranscriptionsUpdateData contains transcription configuration
 type TranscriptionsUpdateData struct {
+	// 输入音频格式。
 	InputAudio *InputAudio `json:"input_audio,omitempty"`
 }
 
-// InputAudioBufferAppendEvent represents audio buffer append event
+// InputAudioBufferAppendEvent 流式上传音频片段
+//
+// 流式向服务端提交音频的片段。
+// docs: https://www.coze.cn/open/docs/developer_guides/asr_event#9ef6e6ca
+// seq:v1/audio/transcriptions:req:2
 type InputAudioBufferAppendEvent struct {
-	EventType WebSocketEventType          `json:"event_type"`
-	ID        string                      `json:"id,omitempty"`
-	Detail    *EventDetail                `json:"detail,omitempty"`
-	Data      *InputAudioBufferAppendData `json:"data,omitempty"`
+	baseWebSocketEvent
+	Data *InputAudioBufferAppendData `json:"data,omitempty"`
 }
 
 // InputAudioBufferAppendData contains audio delta
 type InputAudioBufferAppendData struct {
-	Delta string `json:"delta"` // Base64 encoded audio
+	// todo: 这里需要实现自定义的 json unmarshal marshal
+	// 音频片段。(API 返回的是base64编码的音频片段, SDK 已经自动解码为 bytes)
+	Delta []byte `json:"delta"`
 }
 
-// InputAudioBufferCompleteEvent represents audio buffer complete event
+// InputAudioBufferCompleteEvent 提交音频
+//
+// 客户端发送 input_audio_buffer.complete 事件来告诉服务端提交音频缓冲区的数据。服务端提交成功后会返回 input_audio_buffer.completed 事件。
+// docs: https://www.coze.cn/open/docs/developer_guides/asr_event#f5d76c87
+// seq:v1/audio/transcriptions:req:3
 type InputAudioBufferCompleteEvent struct {
-	EventType WebSocketEventType `json:"event_type"`
-	ID        string             `json:"id,omitempty"`
-	Detail    *EventDetail       `json:"detail,omitempty"`
+	baseWebSocketEvent
 }
 
-// InputAudioBufferClearEvent represents audio buffer clear event
+// InputAudioBufferClearEvent 清除缓冲区音频
+//
+// 客户端发送 input_audio_buffer.clear 事件来告诉服务端清除缓冲区的音频数据。服务端清除完后将返回 input_audio_buffer.cleared 事件。
+// docs: https://www.coze.cn/open/docs/developer_guides/asr_event#e98db543
+// seq:v1/audio/transcriptions:req:4
 type InputAudioBufferClearEvent struct {
-	EventType WebSocketEventType `json:"event_type"`
-	ID        string             `json:"id,omitempty"`
-	Detail    *EventDetail       `json:"detail,omitempty"`
+	baseWebSocketEvent
 }
 
-// TranscriptionsMessageUpdateEvent represents transcription message update event
+// TranscriptionsCreatedEvent 语音识别连接成功
+//
+// 语音识别连接成功后，返回此事件。
+// docs: https://www.coze.cn/open/docs/developer_guides/asr_event#06d772a3
+// seq:v1/audio/transcriptions:resp:1
+type TranscriptionsCreatedEvent struct {
+	baseWebSocketEvent
+}
+
+// TranscriptionsUpdatedEvent 配置更新成功
+//
+// 配置更新成功后，会返回最新的配置。
+// docs: https://www.coze.cn/open/docs/developer_guides/asr_event#3f842df1
+// seq:v1/audio/transcriptions:resp:2
+type TranscriptionsUpdatedEvent struct {
+	baseWebSocketEvent
+	Data *TranscriptionsUpdatedData `json:"data,omitempty"`
+}
+
+type TranscriptionsUpdatedData struct {
+	// 输入音频格式。
+	InputAudio *InputAudio `json:"input_audio,omitempty"`
+}
+
+// InputAudioBufferCompletedEvent 音频提交完成
+//
+// 客户端发送 input_audio_buffer.complete 事件来告诉服务端提交音频缓冲区的数据。服务端提交成功后会返回 input_audio_buffer.completed 事件。
+// docs: https://www.coze.cn/open/docs/developer_guides/asr_event#8d747148
+// seq:v1/audio/transcriptions:resp:3
+type InputAudioBufferCompletedEvent struct {
+	baseWebSocketEvent
+}
+
+// InputAudioBufferCompletedEvent 音频清除成功
+//
+// 客户端发送 input_audio_buffer.clear 事件来告诉服务端清除音频缓冲区的数据。服务端清除完后将返回 input_audio_buffer.cleared 事件。
+// docs: https://www.coze.cn/open/docs/developer_guides/asr_event#8211875b
+// seq:v1/audio/transcriptions:resp:4
+type InputAudioBufferClearedEvent struct {
+	baseWebSocketEvent
+}
+
+// TranscriptionsMessageUpdateEvent 识别出文字
+//
+// 语音识别出文字后，返回此事件，每次都返回全量的识别出来的文字。
+// docs: https://www.coze.cn/open/docs/developer_guides/asr_event#772e6d2d
+// seq:v1/audio/transcriptions:resp:5
 type TranscriptionsMessageUpdateEvent struct {
-	EventType WebSocketEventType               `json:"event_type"`
-	ID        string                           `json:"id,omitempty"`
-	Detail    *EventDetail                     `json:"detail,omitempty"`
-	Data      *TranscriptionsMessageUpdateData `json:"data,omitempty"`
+	baseWebSocketEvent
 }
 
-// TranscriptionsMessageUpdateData contains transcription content
 type TranscriptionsMessageUpdateData struct {
+	// 识别出的文字。
 	Content string `json:"content"`
 }
 
-// Chat Events
+// TranscriptionsMessageCompletedEvent 识别完成
+//
+// 语音识别完成后，返回此事件。
+// docs: https://www.coze.cn/open/docs/developer_guides/asr_event#0c36158c
+type TranscriptionsMessageCompletedEvent struct {
+	baseWebSocketEvent
+}
 
-// ChatUpdateEvent represents chat update event
+// v1/chat
+
+// ChatUpdateEvent 更新对话配置
+//
+// 此事件可以更新当前对话连接的配置项，若更新成功，会收到 chat.updated 的下行事件，否则，会收到 error 下行事件。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#91642fa8
+// seq:v1/chat:req:1
 type ChatUpdateEvent struct {
-	EventType WebSocketEventType `json:"event_type"`
-	ID        string             `json:"id,omitempty"`
-	Detail    *EventDetail       `json:"detail,omitempty"`
-	Data      *ChatUpdateData    `json:"data,omitempty"`
+	baseWebSocketEvent
+	Data *ChatUpdateData `json:"data,omitempty"`
 }
 
 // ChatUpdateData contains chat configuration
 type ChatUpdateData struct {
-	BotID       string       `json:"bot_id,omitempty"`
-	InputAudio  *InputAudio  `json:"input_audio,omitempty"`
+	// 输出音频格式。
 	OutputAudio *OutputAudio `json:"output_audio,omitempty"`
+	// 输入音频格式。
+	InputAudio *InputAudio `json:"input_audio,omitempty"`
+	// 对话配置。
+	ChatConfig *ChatConfig `json:"chat_config,omitempty"`
+	// 需要订阅下行事件的事件类型列表。不设置或者设置为空为订阅所有下行事件。
+	EventSubscriptions []string `json:"event_subscriptions,omitempty"`
+	// 是否需要播放开场白，默认为 false。
+	NeedPlayPrologue *bool `json:"need_play_prologue,omitempty"`
+	// 自定义开场白，need_play_prologue 设置为 true 时生效。如果不设定自定义开场白则使用智能体上设置的开场白。
+	PrologueContent string `json:"prologue_content,omitempty"`
+	// 转检测配置。
+	TurnDetection *TurnDetection `json:"turn_detection,omitempty"`
+	// 语音识别配置，包括热词和上下文信息，以便优化语音识别的准确性和相关性。
+	AsrConfig *ASRConfig `json:"asr_config,omitempty"`
 }
 
-// ConversationMessageCreateEvent represents conversation message create event
+type ChatConfig struct {
+	// 标识对话发生在哪一次会话中。会话是智能体和用户之间的一段问答交互。一个会话包含一条或多条消息。对话是会话中对智能体的一次调用，智能体会将对话中产生的消息添加到会话中。可以使用已创建的会话，会话中已存在的消息将作为上下文传递给模型。创建会话的方式可参考创建会话。对于一问一答等不需要区分 conversation 的场合可不传该参数，系统会自动生成一个会话。不传的话会默认创建一个新的 conversation。
+	ConversationID *string `json:"conversation_id,omitempty"`
+	// 标识当前与智能体的用户，由使用方自行定义、生成与维护。user_id 用于标识对话中的不同用户，不同的 user_id，其对话的上下文消息、数据库等对话记忆数据互相隔离。如果不需要用户数据隔离，可将此参数固定为一个任意字符串，例如 123，abc 等。
+	UserID *string `json:"user_id,omitempty"`
+	// 附加信息，通常用于封装一些业务相关的字段。查看对话消息详情时，系统会透传此附加信息。自定义键值对，应指定为 Map 对象格式。长度为 16 对键值对，其中键（key）的长度范围为 1～64 个字符，值（value）的长度范围为 1～512 个字符。
+	MetaData map[string]string `json:"meta_data,omitempty"`
+	// 智能体中定义的变量。在智能体 prompt 中设置变量 {{key}} 后，可以通过该参数传入变量值，同时支持 Jinja2 语法。详细说明可参考变量示例。变量名只支持英文字母和下划线。
+	CustomVariables map[string]string `json:"custom_variables,omitempty"`
+	// 附加参数，通常用于特殊场景下指定一些必要参数供模型判断，例如指定经纬度，并询问智能体此位置的天气。自定义键值对格式，其中键（key）仅支持设置为：latitude（纬度，此时值（Value）为纬度值，例如 39.9800718）。longitude（经度，此时值（Value）为经度值，例如 116.309314）。
+	ExtraParams map[string]string `json:"extra_params,omitempty"`
+	// 是否保存本次对话记录。true：（默认）会话中保存本次对话记录，包括本次对话的模型回复结果、模型执行中间结果。false：会话中不保存本次对话记录，后续也无法通过任何方式查看本次对话信息、消息详情。在同一个会话中再次发起对话时，本次会话也不会作为上下文传递给模型。
+	AutoSaveHistory *bool `json:"auto_save_history,omitempty"`
+	// 设置对话流的自定义输入参数的值，具体用法和示例代码可参考[为自定义参数赋值](https://www.coze.cn/open/docs/tutorial/variable)。 对话流的输入参数 USER_INPUT 应在 additional_messages 中传入，在 parameters 中的 USER_INPUT 不生效。 如果 parameters 中未指定 CONVERSATION_NAME 或其他输入参数，则使用参数默认值运行对话流；如果指定了这些参数，则使用指定值。
+	Parameters map[string]any `json:"parameters,omitempty"`
+}
+
+type TurnDetection struct {
+	// 用户演讲检测模式
+	Type *TurnDetectionType `json:"type,omitempty"`
+	// server_vad 模式下，VAD 检测到语音之前要包含的音频量，单位为 ms。默认为 600ms。
+	PrefixPaddingMS *int64 `json:"prefix_padding_ms,omitempty"`
+	// server_vad 模式下，检测语音停止的静音持续时间，单位为 ms。默认为 500ms。
+	SilenceDurationMS *int64 `json:"silence_duration_ms,omitempty"`
+	// server_vad 模式下打断策略配置
+	InterruptConfig *InterruptConfig `json:"interrupt_config,omitempty"`
+}
+
+type TurnDetectionType string
+
+const (
+	// TurnDetectionTypeServerVAD 自由对话模式，语音数据会传输到服务器端进行实时分析，服务器端的语音活动检测算法会判断用户是否在说话。
+	TurnDetectionTypeServerVAD TurnDetectionType = "server_vad"
+	// TurnDetectionTypeClientInterrupt 按键说话模式，客户端实时分析语音数据，并检测用户是否已停止说话。
+	TurnDetectionTypeClientInterrupt TurnDetectionType = "client_interrupt"
+)
+
+type InterruptConfig struct {
+	// 打断模式
+	Mode *InterruptConfigMode `json:"mode,omitempty"`
+	// 打断的关键词配置，最多同时限制 5 个关键词，每个关键词限定长度在6-24个字节以内(2-8个汉字以内), 不能有标点符号。
+	Keywords []string `json:"keywords,omitempty"`
+}
+
+type InterruptConfigMode string
+
+const (
+	// InterruptConfigModeKeywordContains keyword_contains模式下，说话内容包含关键词才会打断模型回复。例如关键词"扣子"，用户正在说“你好呀扣子......” / “扣子你好呀”，模型回复都会被打断。
+	InterruptConfigModeKeywordContains InterruptConfigMode = "keyword_contains"
+	// InterruptConfigModeKeywordPrefix keyword_prefix模式下，说话内容前缀匹配关键词才会打断模型回复。例如关键词"扣子"，用户正在说“扣子你好呀......”，模型回复就会被打断，而用户说“你好呀扣子......”，模型回复不会被打断。
+	InterruptConfigModeKeywordPrefix InterruptConfigMode = "keyword_prefix"
+)
+
+type ASRConfig struct {
+	// 请输入热词列表，以便提升这些词汇的识别准确率。所有热词加起来最多100个 Tokens，超出部分将自动截断。
+	HotWords []string `json:"hot_words,omitempty"`
+	// 请输入上下文信息。最多输入 800 个 Tokens，超出部分将自动截断。
+	Context *string `json:"context,omitempty"`
+	// 用户说话的语种，默认为 common。选项包括：
+	UserLanguage *ASRConfigUserLanguage `json:"user_language,omitempty"`
+	// 将语音转为文本时，是否启用语义顺滑。默认为 true。true：系统在进行语音处理时，会去掉识别结果中诸如 “啊”“嗯” 等语气词，使得输出的文本语义更加流畅自然，符合正常的语言表达习惯，尤其适用于对文本质量要求较高的场景，如正式的会议记录、新闻稿件生成等。false：系统不会对识别结果中的语气词进行处理，识别结果会保留原始的语气词。
+	EnableDDC *bool `json:"enable_ddc,omitempty"`
+	// 将语音转为文本时，是否开启文本规范化（ITN）处理，将识别结果转换为更符合书面表达习惯的格式以提升可读性。默认为 true。开启后，会将口语化数字转换为标准数字格式，示例：将两点十五分转换为 14:15。将一百美元转换为 $100。
+	EnableITN *bool `json:"enable_itn,omitempty"`
+	// 将语音转为文本时，是否给文本加上标点符号。默认为 true。
+	EnablePunc *bool `json:"enable_punc,omitempty"`
+}
+
+type ASRConfigUserLanguage string
+
+const (
+	ASRConfigUserLanguageCommon ASRConfigUserLanguage = "common" // 大模型语音识别，可自动识别中英粤。
+	ASRConfigUserLanguageZH     ASRConfigUserLanguage = "zh"     // 小模型语音识别，中文。
+	ASRConfigUserLanguageCANT   ASRConfigUserLanguage = "cant"   // 小模型语音识别，粤语。
+	ASRConfigUserLanguageSC     ASRConfigUserLanguage = "sc"     // 小模型语音识别，川渝。
+	ASRConfigUserLanguageEN     ASRConfigUserLanguage = "en"     // 小模型语音识别，英语。
+	ASRConfigUserLanguageJA     ASRConfigUserLanguage = "ja"     // 小模型语音识别，日语。
+	ASRConfigUserLanguageKO     ASRConfigUserLanguage = "ko"     // 小模型语音识别，韩语。
+	ASRConfigUserLanguageFR     ASRConfigUserLanguage = "fr"     // 小模型语音识别，法语。
+	ASRConfigUserLanguageID     ASRConfigUserLanguage = "id"     // 小模型语音识别，印尼语。
+	ASRConfigUserLanguageES     ASRConfigUserLanguage = "es"     // 小模型语音识别，西班牙语。
+	ASRConfigUserLanguagePT     ASRConfigUserLanguage = "pt"     // 小模型语音识别，葡萄牙语。
+	ASRConfigUserLanguageMS     ASRConfigUserLanguage = "ms"     // 小模型语音识别，马来语。
+	ASRConfigUserLanguageRU     ASRConfigUserLanguage = "ru"     // 小模型语音识别，俄语。
+)
+
+// ConversationMessageCreateEvent 手动提交对话内容
+//
+// 若 role=user，提交事件后就会生成语音回复，适合如下的场景，比如帮我解析 xx 链接，帮我分析这个图片的内容等。若 role=assistant，提交事件后会加入到对话的上下文。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#46f6a7d0
+// seq:v1/chat:req:2
 type ConversationMessageCreateEvent struct {
-	EventType WebSocketEventType             `json:"event_type"`
-	ID        string                         `json:"id,omitempty"`
-	Detail    *EventDetail                   `json:"detail,omitempty"`
-	Data      *ConversationMessageCreateData `json:"data,omitempty"`
+	baseWebSocketEvent
+	Data *ConversationMessageCreateData `json:"data,omitempty"`
 }
 
 // ConversationMessageCreateData contains message content
 type ConversationMessageCreateData struct {
+	// 发送这条消息的实体。取值：user（代表该条消息内容是用户发送的）、assistant（代表该条消息内容是智能体发送的）。
+	Role string `json:"role"`
+	// 消息内容的类型，支持设置为：text：文本。object_string：多模态内容，即文本和文件的组合、文本和图片的组合。
+	ContentType string `json:"content_type"`
+	// 消息的内容，支持纯文本、多模态（文本、图片、文件混合输入）、卡片等多种类型的内容。当 content_type 为 object_string时，content 的结构和详细参数说明请参见object_string object。
 	Content string `json:"content"`
 }
 
-// ConversationMessageDeltaEvent represents conversation message delta event
-type ConversationMessageDeltaEvent struct {
-	EventType WebSocketEventType            `json:"event_type"`
-	ID        string                        `json:"id,omitempty"`
-	Detail    *EventDetail                  `json:"detail,omitempty"`
-	Data      *ConversationMessageDeltaData `json:"data,omitempty"`
+// ConversationClear 清除上下文
+//
+// 清除上下文，会在当前 conversation 下新增一个 section，服务端处理完后会返回 conversation.cleared 事件。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#aa86f213
+type ConversationClear struct {
+	baseWebSocketEvent
 }
 
-// ConversationMessageDeltaData contains message delta
-type ConversationMessageDeltaData struct {
-	Content string `json:"content"`
-}
-
-// ConversationAudioDeltaEvent represents conversation audio delta event
-type ConversationAudioDeltaEvent struct {
-	EventType WebSocketEventType          `json:"event_type"`
-	ID        string                      `json:"id,omitempty"`
-	Detail    *EventDetail                `json:"detail,omitempty"`
-	Data      *ConversationAudioDeltaData `json:"data,omitempty"`
-}
-
-// ConversationAudioDeltaData contains audio delta
-type ConversationAudioDeltaData struct {
-	Content string `json:"content"` // Base64 encoded audio
-}
-
-// GetAudio returns the decoded audio bytes
-func (c *ConversationAudioDeltaData) GetAudio() []byte {
-	// In a real implementation, this would decode the base64 content
-	// For now, we'll return the raw bytes
-	return []byte(c.Content)
-}
-
-// ConversationChatCreatedEvent represents conversation chat created event
-type ConversationChatCreatedEvent struct {
-	EventType WebSocketEventType           `json:"event_type"`
-	ID        string                       `json:"id,omitempty"`
-	Detail    *EventDetail                 `json:"detail,omitempty"`
-	Data      *ConversationChatCreatedData `json:"data,omitempty"`
-}
-
-// ConversationChatCreatedData contains chat information
-type ConversationChatCreatedData struct {
-	ChatID string `json:"chat_id"`
-}
-
-// ConversationChatCompletedEvent represents conversation chat completed event
-type ConversationChatCompletedEvent struct {
-	EventType WebSocketEventType             `json:"event_type"`
-	ID        string                         `json:"id,omitempty"`
-	Detail    *EventDetail                   `json:"detail,omitempty"`
-	Data      *ConversationChatCompletedData `json:"data,omitempty"`
-}
-
-// ConversationChatCompletedData contains completion information
-type ConversationChatCompletedData struct {
-	ChatID string `json:"chat_id"`
-}
-
-// ConversationChatRequiresActionEvent represents conversation chat requires action event
-type ConversationChatRequiresActionEvent struct {
-	EventType WebSocketEventType                  `json:"event_type"`
-	ID        string                              `json:"id,omitempty"`
-	Detail    *EventDetail                        `json:"detail,omitempty"`
-	Data      *ConversationChatRequiresActionData `json:"data,omitempty"`
-}
-
-// ConversationChatRequiresActionData contains tool call requirements
-type ConversationChatRequiresActionData struct {
-	ChatID         string          `json:"chat_id"`
-	RequiredAction *RequiredAction `json:"required_action,omitempty"`
-}
-
-// RequiredAction represents a required action
-type RequiredAction struct {
-	Type              string                   `json:"type"`
-	SubmitToolOutputs *SubmitToolOutputsAction `json:"submit_tool_outputs,omitempty"`
-}
-
-// SubmitToolOutputsAction represents tool outputs action
-type SubmitToolOutputsAction struct {
-	ToolCalls []ToolCall `json:"tool_calls"`
-}
-
-// ToolCall represents a tool call
-type ToolCall struct {
-	ID       string    `json:"id"`
-	Type     string    `json:"type"`
-	Function *Function `json:"function,omitempty"`
-}
-
-// Function represents a function call
-type Function struct {
-	Name      string `json:"name"`
-	Arguments string `json:"arguments"`
-}
-
-// ConversationChatSubmitToolOutputsEvent represents tool outputs submission event
+// ConversationChatSubmitToolOutputsEvent 提交端插件执行结果
+//
+// 你可以将需要客户端执行的操作定义为插件，对话中如果触发这个插件，会收到一个 event_type = "conversation.chat.requires_action" 的下行事件，此时需要执行客户端的操作后，通过此上行事件来提交插件执行后的结果。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#aacdcb41
+// seq:v1/chat:req:3
 type ConversationChatSubmitToolOutputsEvent struct {
-	EventType WebSocketEventType                     `json:"event_type"`
-	ID        string                                 `json:"id,omitempty"`
-	Detail    *EventDetail                           `json:"detail,omitempty"`
-	Data      *ConversationChatSubmitToolOutputsData `json:"data,omitempty"`
+	baseWebSocketEvent
+	Data *ConversationChatSubmitToolOutputsData `json:"data,omitempty"`
 }
 
 // ConversationChatSubmitToolOutputsData contains tool outputs
 type ConversationChatSubmitToolOutputsData struct {
-	ChatID      string       `json:"chat_id"`
-	ToolOutputs []ToolOutput `json:"tool_outputs"`
-}
-
-// ToolOutput represents a tool output
-type ToolOutput struct {
-	ToolCallID string `json:"tool_call_id"`
-	Output     string `json:"output"`
-}
-
-// ConversationChatCancelEvent represents conversation chat cancel event
-type ConversationChatCancelEvent struct {
-	EventType WebSocketEventType          `json:"event_type"`
-	ID        string                      `json:"id,omitempty"`
-	Detail    *EventDetail                `json:"detail,omitempty"`
-	Data      *ConversationChatCancelData `json:"data,omitempty"`
-}
-
-// ConversationChatCancelData contains cancel information
-type ConversationChatCancelData struct {
+	// 对话的唯一标识。
 	ChatID string `json:"chat_id"`
+	// 工具执行结果。
+	ToolOutputs []*ToolOutput `json:"tool_outputs"`
 }
 
-// ConversationChatCanceledEvent represents conversation chat canceled event
+// ConversationChatCancelEvent 打断智能体输出
+//
+// 发送此事件可取消正在进行的对话，中断后，服务端将会返回 conversation.chat.canceled 事件。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#0554db7d
+// seq:v1/chat:req:4
+type ConversationChatCancelEvent struct {
+	baseWebSocketEvent
+}
+
+// ChatCreatedEvent 对话连接成功
+//
+// 流式对话接口成功建立连接后服务端会发送此事件。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#a061f115
+// seq:v1/chat:resp:1
+type ChatCreatedEvent struct {
+	baseWebSocketEvent
+}
+
+// ChatUpdatedEvent 对话配置成功
+//
+// 对话配置更新成功后，会返回最新的配置。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#39879618
+// seq:v1/chat:resp:2
+type ChatUpdatedEvent struct {
+	baseWebSocketEvent
+	Data *ChatUpdateData `json:"data,omitempty"`
+}
+
+// ConversationChatCreatedEvent 对话开始
+//
+// 创建对话的事件，表示对话开始。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#a2b10fd2
+// seq:v1/chat:resp:3
+type ConversationChatCreatedEvent struct {
+	baseWebSocketEvent
+	Data *Chat `json:"data,omitempty"`
+}
+
+// 对话正在处理
+//
+// 服务端正在处理对话。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#36a38a6b
+// seq:v1/chat:resp:4
+type ConversationChatInProgressEvent struct {
+	baseWebSocketEvent
+	Data *Chat `json:"data,omitempty"`
+}
+
+// ConversationMessageDeltaEvent 增量消息
+//
+// 增量消息，通常是 type=answer 时的增量消息。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#2dfe8dba
+// seq:v1/chat:resp:5
+type ConversationMessageDeltaEvent struct {
+	baseWebSocketEvent
+	Data *Message `json:"data,omitempty"`
+}
+
+// ConversationAudioSentenceStartEvent 增量语音字幕
+//
+// 一条新的字幕句子，后续的 conversation.audio.delta 增量语音均属于当前字幕句子，可能有多个增量语音共同对应此句字幕的文字内容。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#2e67bf44
+// seq:v1/chat:resp:6
+type ConversationAudioSentenceStartEvent struct {
+	baseWebSocketEvent
+	Data *ConversationAudioSentenceStartData `json:"data,omitempty"`
+}
+
+type ConversationAudioSentenceStartData struct {
+	// 新字幕句子的文本内容，后续相关 conversation.audio.delta 增量语音均对应此文本。
+	Text string `json:"text"`
+}
+
+// ConversationAudioDeltaEvent 增量语音
+//
+// 增量消息，通常是 type=answer 时的增量消息。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#36a38a6b
+// seq:v1/chat:resp:7
+type ConversationAudioDeltaEvent struct {
+	baseWebSocketEvent
+	Data *Message `json:"data,omitempty"`
+}
+
+// ConversationMessageCompletedEvent 消息完成
+//
+// 消息已回复完成。此时事件中带有所有 message.delta 的拼接结果，且每个消息均为 completed 状态。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#4361e8d1
+// seq:v1/chat:resp:8
+type ConversationMessageCompletedEvent struct {
+	baseWebSocketEvent
+	Data *Message `json:"data,omitempty"`
+}
+
+// ConversationAudioCompletedEvent 语音回复完成
+//
+// 语音回复完成，表示对话结束。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#b00d6a73
+// seq:v1/chat:resp:9
+type ConversationAudioCompletedEvent struct {
+	baseWebSocketEvent
+	Data *Message `json:"data,omitempty"`
+}
+
+// ConversationChatCompletedEvent 对话完成
+//
+// 对话完成，表示对话结束。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#02fac327
+// seq:v1/chat:resp:10
+type ConversationChatCompletedEvent struct {
+	baseWebSocketEvent
+	Data *Chat `json:"data,omitempty"`
+}
+
+// ConversationChatFailedEvent 对话失败
+//
+// 此事件用于标识对话失败。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#765bb7e5
+// seq:v1/chat:resp:11
+type ConversationChatFailedEvent struct {
+	baseWebSocketEvent
+	Data *Chat `json:"data,omitempty"`
+}
+
+// ConversationClearedEvent 上下文清除完成
+//
+// 上下文清除完成，表示上下文已清除。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#6a941b8a
+// seq:v1/chat:resp:12
+type ConversationClearedEvent struct {
+	baseWebSocketEvent
+}
+
+// ConversationChatCanceledEvent 智能体输出中断
+//
+// 客户端提交 conversation.chat.cancel 事件，服务端完成中断后，将返回此事件。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#089ed144
+// seq:v1/chat:resp:13
 type ConversationChatCanceledEvent struct {
-	EventType WebSocketEventType            `json:"event_type"`
-	ID        string                        `json:"id,omitempty"`
-	Detail    *EventDetail                  `json:"detail,omitempty"`
-	Data      *ConversationChatCanceledData `json:"data,omitempty"`
+	baseWebSocketEvent
+	Data *ConversationChatCanceledData `json:"data,omitempty"`
 }
 
 // ConversationChatCanceledData contains cancellation information
 type ConversationChatCanceledData struct {
-	ChatID string `json:"chat_id"`
+	// 输出中断类型枚举值，包括 1: 被用户语音说话打断  2: 用户主动 cancel  3: 手动提交对话内容
+	Code int `json:"code"`
+	// 智能体输出中断的详细说明
+	Msg string `json:"msg"`
+}
+
+// ConversationAudioTranscriptUpdateEvent 用户语音识别字幕
+//
+// 用户语音识别的中间值，每次返回都是全量文本。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#1b59cbf9
+// seq:v1/chat:resp:14
+type ConversationAudioTranscriptUpdateEvent struct {
+	baseWebSocketEvent
+	Data *ConversationAudioTranscriptUpdateData `json:"data,omitempty"`
+}
+
+type ConversationAudioTranscriptUpdateData struct {
+	// 语音识别的中间值。
+	Content string `json:"content"`
+}
+
+// ConversationAudioTranscriptCompletedEvent 用户语音识别完成
+//
+// 用户语音识别完成，表示用户语音识别完成。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#9d1e6930
+// seq:v1/chat:resp:15
+type ConversationAudioTranscriptCompletedEvent struct {
+	baseWebSocketEvent
+	Data *ConversationAudioTranscriptCompletedData `json:"data,omitempty"`
+}
+
+type ConversationAudioTranscriptCompletedData struct {
+	// 语音识别的最终结果。
+	Content string `json:"content"`
+}
+
+// ConversationChatRequiresActionEvent 端插件请求
+//
+// 对话中断，需要使用方上报工具的执行结果。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#2ef697d8
+// seq:v1/chat:resp:16
+type ConversationChatRequiresActionEvent struct {
+	baseWebSocketEvent
+	Data *Chat `json:"data,omitempty"`
+}
+
+// InputAudioBufferSpeechStartedEvent 用户开始说话
+//
+// 此事件表示服务端识别到用户正在说话。只有在 server_vad 模式下，才会返回此事件。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#95553c68
+// seq:v1/chat:resp:17
+type InputAudioBufferSpeechStartedEvent struct {
+	baseWebSocketEvent
+}
+
+// InputAudioBufferSpeechStoppedEvent 用户结束说话
+//
+// 此事件表示服务端识别到用户已停止说话。只有在 server_vad 模式下，才会返回此事件。
+// docs: https://www.coze.cn/open/docs/developer_guides/streaming_chat_event#5084c0aa
+// seq:v1/chat:resp:18
+type InputAudioBufferSpeechStoppedEvent struct {
+	baseWebSocketEvent
 }

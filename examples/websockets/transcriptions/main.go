@@ -31,7 +31,7 @@ func main() {
 
 	// Set up event handlers
 	handler := &coze.TranscriptionsEventHandler{
-		OnTranscriptionsCreated: func(event *coze.WebSocketEvent) error {
+		OnTranscriptionsCreated: func(event coze.IWebSocketEvent) error {
 			fmt.Println("Transcriptions session created")
 			return nil
 		},
@@ -39,7 +39,7 @@ func main() {
 			fmt.Printf("Transcription result: %s\n", event.Data.Content)
 			return nil
 		},
-		OnTranscriptionsMessageCompleted: func(event *coze.WebSocketEvent) error {
+		OnTranscriptionsMessageCompleted: func(event coze.IWebSocketEvent) error {
 			fmt.Println("Transcription completed")
 			return nil
 		},
