@@ -92,9 +92,9 @@ var websocketEvents = map[string]reflect.Type{}
 func registerWebSocketEvent() {
 	websocketEvents = map[string]reflect.Type{
 		// common
-		// string(WebSocketEventTypeClientError): reflect.TypeOf(webclient{}),
-		// string(WebSocketEventTypeClosed): reflect.TypeOf(webclo{}),
-		string(WebSocketEventTypeError): reflect.TypeOf(WebSocketErrorEvent{}),
+		string(WebSocketEventTypeClientError): reflect.TypeOf(WebSocketClientErrorEvent{}),
+		string(WebSocketEventTypeClosed):      reflect.TypeOf(WebSocketClosedEvent{}),
+		string(WebSocketEventTypeError):       reflect.TypeOf(WebSocketErrorEvent{}),
 
 		// v1/audio/speech req
 		string(WebSocketEventTypeSpeechUpdate):            reflect.TypeOf(WebSocketSpeechUpdateEvent{}),

@@ -1,16 +1,23 @@
 package coze
 
+// WebSocketClientErrorEvent represents an client error event
+// seq:common:1
+type WebSocketClientErrorEvent struct {
+	baseWebSocketEvent
+	Data error `json:"data,omitempty"`
+}
+
+// WebSocketClosedEvent represents an closed event
+// seq:common:2
+type WebSocketClosedEvent struct {
+	baseWebSocketEvent
+}
+
 // WebSocketErrorEvent represents an error event
 // seq:common:3
 type WebSocketErrorEvent struct {
 	baseWebSocketEvent
-	Data *WebSocketErrorEventData `json:"data,omitempty"`
-}
-
-// WebSocketErrorEventData contains error information
-type WebSocketErrorEventData struct {
-	Code int    `json:"code"`
-	Msg  string `json:"msg"`
+	Data error `json:"data,omitempty"`
 }
 
 // v1/audio/speech req
