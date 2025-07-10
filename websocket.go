@@ -1,5 +1,13 @@
 package coze
 
+type WebsocketXXX interface {
+	Connect() error
+	Close() error
+	IsConnected() bool
+	OnEvents(handlers map[WebSocketEventType]EventHandler)
+	OnEvent(eventType WebSocketEventType, handler EventHandler)
+}
+
 // websockets is the main WebSocket client that provides access to all WebSocket services
 type websockets struct {
 	core  *core

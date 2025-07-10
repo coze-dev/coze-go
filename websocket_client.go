@@ -37,7 +37,7 @@ type WebSocketClientOption struct {
 }
 
 // EventHandler represents a WebSocket event handler
-type EventHandler func(event IWebSocketEvent) error
+type EventHandler func(ctx context.Context, event IWebSocketEvent) error
 
 // newWebSocketClient creates a new WebSocket client
 func newWebSocketClient(opt *WebSocketClientOption) *websocketClient {

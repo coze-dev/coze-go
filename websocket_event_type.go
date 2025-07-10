@@ -124,7 +124,7 @@ func registerWebSocketEvent() {
 		// string(WebSocketEventTypeInputAudioBufferComplete): reflect.TypeOf(WebSocketInputAudioBufferCompleteEvent{}),
 		// string(WebSocketEventTypeInputAudioBufferClear):    reflect.TypeOf(WebSocketInputAudioBufferClearEvent{}),
 		string(WebSocketEventTypeConversationMessageCreate):         reflect.TypeOf(WebSocketConversationMessageCreateEvent{}),
-		string(WebSocketEventTypeConversationClear):                 reflect.TypeOf(WebSocketConversationClear{}),
+		string(WebSocketEventTypeConversationClear):                 reflect.TypeOf(WebSocketConversationClearEvent{}),
 		string(WebSocketEventTypeConversationChatSubmitToolOutputs): reflect.TypeOf(WebSocketConversationChatSubmitToolOutputsEvent{}),
 		string(WebSocketEventTypeConversationChatCancel):            reflect.TypeOf(WebSocketConversationChatCancelEvent{}),
 		// v1/chat resp
@@ -149,13 +149,6 @@ func registerWebSocketEvent() {
 		string(WebSocketEventTypeInputAudioBufferSpeechStarted):        reflect.TypeOf(WebSocketInputAudioBufferSpeechStartedEvent{}),
 		string(WebSocketEventTypeInputAudioBufferSpeechStopped):        reflect.TypeOf(WebSocketInputAudioBufferSpeechStoppedEvent{}),
 	}
-}
-
-// IWebSocketEvent websocket 事件接口
-type IWebSocketEvent interface {
-	GetEventType() WebSocketEventType
-	GetID() string
-	GetDetail() *EventDetail
 }
 
 type commonWebSocketEvent struct {

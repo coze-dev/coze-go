@@ -38,9 +38,11 @@ func main() {
 		BotID: botID,
 	})
 
-	// Set up event handlers
-	handler := &coze.ChatEventHandler{
-		OnChatCreated: func(event coze.IWebSocketEvent) error {
+	chatClient.On(IWebSocketChatHandler)
+
+	// Register event handlers
+	chatClient.RegisterHandlers(&coze.WebSocketChatEventHandler{
+		OnChatCreated: func(event *coze.WebSocketChatCreatedEvent) error {
 			fmt.Println("Chat session created")
 			return nil
 		},
@@ -94,11 +96,7 @@ func main() {
 			fmt.Println("Connection closed")
 			return nil
 		},
-	}
-
-	// Register event handlers
-	chatClient.OnEvents(map[coze.WebSocketEventType]coze.EventHandler{})
-	handler.RegisterHandlers(chatClient)
+	})
 
 	// Connect to WebSocket
 	fmt.Println("Connecting to WebSocket...")
