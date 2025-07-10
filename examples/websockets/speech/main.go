@@ -31,15 +31,15 @@ func main() {
 
 	// Set up event handlers
 	handler := &coze.SpeechEventHandler{
-		OnSpeechCreated: func(event *coze.SpeechCreatedEvent) error {
+		OnSpeechCreated: func(event *coze.WebSocketSpeechCreatedEvent) error {
 			fmt.Printf("Speech session created: %s\n", event.Data.SessionID)
 			return nil
 		},
-		OnSpeechAudioUpdate: func(event *coze.SpeechAudioUpdateEvent) error {
+		OnSpeechAudioUpdate: func(event *coze.WebSocketSpeechAudioUpdateEvent) error {
 			fmt.Printf("Received audio data chunk (length: %d)\n", len(event.Data.Delta))
 			return nil
 		},
-		OnSpeechAudioCompleted: func(event *coze.SpeechAudioCompletedEvent) error {
+		OnSpeechAudioCompleted: func(event *coze.WebSocketSpeechAudioCompletedEvent) error {
 			fmt.Printf("Speech audio completed: %s\n", event.Data.SessionID)
 			return nil
 		},

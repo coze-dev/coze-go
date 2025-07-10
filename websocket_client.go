@@ -316,7 +316,7 @@ func (c *websocketClient) handleError(err error) {
 				EventType: EventTypeError,
 			},
 			// todo
-			Data: &ErrorData{
+			Data: &WebSocketErrorEventData{
 				Code: 0,
 				Msg:  "",
 			},

@@ -44,24 +44,24 @@ func main() {
 			fmt.Println("Chat session created")
 			return nil
 		},
-		OnConversationChatCreated: func(event *coze.ConversationChatCreatedEvent) error {
+		OnConversationChatCreated: func(event *coze.WebSocketConversationChatCreatedEvent) error {
 			fmt.Printf("Conversation chat created: %s\n", event.Data.ChatID)
 			return nil
 		},
-		OnConversationMessageDelta: func(event *coze.ConversationMessageDeltaEvent) error {
+		OnConversationMessageDelta: func(event *coze.WebSocketConversationMessageDeltaEvent) error {
 			fmt.Printf("Message delta: %s\n", event.Data.Content)
 			return nil
 		},
-		OnConversationAudioDelta: func(event *coze.ConversationAudioDeltaEvent) error {
+		OnConversationAudioDelta: func(event *coze.WebSocketConversationAudioDeltaEvent) error {
 			audioData := event.Data.GetAudio()
 			fmt.Printf("Audio delta received (length: %d)\n", len(audioData))
 			return nil
 		},
-		OnConversationChatCompleted: func(event *coze.ConversationChatCompletedEvent) error {
+		OnConversationChatCompleted: func(event *coze.WebSocketConversationChatCompletedEvent) error {
 			fmt.Printf("Chat completed: %s\n", event.Data.ChatID)
 			return nil
 		},
-		OnConversationChatRequiresAction: func(event *coze.ConversationChatRequiresActionEvent) error {
+		OnConversationChatRequiresAction: func(event *coze.WebSocketConversationChatRequiresActionEvent) error {
 			fmt.Printf("Chat requires action: %s\n", event.Data.ChatID)
 
 			// Example: Handle tool call requirements

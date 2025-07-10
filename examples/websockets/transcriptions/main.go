@@ -35,7 +35,7 @@ func main() {
 			fmt.Println("Transcriptions session created")
 			return nil
 		},
-		OnTranscriptionsMessageUpdate: func(event *coze.TranscriptionsMessageUpdateEvent) error {
+		OnTranscriptionsMessageUpdate: func(event *coze.WebSocketTranscriptionsMessageUpdateEvent) error {
 			fmt.Printf("Transcription result: %s\n", event.Data.Content)
 			return nil
 		},

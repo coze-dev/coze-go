@@ -50,9 +50,9 @@ func (c *SpeechClient) IsConnected() bool {
 
 // UpdateSpeech updates the speech configuration
 func (c *SpeechClient) UpdateSpeech(outputAudio *OutputAudio) error {
-	event := SpeechUpdateEvent{
+	event := WebSocketSpeechUpdateEvent{
 		EventType: EventTypeSpeechUpdate,
-		Data: &SpeechUpdateData{
+		Data: &WebSocketSpeechUpdateEventData{
 			OutputAudio: outputAudio,
 		},
 	}
@@ -62,9 +62,9 @@ func (c *SpeechClient) UpdateSpeech(outputAudio *OutputAudio) error {
 
 // AppendTextBuffer appends text to the input buffer
 func (c *SpeechClient) AppendTextBuffer(text string) error {
-	event := InputTextBufferAppendEvent{
+	event := WebSocketInputTextBufferAppendEvent{
 		EventType: EventTypeInputTextBufferAppend,
-		Data: &InputTextBufferAppendData{
+		Data: &WebSocketInputTextBufferAppendEventData{
 			Delta: text,
 		},
 	}
@@ -74,7 +74,7 @@ func (c *SpeechClient) AppendTextBuffer(text string) error {
 
 // CompleteTextBuffer completes the text buffer input
 func (c *SpeechClient) CompleteTextBuffer() error {
-	event := InputTextBufferCompleteEvent{
+	event := WebSocketInputTextBufferCompleteEvent{
 		EventType: EventTypeInputTextBufferComplete,
 	}
 
@@ -102,11 +102,11 @@ func (c *SpeechClient) WaitForSpeechCreated(timeout time.Duration) (IWebSocketEv
 
 // SpeechEventHandler provides default handlers for speech events
 type SpeechEventHandler struct {
-	OnSpeechCreated            func(*SpeechCreatedEvent) error
+	OnSpeechCreated            func(*WebSocketSpeechCreatedEvent) error
 	OnSpeechUpdated            func(IWebSocketEvent) error
 	OnInputTextBufferCompleted func(IWebSocketEvent) error
-	OnSpeechAudioUpdate        func(*SpeechAudioUpdateEvent) error
-	OnSpeechAudioCompleted     func(*SpeechAudioCompletedEvent) error
+	OnSpeechAudioUpdate        func(*WebSocketSpeechAudioUpdateEvent) error
+	OnSpeechAudioCompleted     func(*WebSocketSpeechAudioCompletedEvent) error
 	OnError                    func(error) error
 	OnClosed                   func() error
 }
@@ -115,7 +115,7 @@ type SpeechEventHandler struct {
 func (h *SpeechEventHandler) RegisterHandlers(client *SpeechClient) {
 	if h.OnSpeechCreated != nil {
 		client.OnEvent(EventTypeSpeechCreated, func(event IWebSocketEvent) error {
-			var speechEvent SpeechCreatedEvent
+			var speechEvent WebSocketSpeechCreatedEvent
 			if err := json.Unmarshal(event.Data, &speechEvent.Data); err != nil {
 				return fmt.Errorf("failed to unmarshal speech created event: %w", err)
 			}
@@ -136,7 +136,7 @@ func (h *SpeechEventHandler) RegisterHandlers(client *SpeechClient) {
 
 	if h.OnSpeechAudioUpdate != nil {
 		client.OnEvent(EventTypeSpeechAudioUpdate, func(event IWebSocketEvent) error {
-			var audioEvent SpeechAudioUpdateEvent
+			var audioEvent WebSocketSpeechAudioUpdateEvent
 			if err := json.Unmarshal(event.Data, &audioEvent.Data); err != nil {
 				return fmt.Errorf("failed to unmarshal speech audio update event: %w", err)
 			}
@@ -149,7 +149,7 @@ func (h *SpeechEventHandler) RegisterHandlers(client *SpeechClient) {
 
 	if h.OnSpeechAudioCompleted != nil {
 		client.OnEvent(EventTypeSpeechAudioCompleted, func(event IWebSocketEvent) error {
-			var completedEvent SpeechAudioCompletedEvent
+			var completedEvent WebSocketSpeechAudioCompletedEvent
 			if err := json.Unmarshal(event.Data, &completedEvent.Data); err != nil {
 				return fmt.Errorf("failed to unmarshal speech audio completed event: %w", err)
 			}

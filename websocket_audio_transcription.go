@@ -60,9 +60,9 @@ func (c *TranscriptionsClient) IsConnected() bool {
 
 // UpdateTranscriptions updates the transcriptions configuration
 func (c *TranscriptionsClient) UpdateTranscriptions(inputAudio *InputAudio) error {
-	event := TranscriptionsUpdateEvent{
+	event := WebSocketTranscriptionsUpdateEvent{
 		EventType: EventTypeTranscriptionsUpdate,
-		Data: &TranscriptionsUpdateData{
+		Data: &WebSocketTranscriptionsUpdateEventData{
 			InputAudio: inputAudio,
 		},
 	}
@@ -75,9 +75,9 @@ func (c *TranscriptionsClient) AppendAudioBuffer(audioData []byte) error {
 	// Encode audio data to base64
 	encoded := base64.StdEncoding.EncodeToString(audioData)
 
-	event := InputAudioBufferAppendEvent{
+	event := WebSocketInputAudioBufferAppendEvent{
 		EventType: EventTypeInputAudioBufferAppend,
-		Data: &InputAudioBufferAppendData{
+		Data: &WebSocketInputAudioBufferAppendEventData{
 			Delta: encoded,
 		},
 	}
@@ -87,7 +87,7 @@ func (c *TranscriptionsClient) AppendAudioBuffer(audioData []byte) error {
 
 // CompleteAudioBuffer completes the audio buffer input
 func (c *TranscriptionsClient) CompleteAudioBuffer() error {
-	event := InputAudioBufferCompleteEvent{
+	event := WebSocketInputAudioBufferCompleteEvent{
 		EventType: EventTypeInputAudioBufferComplete,
 	}
 
@@ -96,7 +96,7 @@ func (c *TranscriptionsClient) CompleteAudioBuffer() error {
 
 // ClearAudioBuffer clears the audio buffer
 func (c *TranscriptionsClient) ClearAudioBuffer() error {
-	event := InputAudioBufferClearEvent{
+	event := WebSocketInputAudioBufferClearEvent{
 		EventType: EventTypeInputAudioBufferClear,
 	}
 
@@ -128,7 +128,7 @@ type TranscriptionsEventHandler struct {
 	OnTranscriptionsUpdated          func(IWebSocketEvent) error
 	OnInputAudioBufferCompleted      func(IWebSocketEvent) error
 	OnInputAudioBufferCleared        func(IWebSocketEvent) error
-	OnTranscriptionsMessageUpdate    func(*TranscriptionsMessageUpdateEvent) error
+	OnTranscriptionsMessageUpdate    func(*WebSocketTranscriptionsMessageUpdateEvent) error
 	OnTranscriptionsMessageCompleted func(IWebSocketEvent) error
 	OnError                          func(error) error
 	OnClosed                         func() error
@@ -154,7 +154,7 @@ func (h *TranscriptionsEventHandler) RegisterHandlers(client *TranscriptionsClie
 
 	if h.OnTranscriptionsMessageUpdate != nil {
 		client.OnEvent(EventTypeTranscriptionsMessageUpdate, func(event IWebSocketEvent) error {
-			var messageEvent TranscriptionsMessageUpdateEvent
+			var messageEvent WebSocketTranscriptionsMessageUpdateEvent
 			if err := json.Unmarshal(event.Data, &messageEvent.Data); err != nil {
 				return fmt.Errorf("failed to unmarshal transcriptions message update event: %w", err)
 			}

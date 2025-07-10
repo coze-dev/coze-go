@@ -108,22 +108,22 @@ package coze
 // }
 //
 // func TestEventStructures(t *testing.T) {
-// 	// Test SpeechUpdateData structure
+// 	// Test WebSocketSpeechUpdateEventData structure
 // 	outputAudio := &OutputAudio{
 // 		Codec:      "pcm",
 // 		SpeechRate: 0,
 // 		VoiceID:    "test-voice",
 // 	}
 //
-// 	speechUpdateData := &SpeechUpdateData{
+// 	speechUpdateData := &WebSocketSpeechUpdateEventData{
 // 		OutputAudio: outputAudio,
 // 	}
 //
 // 	assert.Equal(t, "pcm", speechUpdateData.OutputAudio.Codec)
 // 	assert.Equal(t, "test-voice", speechUpdateData.OutputAudio.VoiceID)
 //
-// 	// Test InputTextBufferAppendData structure
-// 	textData := &InputTextBufferAppendData{
+// 	// Test WebSocketInputTextBufferAppendEventData structure
+// 	textData := &WebSocketInputTextBufferAppendEventData{
 // 		Delta: "Hello World",
 // 	}
 //
