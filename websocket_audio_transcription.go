@@ -7,6 +7,11 @@ import (
 	"time"
 )
 
+// Transcriptions returns a new transcriptions client
+func (a *websocketAudio) Transcriptions() *TranscriptionsClient {
+	return NewTranscriptionsClient(a.baseURL, a.auth, opts...)
+}
+
 // TranscriptionsClient handles audio transcriptions WebSocket connections
 type TranscriptionsClient struct {
 	ws *websocketClient

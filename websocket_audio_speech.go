@@ -7,6 +7,11 @@ import (
 	"time"
 )
 
+// Speech returns a new speech client
+func (a *websocketAudio) Speech(opts ...SpeechClientOption) *SpeechClient {
+	return NewSpeechClient(a.baseURL, a.auth, opts...)
+}
+
 // SpeechClient handles audio speech WebSocket connections
 type SpeechClient struct {
 	ws *websocketClient
