@@ -25,48 +25,56 @@ func (h *mockWebSocketAudioTranscriptionHandler) OnClientError(ctx context.Conte
 	}
 	return nil
 }
+
 func (h *mockWebSocketAudioTranscriptionHandler) OnClosed(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketClosedEvent) error {
 	if h.OnClosedFunc != nil {
 		return h.OnClosedFunc(ctx, cli, event)
 	}
 	return nil
 }
+
 func (h *mockWebSocketAudioTranscriptionHandler) OnError(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketErrorEvent) error {
 	if h.OnErrorFunc != nil {
 		return h.OnErrorFunc(ctx, cli, event)
 	}
 	return nil
 }
+
 func (h *mockWebSocketAudioTranscriptionHandler) OnTranscriptionsCreated(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketTranscriptionsCreatedEvent) error {
 	if h.OnTranscriptionsCreatedFunc != nil {
 		return h.OnTranscriptionsCreatedFunc(ctx, cli, event)
 	}
 	return nil
 }
+
 func (h *mockWebSocketAudioTranscriptionHandler) OnTranscriptionsUpdated(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketTranscriptionsUpdatedEvent) error {
 	if h.OnTranscriptionsUpdatedFunc != nil {
 		return h.OnTranscriptionsUpdatedFunc(ctx, cli, event)
 	}
 	return nil
 }
+
 func (h *mockWebSocketAudioTranscriptionHandler) OnInputAudioBufferCompleted(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketInputAudioBufferCompletedEvent) error {
 	if h.OnInputAudioBufferCompletedFunc != nil {
 		return h.OnInputAudioBufferCompletedFunc(ctx, cli, event)
 	}
 	return nil
 }
+
 func (h *mockWebSocketAudioTranscriptionHandler) OnInputAudioBufferCleared(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketInputAudioBufferClearedEvent) error {
 	if h.OnInputAudioBufferClearedFunc != nil {
 		return h.OnInputAudioBufferClearedFunc(ctx, cli, event)
 	}
 	return nil
 }
+
 func (h *mockWebSocketAudioTranscriptionHandler) OnTranscriptionsMessageUpdate(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketTranscriptionsMessageUpdateEvent) error {
 	if h.OnTranscriptionsMessageUpdateFunc != nil {
 		return h.OnTranscriptionsMessageUpdateFunc(ctx, cli, event)
 	}
 	return nil
 }
+
 func (h *mockWebSocketAudioTranscriptionHandler) OnTranscriptionsMessageCompleted(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketTranscriptionsMessageCompletedEvent) error {
 	if h.OnTranscriptionsMessageCompletedFunc != nil {
 		return h.OnTranscriptionsMessageCompletedFunc(ctx, cli, event)
