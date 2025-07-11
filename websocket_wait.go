@@ -16,7 +16,6 @@ type eventWaiter struct {
 	eventChannels  [maxEventSize]chan struct{}
 	eventOnce      [maxEventSize]sync.Once
 	enableEvents   []WebSocketEventType
-	initOnce       sync.Once
 }
 
 func getWebSocketEventTypeIndex(WebSocketEventType WebSocketEventType) (int, bool) {

@@ -256,8 +256,7 @@ func (c *websocketClient) receiveLoop() {
 				continue
 			}
 
-			// todo error
-			c.waiter.trigger(event.GetEventType())
+			_ = c.waiter.trigger(event.GetEventType())
 
 			if event.GetEventType() == WebSocketEventTypeSpeechAudioUpdate {
 				c.core.Log(c.ctx, LogLevelDebug, "[%s] receive event, type=%s, event=%s", c.opt.path, event.GetEventType(), event.(*WebSocketSpeechAudioUpdateEvent).dumpWithoutBinary())
