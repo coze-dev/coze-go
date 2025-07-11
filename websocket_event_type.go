@@ -147,6 +147,115 @@ var websocketEvents = map[string]reflect.Type{
 	string(WebSocketEventTypeInputAudioBufferSpeechStopped):        reflect.TypeOf(WebSocketInputAudioBufferSpeechStoppedEvent{}),
 }
 
+var audioSpeechResponseEventTypes = []WebSocketEventType{
+	WebSocketEventTypeClientError,
+	WebSocketEventTypeClosed,
+	WebSocketEventTypeError,
+
+	WebSocketEventTypeSpeechCreated,
+	WebSocketEventTypeSpeechUpdated,
+	WebSocketEventTypeInputTextBufferCompleted,
+	WebSocketEventTypeSpeechAudioUpdate,
+	WebSocketEventTypeSpeechAudioCompleted,
+}
+
+var audioTranscriptionResponseEventTypes = []WebSocketEventType{
+	WebSocketEventTypeClientError,
+	WebSocketEventTypeClosed,
+	WebSocketEventTypeError,
+
+	WebSocketEventTypeTranscriptionsCreated,
+	WebSocketEventTypeTranscriptionsUpdated,
+	WebSocketEventTypeInputAudioBufferCompleted,
+	WebSocketEventTypeInputAudioBufferCleared,
+	WebSocketEventTypeTranscriptionsMessageUpdate,
+	WebSocketEventTypeTranscriptionsMessageCompleted,
+}
+
+var chatResponseEventTypes = []WebSocketEventType{
+	WebSocketEventTypeClientError,
+	WebSocketEventTypeClosed,
+	WebSocketEventTypeError,
+
+	WebSocketEventTypeChatCreated,
+	WebSocketEventTypeChatUpdated,
+	WebSocketEventTypeConversationChatCreated,
+	WebSocketEventTypeConversationChatInProgress,
+	WebSocketEventTypeConversationMessageDelta,
+	WebSocketEventTypeConversationAudioSentenceStart,
+	WebSocketEventTypeConversationAudioDelta,
+	WebSocketEventTypeConversationMessageCompleted,
+	WebSocketEventTypeConversationAudioCompleted,
+	WebSocketEventTypeConversationChatCompleted,
+	WebSocketEventTypeConversationChatFailed,
+	WebSocketEventTypeInputAudioBufferCompleted,
+	WebSocketEventTypeInputAudioBufferCleared,
+	WebSocketEventTypeConversationCleared,
+	WebSocketEventTypeConversationChatCanceled,
+	WebSocketEventTypeConversationAudioTranscriptUpdate,
+	WebSocketEventTypeConversationAudioTranscriptCompleted,
+	WebSocketEventTypeConversationChatRequiresAction,
+	WebSocketEventTypeInputAudioBufferSpeechStarted,
+	WebSocketEventTypeInputAudioBufferSpeechStopped,
+}
+
+const websocketEventTypeSize = 44
+
+var websocketEventTypes = [websocketEventTypeSize]WebSocketEventType{
+	WebSocketEventTypeClientError,
+	WebSocketEventTypeClosed,
+	WebSocketEventTypeError,
+	WebSocketEventTypeSpeechUpdate,
+	WebSocketEventTypeInputTextBufferAppend,
+	WebSocketEventTypeInputTextBufferComplete,
+	WebSocketEventTypeSpeechCreated,
+	WebSocketEventTypeSpeechUpdated,
+	WebSocketEventTypeInputTextBufferCompleted,
+	WebSocketEventTypeSpeechAudioUpdate,
+	WebSocketEventTypeSpeechAudioCompleted,
+	WebSocketEventTypeTranscriptionsUpdate,
+	WebSocketEventTypeInputAudioBufferAppend,
+	WebSocketEventTypeInputAudioBufferComplete,
+	WebSocketEventTypeInputAudioBufferClear,
+	WebSocketEventTypeTranscriptionsCreated,
+	WebSocketEventTypeTranscriptionsUpdated,
+	WebSocketEventTypeInputAudioBufferCompleted,
+	WebSocketEventTypeInputAudioBufferCleared,
+	WebSocketEventTypeTranscriptionsMessageUpdate,
+	WebSocketEventTypeTranscriptionsMessageCompleted,
+	WebSocketEventTypeChatUpdate,
+	WebSocketEventTypeConversationMessageCreate,
+	WebSocketEventTypeConversationClear,
+	WebSocketEventTypeConversationChatSubmitToolOutputs,
+	WebSocketEventTypeConversationChatCancel,
+	WebSocketEventTypeChatCreated,
+	WebSocketEventTypeChatUpdated,
+	WebSocketEventTypeConversationChatCreated,
+	WebSocketEventTypeConversationChatInProgress,
+	WebSocketEventTypeConversationMessageDelta,
+	WebSocketEventTypeConversationAudioSentenceStart,
+	WebSocketEventTypeConversationAudioDelta,
+	WebSocketEventTypeConversationMessageCompleted,
+	WebSocketEventTypeConversationAudioCompleted,
+	WebSocketEventTypeConversationChatCompleted,
+	WebSocketEventTypeConversationChatFailed,
+	WebSocketEventTypeConversationCleared,
+	WebSocketEventTypeConversationChatCanceled,
+	WebSocketEventTypeConversationAudioTranscriptUpdate,
+	WebSocketEventTypeConversationAudioTranscriptCompleted,
+	WebSocketEventTypeConversationChatRequiresAction,
+	WebSocketEventTypeInputAudioBufferSpeechStarted,
+	WebSocketEventTypeInputAudioBufferSpeechStopped,
+}
+
+var websocketEventTypeIndex = map[WebSocketEventType]int{}
+
+func init() {
+	for k, v := range websocketEventTypes {
+		websocketEventTypeIndex[v] = k
+	}
+}
+
 type commonWebSocketEvent struct {
 	baseWebSocketEvent
 	Data json.RawMessage `json:"data,omitempty"`

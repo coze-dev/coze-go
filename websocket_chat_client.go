@@ -16,10 +16,11 @@ type WebSocketChat struct {
 func newWebsocketChatClient(ctx context.Context, core *core, req *CreateWebsocketChatReq) *WebSocketChat {
 	ws := newWebSocketClient(
 		&WebSocketClientOption{
-			ctx:   ctx,
-			core:  core,
-			path:  "/v1/chat",
-			query: req.toQuery(),
+			ctx:                ctx,
+			core:               core,
+			path:               "/v1/chat",
+			query:              req.toQuery(),
+			responseEventTypes: chatResponseEventTypes,
 		},
 	)
 

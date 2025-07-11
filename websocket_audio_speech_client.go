@@ -15,10 +15,11 @@ type WebSocketAudioSpeech struct {
 func newWebSocketAudioSpeechClient(ctx context.Context, core *core, req *CreateWebsocketAudioSpeechReq) *WebSocketAudioSpeech {
 	ws := newWebSocketClient(
 		&WebSocketClientOption{
-			ctx:   ctx,
-			core:  core,
-			path:  "/v1/audio/speech",
-			query: req.toQuery(),
+			ctx:                ctx,
+			core:               core,
+			path:               "/v1/audio/speech",
+			query:              req.toQuery(),
+			responseEventTypes: audioSpeechResponseEventTypes,
 		},
 	)
 

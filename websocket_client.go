@@ -37,6 +37,7 @@ type WebSocketClientOption struct {
 	core                *core
 	path                string
 	query               map[string]string
+	responseEventTypes  []WebSocketEventType
 	SendChanCapacity    int           // 默认 1000
 	ReceiveChanCapacity int           // 默认 1000
 	HandshakeTimeout    time.Duration // 默认 3s
@@ -68,7 +69,7 @@ func newWebSocketClient(opt *WebSocketClientOption) *websocketClient {
 		handlers:    sync.Map{},
 		ctx:         ctx,
 		cancel:      cancel,
-		waiter:      newEventWaiter(),
+		waiter:      newEventWaiter(opt.responseEventTypes),
 	}
 
 	return client
@@ -214,11 +215,7 @@ func (c *websocketClient) OnEvent(eventType WebSocketEventType, handler EventHan
 
 // WaitForEvent waits for specific events
 func (c *websocketClient) WaitForEvent(eventTypes []WebSocketEventType, waitAll bool) error {
-	keys := make([]string, 0, 10)
-	for _, eventType := range eventTypes {
-		keys = append(keys, string(eventType))
-	}
-	return c.waiter.wait(c.ctx, keys, waitAll)
+	return c.waiter.wait(c.ctx, eventTypes, waitAll)
 }
 
 // sendLoop handles sending messages
@@ -259,7 +256,8 @@ func (c *websocketClient) receiveLoop() {
 				continue
 			}
 
-			c.waiter.trigger(string(event.GetEventType()))
+			// todo error
+			c.waiter.trigger(event.GetEventType())
 
 			if event.GetEventType() == WebSocketEventTypeSpeechAudioUpdate {
 				c.core.Log(c.ctx, LogLevelDebug, "[%s] receive event, type=%s, event=%s", c.opt.path, event.GetEventType(), event.(*WebSocketSpeechAudioUpdateEvent).dumpWithoutBinary())
