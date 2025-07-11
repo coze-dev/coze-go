@@ -266,8 +266,6 @@ func (c *websocketClient) receiveLoop() {
 				continue
 			}
 
-			_ = c.waiter.trigger(event.GetEventType())
-
 			if err := c.waiter.trigger(event.GetEventType()); err != nil {
 				c.core.Log(c.ctx, LogLevelWarn, "[%s] trigger event failed, event_type=%s, err=%s", c.opt.path, event.GetEventType(), err)
 			}

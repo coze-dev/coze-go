@@ -241,7 +241,7 @@ func (oew *eventWaiter) shutdown() {
 
 func safeCloseChan[T any](ch chan T) {
 	defer func() {
-		recover()
+		_ = recover()
 	}()
 	close(ch)
 }
