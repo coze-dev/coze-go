@@ -6,8 +6,7 @@ func (r *websocketAudioTranscriptionBuild) Create(ctx context.Context, req *Crea
 	return newWebSocketAudioTranscriptionClient(ctx, r.core, req)
 }
 
-type CreateWebsocketAudioTranscriptionReq struct {
-}
+type CreateWebsocketAudioTranscriptionReq struct{}
 
 func (r *CreateWebsocketAudioTranscriptionReq) toQuery() map[string]string {
 	q := map[string]string{}

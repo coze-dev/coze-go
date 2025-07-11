@@ -295,7 +295,6 @@ func (c *websocketClient) handleEvent(event IWebSocketEvent) {
 
 	if handler != nil {
 		if err := handler(event); err != nil {
-			// TODO: handler 返回错误类型？
 			c.core.Log(c.ctx, LogLevelWarn, "[%s] handler %s failed, logid=%s, err=%s", c.opt.path, event.GetEventType(), event.GetDetail().LogID, err)
 		}
 	}
