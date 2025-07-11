@@ -35,67 +35,32 @@ func main() {
 
 	// Create chat WebSocket client
 	chatClient := client.WebSockets.Chat.Create(context.Background(), &coze.CreateWebsocketChatReq{
-		BotID: botID,
+		BotID: &botID,
 	})
 
-	chatClient.On(IWebSocketChatHandler)
-
-	// Register event handlers
-	chatClient.RegisterHandlers(&coze.WebSocketChatEventHandler{
-		OnChatCreated: func(event *coze.WebSocketChatCreatedEvent) error {
-			fmt.Println("Chat session created")
-			return nil
-		},
-		OnConversationChatCreated: func(event *coze.WebSocketConversationChatCreatedEvent) error {
-			fmt.Printf("Conversation chat created: %s\n", event.Data.ChatID)
-			return nil
-		},
-		OnConversationMessageDelta: func(event *coze.WebSocketConversationMessageDeltaEvent) error {
-			fmt.Printf("Message delta: %s\n", event.Data.Content)
-			return nil
-		},
-		OnConversationAudioDelta: func(event *coze.WebSocketConversationAudioDeltaEvent) error {
-			audioData := event.Data.GetAudio()
-			fmt.Printf("Audio delta received (length: %d)\n", len(audioData))
-			return nil
-		},
-		OnConversationChatCompleted: func(event *coze.WebSocketConversationChatCompletedEvent) error {
-			fmt.Printf("Chat completed: %s\n", event.Data.ChatID)
-			return nil
-		},
-		OnConversationChatRequiresAction: func(event *coze.WebSocketConversationChatRequiresActionEvent) error {
-			fmt.Printf("Chat requires action: %s\n", event.Data.ChatID)
-
-			// Example: Handle tool call requirements
-			if event.Data.RequiredAction != nil && event.Data.RequiredAction.SubmitToolOutputs != nil {
-				for _, toolCall := range event.Data.RequiredAction.SubmitToolOutputs.ToolCalls {
-					fmt.Printf("Tool call required: %s (%s)\n", toolCall.Function.Name, toolCall.ID)
-
-					// In a real implementation, you would execute the tool and get the result
-					// For this example, we'll just return a dummy result
-					toolOutputs := []coze.ToolOutput{
-						{
-							ToolCallID: toolCall.ID,
-							Output:     "Tool execution result: success",
-						},
-					}
-
-					// Submit tool outputs
-					if err := chatClient.SubmitToolOutputs(event.Data.ChatID, toolOutputs); err != nil {
-						fmt.Printf("Failed to submit tool outputs: %v\n", err)
-					}
-				}
-			}
-			return nil
-		},
-		OnError: func(err error) error {
-			fmt.Printf("Error: %v\n", err)
-			return nil
-		},
-		OnClosed: func() error {
-			fmt.Println("Connection closed")
-			return nil
-		},
+	chatClient.OnChatCreated(func(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketChatCreatedEvent) error {
+		fmt.Println("Chat session created")
+		return nil
+	})
+	chatClient.OnConversationChatCreated(func(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketConversationChatCreatedEvent) error {
+		fmt.Printf("Conversation chat created: %s\n", event.Data.ID)
+		return nil
+	})
+	chatClient.OnConversationMessageDelta(func(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketConversationMessageDeltaEvent) error {
+		fmt.Printf("Message delta: %s\n", event.Data.Content)
+		return nil
+	})
+	chatClient.OnConversationChatCompleted(func(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketConversationChatCompletedEvent) error {
+		fmt.Printf("Chat completed: %s\n", event.Data.ID)
+		return nil
+	})
+	chatClient.OnError(func(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketErrorEvent) error {
+		fmt.Printf("Error: %v\n", event)
+		return nil
+	})
+	chatClient.OnClosed(func(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketClosedEvent) error {
+		fmt.Println("Connection closed")
+		return nil
 	})
 
 	// Connect to WebSocket
@@ -105,32 +70,20 @@ func main() {
 	}
 	defer chatClient.Close()
 
-	// Update chat configuration
-	fmt.Println("Updating chat configuration...")
-	if err := chatClient.UpdateChat(botID, nil, nil); err != nil {
-		log.Fatalf("Failed to update chat: %v", err)
-	}
-
 	// Send a message
 	message := "Hello! How are you today?"
 	fmt.Printf("Sending message: %s\n", message)
-
-	if err := chatClient.CreateMessage(message); err != nil {
+	if err := chatClient.ConversationMessageCreate(&coze.WebSocketConversationMessageCreateEventData{
+		Role:        coze.MessageRoleUser,
+		ContentType: coze.MessageContentTypeText,
+		Content:     message,
+	}); err != nil {
 		log.Fatalf("Failed to create message: %v", err)
 	}
 
-	// Alternative: Send audio data
-	// audioData := []byte("This is simulated audio data")
-	// if err := chatClient.AppendAudioBuffer(audioData); err != nil {
-	//     log.Fatalf("Failed to append audio: %v", err)
-	// }
-	// if err := chatClient.CompleteAudioBuffer(); err != nil {
-	//     log.Fatalf("Failed to complete audio buffer: %v", err)
-	// }
-
 	// Wait for chat completion
 	fmt.Println("Waiting for chat completion...")
-	event, err := chatClient.WaitForChatCompleted(60 * time.Second)
+	event, err := chatClient.Wait(60 * time.Second)
 	if err != nil {
 		log.Fatalf("Failed to wait for completion: %v", err)
 	}

@@ -1,6 +1,9 @@
 package coze
 
-import "context"
+import (
+	"context"
+	"reflect"
+)
 
 // IWebSocketEvent websocket 事件接口
 type IWebSocketEvent interface {
@@ -232,6 +235,8 @@ type WebSocketInputAudioBufferCompleteEvent struct {
 	baseWebSocketEvent
 }
 
+type WebSocketInputAudioBufferCompleteEventData struct{}
+
 // WebSocketInputAudioBufferClearEvent 清除缓冲区音频
 //
 // 客户端发送 input_audio_buffer.clear 事件来告诉服务端清除缓冲区的音频数据。服务端清除完后将返回 input_audio_buffer.cleared 事件。
@@ -240,6 +245,8 @@ type WebSocketInputAudioBufferCompleteEvent struct {
 type WebSocketInputAudioBufferClearEvent struct {
 	baseWebSocketEvent
 }
+
+type WebSocketInputAudioBufferClearEventData struct{}
 
 // WebSocketTranscriptionsCreatedEvent 语音识别连接成功
 //
@@ -437,11 +444,11 @@ type WebSocketConversationMessageCreateEvent struct {
 // WebSocketConversationMessageCreateEventData contains message content
 type WebSocketConversationMessageCreateEventData struct {
 	// 发送这条消息的实体。取值：user（代表该条消息内容是用户发送的）、assistant（代表该条消息内容是智能体发送的）。
-	Role string `json:"role"`
+	Role MessageRole `json:"role,omitempty"`
 	// 消息内容的类型，支持设置为：text：文本。object_string：多模态内容，即文本和文件的组合、文本和图片的组合。
-	ContentType string `json:"content_type"`
+	ContentType MessageContentType `json:"content_type,omitempty"`
 	// 消息的内容，支持纯文本、多模态（文本、图片、文件混合输入）、卡片等多种类型的内容。当 content_type 为 object_string时，content 的结构和详细参数说明请参见object_string object。
-	Content string `json:"content"`
+	Content string `json:"content,omitempty"`
 }
 
 // WebSocketConversationClearEvent 清除上下文
@@ -451,6 +458,8 @@ type WebSocketConversationMessageCreateEventData struct {
 type WebSocketConversationClearEvent struct {
 	baseWebSocketEvent
 }
+
+type WebSocketConversationClearEventData struct{}
 
 // WebSocketConversationChatSubmitToolOutputsEvent 提交端插件执行结果
 //
@@ -478,6 +487,8 @@ type WebSocketConversationChatSubmitToolOutputsEventData struct {
 type WebSocketConversationChatCancelEvent struct {
 	baseWebSocketEvent
 }
+
+type WebSocketConversationChatCancelEventData struct{}
 
 // WebSocketChatCreatedEvent 对话连接成功
 //
@@ -679,121 +690,139 @@ type WebSocketInputAudioBufferSpeechStoppedEvent struct {
 }
 
 type IWebSocketChatHandler interface {
-	OnClientError(ctx context.Context, cli *websocketsChat, event *WebSocketClientErrorEvent) error
-	OnClosed(ctx context.Context, cli *websocketsChat, event *WebSocketClosedEvent) error
-	OnError(ctx context.Context, cli *websocketsChat, event *WebSocketErrorEvent) error
-	OnChatCreated(ctx context.Context, cli *websocketsChat, event *WebSocketChatCreatedEvent) error
-	OnChatUpdated(ctx context.Context, cli *websocketsChat, event *WebSocketChatUpdatedEvent) error
-	OnConversationChatCreated(ctx context.Context, cli *websocketsChat, event *WebSocketConversationChatCreatedEvent) error
-	OnConversationChatInProgress(ctx context.Context, cli *websocketsChat, event *WebSocketConversationChatInProgressEvent) error
-	OnConversationMessageDelta(ctx context.Context, cli *websocketsChat, event *WebSocketConversationMessageDeltaEvent) error
-	OnConversationAudioSentenceStart(ctx context.Context, cli *websocketsChat, event *WebSocketConversationAudioSentenceStartEvent) error
-	OnConversationAudioDelta(ctx context.Context, cli *websocketsChat, event *WebSocketConversationAudioDeltaEvent) error
-	OnConversationMessageCompleted(ctx context.Context, cli *websocketsChat, event *WebSocketConversationMessageCompletedEvent) error
-	OnConversationAudioCompleted(ctx context.Context, cli *websocketsChat, event *WebSocketConversationAudioCompletedEvent) error
-	OnConversationChatCompleted(ctx context.Context, cli *websocketsChat, event *WebSocketConversationChatCompletedEvent) error
-	OnConversationChatFailed(ctx context.Context, cli *websocketsChat, event *WebSocketConversationChatFailedEvent) error
-	OnInputAudioBufferCompleted(ctx context.Context, cli *websocketsChat, event *WebSocketInputAudioBufferCompletedEvent) error
-	OnInputAudioBufferCleared(ctx context.Context, cli *websocketsChat, event *WebSocketInputAudioBufferClearedEvent) error
-	OnConversationCleared(ctx context.Context, cli *websocketsChat, event *WebSocketConversationClearedEvent) error
-	OnConversationChatCanceled(ctx context.Context, cli *websocketsChat, event *WebSocketConversationChatCanceledEvent) error
-	OnConversationAudioTranscriptUpdate(ctx context.Context, cli *websocketsChat, event *WebSocketConversationAudioTranscriptUpdateEvent) error
-	OnConversationAudioTranscriptCompleted(ctx context.Context, cli *websocketsChat, event *WebSocketConversationAudioTranscriptCompletedEvent) error
-	OnConversationChatRequiresAction(ctx context.Context, cli *websocketsChat, event *WebSocketConversationChatRequiresActionEvent) error
-	OnInputAudioBufferSpeechStarted(ctx context.Context, cli *websocketsChat, event *WebSocketInputAudioBufferSpeechStartedEvent) error
-	OnInputAudioBufferSpeechStopped(ctx context.Context, cli *websocketsChat, event *WebSocketInputAudioBufferSpeechStoppedEvent) error
+	OnClientError(ctx context.Context, cli *WebSocketChat, event *WebSocketClientErrorEvent) error
+	OnClosed(ctx context.Context, cli *WebSocketChat, event *WebSocketClosedEvent) error
+	OnError(ctx context.Context, cli *WebSocketChat, event *WebSocketErrorEvent) error
+	OnChatCreated(ctx context.Context, cli *WebSocketChat, event *WebSocketChatCreatedEvent) error
+	OnChatUpdated(ctx context.Context, cli *WebSocketChat, event *WebSocketChatUpdatedEvent) error
+	OnConversationChatCreated(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationChatCreatedEvent) error
+	OnConversationChatInProgress(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationChatInProgressEvent) error
+	OnConversationMessageDelta(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationMessageDeltaEvent) error
+	OnConversationAudioSentenceStart(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationAudioSentenceStartEvent) error
+	OnConversationAudioDelta(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationAudioDeltaEvent) error
+	OnConversationMessageCompleted(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationMessageCompletedEvent) error
+	OnConversationAudioCompleted(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationAudioCompletedEvent) error
+	OnConversationChatCompleted(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationChatCompletedEvent) error
+	OnConversationChatFailed(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationChatFailedEvent) error
+	OnInputAudioBufferCompleted(ctx context.Context, cli *WebSocketChat, event *WebSocketInputAudioBufferCompletedEvent) error
+	OnInputAudioBufferCleared(ctx context.Context, cli *WebSocketChat, event *WebSocketInputAudioBufferClearedEvent) error
+	OnConversationCleared(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationClearedEvent) error
+	OnConversationChatCanceled(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationChatCanceledEvent) error
+	OnConversationAudioTranscriptUpdate(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationAudioTranscriptUpdateEvent) error
+	OnConversationAudioTranscriptCompleted(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationAudioTranscriptCompletedEvent) error
+	OnConversationChatRequiresAction(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationChatRequiresActionEvent) error
+	OnInputAudioBufferSpeechStarted(ctx context.Context, cli *WebSocketChat, event *WebSocketInputAudioBufferSpeechStartedEvent) error
+	OnInputAudioBufferSpeechStopped(ctx context.Context, cli *WebSocketChat, event *WebSocketInputAudioBufferSpeechStoppedEvent) error
 }
 
 type BaseWebSocketChatHandler struct{}
 
-func (BaseWebSocketChatHandler) OnClientError(ctx context.Context, cli *websocketsChat, event *WebSocketClientErrorEvent) error {
+func (BaseWebSocketChatHandler) OnClientError(ctx context.Context, cli *WebSocketChat, event *WebSocketClientErrorEvent) error {
 	return nil
 }
 
-func (BaseWebSocketChatHandler) OnClosed(ctx context.Context, cli *websocketsChat, event *WebSocketClosedEvent) error {
+func (BaseWebSocketChatHandler) OnClosed(ctx context.Context, cli *WebSocketChat, event *WebSocketClosedEvent) error {
 	return nil
 }
 
-func (BaseWebSocketChatHandler) OnError(ctx context.Context, cli *websocketsChat, event *WebSocketErrorEvent) error {
+func (BaseWebSocketChatHandler) OnError(ctx context.Context, cli *WebSocketChat, event *WebSocketErrorEvent) error {
 	return nil
 }
 
-func (BaseWebSocketChatHandler) OnChatCreated(ctx context.Context, cli *websocketsChat, event *WebSocketChatCreatedEvent) error {
+func (BaseWebSocketChatHandler) OnChatCreated(ctx context.Context, cli *WebSocketChat, event *WebSocketChatCreatedEvent) error {
 	return nil
 }
 
-func (BaseWebSocketChatHandler) OnChatUpdated(ctx context.Context, cli *websocketsChat, event *WebSocketChatUpdatedEvent) error {
+func (BaseWebSocketChatHandler) OnChatUpdated(ctx context.Context, cli *WebSocketChat, event *WebSocketChatUpdatedEvent) error {
 	return nil
 }
 
-func (BaseWebSocketChatHandler) OnConversationChatCreated(ctx context.Context, cli *websocketsChat, event *WebSocketConversationChatCreatedEvent) error {
+func (BaseWebSocketChatHandler) OnConversationChatCreated(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationChatCreatedEvent) error {
 	return nil
 }
 
-func (BaseWebSocketChatHandler) OnConversationChatInProgress(ctx context.Context, cli *websocketsChat, event *WebSocketConversationChatInProgressEvent) error {
+func (BaseWebSocketChatHandler) OnConversationChatInProgress(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationChatInProgressEvent) error {
 	return nil
 }
 
-func (BaseWebSocketChatHandler) OnConversationMessageDelta(ctx context.Context, cli *websocketsChat, event *WebSocketConversationMessageDeltaEvent) error {
+func (BaseWebSocketChatHandler) OnConversationMessageDelta(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationMessageDeltaEvent) error {
 	return nil
 }
 
-func (BaseWebSocketChatHandler) OnConversationAudioSentenceStart(ctx context.Context, cli *websocketsChat, event *WebSocketConversationAudioSentenceStartEvent) error {
+func (BaseWebSocketChatHandler) OnConversationAudioSentenceStart(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationAudioSentenceStartEvent) error {
 	return nil
 }
 
-func (BaseWebSocketChatHandler) OnConversationAudioDelta(ctx context.Context, cli *websocketsChat, event *WebSocketConversationAudioDeltaEvent) error {
+func (BaseWebSocketChatHandler) OnConversationAudioDelta(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationAudioDeltaEvent) error {
 	return nil
 }
 
-func (BaseWebSocketChatHandler) OnConversationMessageCompleted(ctx context.Context, cli *websocketsChat, event *WebSocketConversationMessageCompletedEvent) error {
+func (BaseWebSocketChatHandler) OnConversationMessageCompleted(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationMessageCompletedEvent) error {
 	return nil
 }
 
-func (BaseWebSocketChatHandler) OnConversationAudioCompleted(ctx context.Context, cli *websocketsChat, event *WebSocketConversationAudioCompletedEvent) error {
+func (BaseWebSocketChatHandler) OnConversationAudioCompleted(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationAudioCompletedEvent) error {
 	return nil
 }
 
-func (BaseWebSocketChatHandler) OnConversationChatCompleted(ctx context.Context, cli *websocketsChat, event *WebSocketConversationChatCompletedEvent) error {
+func (BaseWebSocketChatHandler) OnConversationChatCompleted(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationChatCompletedEvent) error {
 	return nil
 }
 
-func (BaseWebSocketChatHandler) OnConversationChatFailed(ctx context.Context, cli *websocketsChat, event *WebSocketConversationChatFailedEvent) error {
+func (BaseWebSocketChatHandler) OnConversationChatFailed(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationChatFailedEvent) error {
 	return nil
 }
 
-func (BaseWebSocketChatHandler) OnInputAudioBufferCompleted(ctx context.Context, cli *websocketsChat, event *WebSocketInputAudioBufferCompletedEvent) error {
+func (BaseWebSocketChatHandler) OnInputAudioBufferCompleted(ctx context.Context, cli *WebSocketChat, event *WebSocketInputAudioBufferCompletedEvent) error {
 	return nil
 }
 
-func (BaseWebSocketChatHandler) OnInputAudioBufferCleared(ctx context.Context, cli *websocketsChat, event *WebSocketInputAudioBufferClearedEvent) error {
+func (BaseWebSocketChatHandler) OnInputAudioBufferCleared(ctx context.Context, cli *WebSocketChat, event *WebSocketInputAudioBufferClearedEvent) error {
 	return nil
 }
 
-func (BaseWebSocketChatHandler) OnConversationCleared(ctx context.Context, cli *websocketsChat, event *WebSocketConversationClearedEvent) error {
+func (BaseWebSocketChatHandler) OnConversationCleared(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationClearedEvent) error {
 	return nil
 }
 
-func (BaseWebSocketChatHandler) OnConversationChatCanceled(ctx context.Context, cli *websocketsChat, event *WebSocketConversationChatCanceledEvent) error {
+func (BaseWebSocketChatHandler) OnConversationChatCanceled(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationChatCanceledEvent) error {
 	return nil
 }
 
-func (BaseWebSocketChatHandler) OnConversationAudioTranscriptUpdate(ctx context.Context, cli *websocketsChat, event *WebSocketConversationAudioTranscriptUpdateEvent) error {
+func (BaseWebSocketChatHandler) OnConversationAudioTranscriptUpdate(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationAudioTranscriptUpdateEvent) error {
 	return nil
 }
 
-func (BaseWebSocketChatHandler) OnConversationAudioTranscriptCompleted(ctx context.Context, cli *websocketsChat, event *WebSocketConversationAudioTranscriptCompletedEvent) error {
+func (BaseWebSocketChatHandler) OnConversationAudioTranscriptCompleted(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationAudioTranscriptCompletedEvent) error {
 	return nil
 }
 
-func (BaseWebSocketChatHandler) OnConversationChatRequiresAction(ctx context.Context, cli *websocketsChat, event *WebSocketConversationChatRequiresActionEvent) error {
+func (BaseWebSocketChatHandler) OnConversationChatRequiresAction(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationChatRequiresActionEvent) error {
 	return nil
 }
 
-func (BaseWebSocketChatHandler) OnInputAudioBufferSpeechStarted(ctx context.Context, cli *websocketsChat, event *WebSocketInputAudioBufferSpeechStartedEvent) error {
+func (BaseWebSocketChatHandler) OnInputAudioBufferSpeechStarted(ctx context.Context, cli *WebSocketChat, event *WebSocketInputAudioBufferSpeechStartedEvent) error {
 	return nil
 }
 
-func (BaseWebSocketChatHandler) OnInputAudioBufferSpeechStopped(ctx context.Context, cli *websocketsChat, event *WebSocketInputAudioBufferSpeechStoppedEvent) error {
+func (BaseWebSocketChatHandler) OnInputAudioBufferSpeechStopped(ctx context.Context, cli *WebSocketChat, event *WebSocketInputAudioBufferSpeechStoppedEvent) error {
 	return nil
+}
+
+func newWebSocketEvent(eventType WebSocketEventType, data any) any {
+	eventStructType, exists := websocketEvents[string(eventType)]
+	if !exists {
+		return nil
+	}
+	eventValue := reflect.New(eventStructType).Elem()
+
+	eventTypeField := eventValue.FieldByName("EventType")
+	if eventTypeField.IsValid() && eventTypeField.CanSet() {
+		eventTypeField.SetString(string(eventType))
+	}
+	dataField := eventValue.FieldByName("Data")
+	if dataField.IsValid() && dataField.CanSet() {
+		dataField.Set(reflect.ValueOf(data))
+	}
+	return eventValue.Interface()
 }

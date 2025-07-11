@@ -31,13 +31,14 @@ type WebSocketClientOption struct {
 	ctx                 context.Context
 	core                *core
 	path                string
+	query               map[string]string
 	SendChanCapacity    int           // 默认 1000
 	ReceiveChanCapacity int           // 默认 1000
 	HandshakeTimeout    time.Duration // 默认 3s
 }
 
 // EventHandler represents a WebSocket event handler
-type EventHandler func(ctx context.Context, event IWebSocketEvent) error
+type EventHandler func(event IWebSocketEvent) error
 
 // newWebSocketClient creates a new WebSocket client
 func newWebSocketClient(opt *WebSocketClientOption) *websocketClient {
