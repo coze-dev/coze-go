@@ -227,7 +227,7 @@ func (c *websocketClient) sendLoop() {
 		select {
 		case data := <-c.sendChan:
 			if err := c.conn.WriteMessage(websocket.TextMessage, data); err != nil {
-				c.handleError(WebSocketEventTypeClientError, fmt.Errorf("failed to send message: %w", err))
+				c.handleClientError(fmt.Errorf("failed to send message: %w", err))
 				continue
 			}
 		case <-c.ctx.Done():
@@ -248,15 +248,14 @@ func (c *websocketClient) receiveLoop() {
 				if errors.Is(err, net.ErrClosed) {
 					return
 				}
-				c.handleError(WebSocketEventTypeClientError, fmt.Errorf("failed to read message: %w", err))
+				c.handleClientError(fmt.Errorf("failed to read message: %w", err))
 				c.waiter.shutdown()
 				return
 			}
 
 			event, err := parseWebSocketEvent(message)
 			if err != nil {
-				// TODO: 这里不应该发 client error？
-				c.handleError(WebSocketEventTypeClientError, err)
+				c.handleClientError(err)
 				continue
 			}
 
@@ -297,26 +296,24 @@ func (c *websocketClient) handleEvent(event IWebSocketEvent) {
 	if handler != nil {
 		if err := handler(event); err != nil {
 			// TODO: handler 返回错误类型？
-			c.handleError(WebSocketEventTypeClientError, fmt.Errorf("event handler error: %w", err))
+			c.core.Log(c.ctx, LogLevelWarn, "[%s] handler %s failed, logid=%s, err=%s", c.opt.path, event.GetEventType(), event.GetDetail().LogID, err)
 		}
 	}
 }
 
-// handleError handles errors
-func (c *websocketClient) handleError(eventType WebSocketEventType, err error) {
-	c.core.Log(c.ctx, LogLevelWarn, "[%s] receive event, type=%s, event=%s", c.opt.path, eventType, err)
-
-	handler := c.getHandler(eventType)
+// handleClientError handles errors
+func (c *websocketClient) handleClientError(err error) {
+	handler := c.getHandler(WebSocketEventTypeClientError)
 	if handler == nil {
 		return
 	}
-	if eventType == WebSocketEventTypeClientError {
-		handler(&WebSocketClientErrorEvent{
-			baseWebSocketEvent: baseWebSocketEvent{
-				EventType: eventType,
-			},
-			Data: err,
-		})
+	if err := handler(&WebSocketClientErrorEvent{
+		baseWebSocketEvent: baseWebSocketEvent{
+			EventType: WebSocketEventTypeClientError,
+		},
+		Data: err,
+	}); err != nil {
+		c.core.Log(c.ctx, LogLevelWarn, "[%s] handler %s failed, err=%s", c.opt.path, WebSocketEventTypeClientError, err)
 	}
 }
 

@@ -188,7 +188,6 @@ type WebSocketSpeechAudioUpdateEvent struct {
 }
 
 // WebSocketSpeechAudioUpdateEventData contains audio delta
-// TODO: 这里需要实现自定义的 json unmarshal marshal
 type WebSocketSpeechAudioUpdateEventData struct {
 	// 音频片段。(API 返回的是base64编码的音频片段, SDK 已经自动解码为 bytes)
 	Delta []byte `json:"delta"`
@@ -247,7 +246,6 @@ type WebSocketInputAudioBufferAppendEvent struct {
 
 // WebSocketInputAudioBufferAppendEventData contains audio delta
 type WebSocketInputAudioBufferAppendEventData struct {
-	// todo: 这里需要实现自定义的 json unmarshal marshal
 	// 音频片段。(API 返回的是base64编码的音频片段, SDK 已经自动解码为 bytes)
 	Delta []byte `json:"delta"`
 }

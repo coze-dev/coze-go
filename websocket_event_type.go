@@ -153,10 +153,9 @@ type commonWebSocketEvent struct {
 }
 
 func parseWebSocketEvent(message []byte) (IWebSocketEvent, error) {
-	// fmt.Println(string(message))
 	var common commonWebSocketEvent
 	if err := json.Unmarshal(message, &common); err != nil {
-		return nil, fmt.Errorf("1-failed to unmarshal event: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal event: %w", err)
 	}
 
 	eventTypeRef, ok := websocketEvents[string(common.GetEventType())]
@@ -165,9 +164,8 @@ func parseWebSocketEvent(message []byte) (IWebSocketEvent, error) {
 	}
 
 	event := reflect.New(eventTypeRef).Interface()
-	// fmt.Println(string(message))
 	if err := json.Unmarshal(message, &event); err != nil {
-		return nil, fmt.Errorf("2-failed to unmarshal event data: %w", err)
+		return nil, fmt.Errorf("failed to unmarshal event data: %w", err)
 	}
 
 	return any(event).(IWebSocketEvent), nil
