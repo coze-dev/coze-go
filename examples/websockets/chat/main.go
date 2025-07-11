@@ -42,10 +42,6 @@ func (r *handler) OnConversationMessageDelta(ctx context.Context, cli *coze.WebS
 	return nil
 }
 
-func (r *handler) OnConversationAudioSentenceStart(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketConversationAudioSentenceStartEvent) error {
-	return nil
-}
-
 func (r *handler) OnConversationAudioDelta(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketConversationAudioDeltaEvent) error {
 	r.data = append(r.data, event.Data.Content...)
 	return nil
@@ -59,14 +55,6 @@ func (r *handler) OnConversationAudioCompleted(ctx context.Context, cli *coze.We
 	}
 
 	log.Printf("chat completed, audio write to %s", "output_chat.wav")
-	return nil
-}
-
-func (r *handler) OnConversationAudioTranscriptUpdate(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketConversationAudioTranscriptUpdateEvent) error {
-	return nil
-}
-
-func (r *handler) OnConversationAudioTranscriptCompleted(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketConversationAudioTranscriptCompletedEvent) error {
 	return nil
 }
 
