@@ -221,7 +221,7 @@ func (oew *eventWaiter) trigger(eventType WebSocketEventType) error {
 			}
 		}
 
-		close(oew.eventChannels[i]) // 关闭 channel 通知所有等待者
+		safeCloseChan(oew.eventChannels[i]) // 关闭 channel 通知所有等待者
 	})
 
 	return nil
@@ -235,50 +235,13 @@ func (oew *eventWaiter) shutdown() {
 			continue
 		}
 
-		close(oew.eventChannels[i])
+		safeCloseChan(oew.eventChannels[i])
 	}
 }
 
-// // IsEventTriggered 检查事件是否已触发
-// func (oew *eventWaiter) IsEventTriggered(eventType WebSocketEventType) bool {
-// 	i := getWebSocketEventTypeIndex(eventType)
-// 	return atomic.LoadInt32(&oew.eventTriggered[i]) == 1
-// }
-
-// // GetTriggeredEvents 获取所有已触发的事件
-// func (oew *eventWaiter) GetTriggeredEvents() []WebSocketEventType {
-// 	var triggered []WebSocketEventType
-//
-// 	for i := WebSocketEventType(0); i < maxEventSize; i++ {
-// 		if atomic.LoadInt32(&oew.eventTriggered[i]) == 1 {
-// 			triggered = append(triggered, i)
-// 		}
-// 	}
-//
-// 	return triggered
-// }
-//
-// // Reset 重置指定事件（可选功能，如果需要重复使用）
-// func (oew *eventWaiter) Reset(WebSocketEventType WebSocketEventType) error {
-// 	if WebSocketEventType >= maxEventSize {
-// 		return errors.New("invalid event type")
-// 	}
-//
-// 	// 注意：这里不是并发安全的重置，仅在确保没有并发访问时使用
-// 	atomic.StoreInt32(&oew.eventTriggered[WebSocketEventType], 0)
-//
-// 	// 重置位掩码
-// 	for {
-// 		old := atomic.LoadUint64(&oew.eventMask)
-// 		new := old &^ (1 << WebSocketEventType) // 清除对应位
-// 		if atomic.CompareAndSwapUint64(&oew.eventMask, old, new) {
-// 			break
-// 		}
-// 	}
-//
-// 	// 重新创建 channel 和 once
-// 	oew.eventChannels[WebSocketEventType] = make(chan struct{})
-// 	oew.eventOnce[WebSocketEventType] = sync.Once{}
-//
-// 	return nil
-// }
+func safeCloseChan[T any](ch chan T) {
+	defer func() {
+		recover()
+	}()
+	close(ch)
+}

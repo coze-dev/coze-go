@@ -54,7 +54,7 @@ func (r *handler) OnConversationAudioCompleted(ctx context.Context, cli *coze.We
 		return err
 	}
 
-	log.Printf("chat completed, audio write to %s", "output_chat.wav")
+	fmt.Printf("chat completed, audio write to %s", "output_chat.wav")
 	return nil
 }
 
@@ -99,8 +99,7 @@ func main() {
 
 	// Wait for chat completion
 	fmt.Println("Waiting for chat completion...")
-	err := chatClient.Wait()
-	if err != nil {
+	if err := chatClient.Wait(); err != nil {
 		log.Fatalf("Failed to wait for completion: %v", err)
 	}
 

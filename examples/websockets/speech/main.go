@@ -31,13 +31,14 @@ func (r *handler) OnSpeechAudioUpdate(ctx context.Context, cli *coze.WebSocketAu
 }
 
 func (r *handler) OnSpeechAudioCompleted(ctx context.Context, cli *coze.WebSocketAudioSpeech, event *coze.WebSocketSpeechAudioCompletedEvent) error {
-	err := util.WritePCMToWavFile("output.wav", r.data)
+	filename := "output_speech.wav"
+	err := util.WritePCMToWavFile(filename, r.data)
 	if err != nil {
 		fmt.Printf("错误: %v\n", err)
 		return err
 	}
 
-	log.Printf("speech completed, audio write to %s", "output.wav")
+	fmt.Printf("speech completed, audio write to %s\n", filename)
 	return nil
 }
 
@@ -50,7 +51,10 @@ func main() {
 
 	// Init the Coze client through the access_token.
 	authCli := coze.NewTokenAuth(cozeAPIToken)
-	client := coze.NewCozeAPI(authCli, coze.WithBaseURL(cozeAPIBase), coze.WithLogLevel(coze.LogLevelDebug))
+	client := coze.NewCozeAPI(authCli,
+		coze.WithBaseURL(cozeAPIBase),
+		// coze.WithLogLevel(coze.LogLevelDebug),
+	)
 
 	// Create speech WebSocket client
 	speechClient := client.WebSockets.Audio.Speech.Create(context.Background(), &coze.CreateWebsocketAudioSpeechReq{})
