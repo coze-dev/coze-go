@@ -86,6 +86,7 @@ func (c *websocketClient) Connect() error {
 	baseURL := c.opt.core.baseURL
 	path := c.opt.path
 	auth := c.opt.core.auth
+	query := c.opt.query
 
 	// Build WebSocket URL
 	u, err := url.Parse(baseURL)
@@ -106,6 +107,14 @@ func (c *websocketClient) Connect() error {
 	}
 
 	u.Path = path
+
+	if len(query) > 0 {
+		q := u.Query()
+		for k, v := range query {
+			q.Add(k, v)
+		}
+		u.RawQuery = q.Encode()
+	}
 
 	// Get auth header
 	accessToken, err := auth.Token(c.ctx)
@@ -219,7 +228,7 @@ func (c *websocketClient) sendLoop() {
 		case data := <-c.sendChan:
 			if err := c.conn.WriteMessage(websocket.TextMessage, data); err != nil {
 				c.handleError(WebSocketEventTypeClientError, fmt.Errorf("failed to send message: %w", err))
-				return
+				continue
 			}
 		case <-c.ctx.Done():
 			return
@@ -240,6 +249,7 @@ func (c *websocketClient) receiveLoop() {
 					return
 				}
 				c.handleError(WebSocketEventTypeClientError, fmt.Errorf("failed to read message: %w", err))
+				c.waiter.shutdown()
 				return
 			}
 
@@ -254,6 +264,8 @@ func (c *websocketClient) receiveLoop() {
 
 			if event.GetEventType() == WebSocketEventTypeSpeechAudioUpdate {
 				c.core.Log(c.ctx, LogLevelDebug, "[%s] receive event, type=%s, event=%s", c.opt.path, event.GetEventType(), event.(*WebSocketSpeechAudioUpdateEvent).dumpWithoutBinary())
+			} else if event.GetEventType() == WebSocketEventTypeConversationAudioDelta {
+				c.core.Log(c.ctx, LogLevelDebug, "[%s] receive event, type=%s, event=%s", c.opt.path, event.GetEventType(), event.(*WebSocketConversationAudioDeltaEvent).dumpWithoutBinary())
 			} else {
 				c.core.Log(c.ctx, LogLevelDebug, "[%s] receive event, type=%s, event=%s", c.opt.path, event.GetEventType(), message)
 			}
@@ -298,14 +310,7 @@ func (c *websocketClient) handleError(eventType WebSocketEventType, err error) {
 	if handler == nil {
 		return
 	}
-	if eventType == WebSocketEventTypeError {
-		handler(&WebSocketErrorEvent{
-			baseWebSocketEvent: baseWebSocketEvent{
-				EventType: eventType,
-			},
-			Data: err,
-		})
-	} else if eventType == WebSocketEventTypeClientError {
+	if eventType == WebSocketEventTypeClientError {
 		handler(&WebSocketClientErrorEvent{
 			baseWebSocketEvent: baseWebSocketEvent{
 				EventType: eventType,

@@ -31,7 +31,7 @@ type WebSocketClosedEvent struct {
 // seq:common:3
 type WebSocketErrorEvent struct {
 	baseWebSocketEvent
-	Data error `json:"data,omitempty"`
+	Data *Error `json:"data,omitempty"`
 }
 
 // v1/audio/speech req
@@ -587,7 +587,70 @@ type WebSocketConversationAudioSentenceStartEventData struct {
 // seq:v1/chat:resp:7
 type WebSocketConversationAudioDeltaEvent struct {
 	baseWebSocketEvent
-	Data *Message `json:"data,omitempty"`
+	Data *WebSocketConversationAudioDeltaEventData `json:"data,omitempty"`
+}
+
+type WebSocketConversationAudioDeltaEventData struct {
+	// The entity that sent this message.
+	Role MessageRole `json:"role"`
+
+	// The type of message.
+	Type MessageType `json:"type"`
+
+	// The content of the message. It supports various types of content, including plain text,
+	// multimodal (a mix of text, images, and files), message cards, and more.
+	Content []byte `json:"content"`
+
+	// The reasoning_content of the thought process message
+	ReasoningContent string `json:"reasoning_content"`
+
+	// The type of message content.
+	ContentType MessageContentType `json:"content_type"`
+
+	// Additional information when creating a message, and this additional information will also be
+	// returned when retrieving messages. Custom key-value pairs should be specified in Map object
+	// format, with a length of 16 key-value pairs. The length of the key should be between 1 and 64
+	// characters, and the length of the value should be between 1 and 512 characters.
+	MetaData map[string]string `json:"meta_data,omitempty"`
+
+	ID             string `json:"id"`
+	ConversationID string `json:"conversation_id"`
+
+	// section_id is used to distinguish the context sections of the session history. The same section
+	// is one context.
+	SectionID string `json:"section_id"`
+	BotID     string `json:"bot_id"`
+	ChatID    string `json:"chat_id"`
+	CreatedAt int64  `json:"created_at"`
+	UpdatedAt int64  `json:"updated_at"`
+}
+
+func (r *WebSocketConversationAudioDeltaEvent) dumpWithoutBinary() string {
+	if r.Data.ContentType == MessageContentTypeAudio {
+		b, _ := json.Marshal(map[string]any{
+			"id":         r.GetID(),
+			"event_type": r.GetEventType(),
+			"detail":     r.GetDetail(),
+			"data": &Message{
+				Role:             r.Data.Role,
+				Type:             r.Data.Type,
+				Content:          fmt.Sprintf("<length: %d>", len(r.Data.Content)),
+				ReasoningContent: r.Data.ReasoningContent,
+				ContentType:      r.Data.ContentType,
+				MetaData:         r.Data.MetaData,
+				ID:               r.Data.ID,
+				ConversationID:   r.Data.ConversationID,
+				SectionID:        r.Data.SectionID,
+				BotID:            r.Data.BotID,
+				ChatID:           r.Data.ChatID,
+				CreatedAt:        r.Data.CreatedAt,
+				UpdatedAt:        r.Data.UpdatedAt,
+			},
+		})
+		return string(b)
+	}
+	b, _ := json.Marshal(r)
+	return string(b)
 }
 
 // WebSocketConversationMessageCompletedEvent 消息完成

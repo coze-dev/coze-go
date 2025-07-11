@@ -2,65 +2,94 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
+	"net"
 	"os"
 
 	"github.com/coze-dev/coze-go"
+	"github.com/coze-dev/coze-go/examples/websockets/util"
+	"github.com/gorilla/websocket"
 )
 
+type handler struct {
+	coze.BaseWebSocketChatHandler
+	data []byte
+}
+
+func (r *handler) OnClientError(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketClientErrorEvent) error {
+	if errors.Is(event.Data, net.ErrClosed) {
+		return nil
+	}
+	var wsErr *websocket.CloseError
+	if errors.As(event.Data, &wsErr) {
+		// if wsErr.Code == websocket.CloseNormalClosure {
+		return nil
+		// }
+	}
+	fmt.Printf("chat client_error=%s\n", event)
+	return nil
+}
+
+func (r *handler) OnError(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketErrorEvent) error {
+	fmt.Printf("chat error=%s\n", event)
+	return nil
+}
+
+func (r *handler) OnConversationMessageDelta(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketConversationMessageDeltaEvent) error {
+	fmt.Printf("chat message_delta=%s\n", event.Data.Content)
+	return nil
+}
+
+func (r *handler) OnConversationAudioSentenceStart(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketConversationAudioSentenceStartEvent) error {
+	return nil
+}
+
+func (r *handler) OnConversationAudioDelta(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketConversationAudioDeltaEvent) error {
+	r.data = append(r.data, event.Data.Content...)
+	return nil
+}
+
+func (r *handler) OnConversationAudioCompleted(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketConversationAudioCompletedEvent) error {
+	err := util.WritePCMToWavFile("output_chat.wav", r.data)
+	if err != nil {
+		fmt.Printf("错误: %v\n", err)
+		return err
+	}
+
+	log.Printf("chat completed, audio write to %s", "output_chat.wav")
+	return nil
+}
+
+func (r *handler) OnConversationAudioTranscriptUpdate(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketConversationAudioTranscriptUpdateEvent) error {
+	return nil
+}
+
+func (r *handler) OnConversationAudioTranscriptCompleted(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketConversationAudioTranscriptCompletedEvent) error {
+	return nil
+}
+
 func main() {
-	// Get API token from environment
-	apiToken := os.Getenv("COZE_API_TOKEN")
-	if apiToken == "" {
-		log.Fatal("COZE_API_TOKEN environment variable is required")
+	cozeAPIToken := os.Getenv("COZE_API_TOKEN")
+	cozeAPIBase := os.Getenv("COZE_API_BASE")
+	if cozeAPIBase == "" {
+		cozeAPIBase = coze.CnBaseURL
 	}
-
-	// Get bot ID from environment
 	botID := os.Getenv("COZE_BOT_ID")
-	if botID == "" {
-		log.Fatal("COZE_BOT_ID environment variable is required")
-	}
 
-	// Get base URL from environment (default to CN)
-	baseURL := os.Getenv("COZE_API_BASE")
-	if baseURL == "" {
-		baseURL = coze.CnBaseURL
-	}
-
-	// Create Coze API client
-	auth := coze.NewTokenAuth(apiToken)
-	client := coze.NewCozeAPI(auth, coze.WithBaseURL(baseURL))
+	// Init the Coze client through the access_token.
+	authCli := coze.NewTokenAuth(cozeAPIToken)
+	client := coze.NewCozeAPI(authCli,
+		coze.WithBaseURL(cozeAPIBase),
+		// coze.WithLogLevel(coze.LogLevelDebug),
+	)
 
 	// Create chat WebSocket client
 	chatClient := client.WebSockets.Chat.Create(context.Background(), &coze.CreateWebsocketChatReq{
 		BotID: &botID,
 	})
-
-	chatClient.OnChatCreated(func(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketChatCreatedEvent) error {
-		fmt.Println("Chat session created")
-		return nil
-	})
-	chatClient.OnConversationChatCreated(func(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketConversationChatCreatedEvent) error {
-		fmt.Printf("Conversation chat created: %s\n", event.Data.ID)
-		return nil
-	})
-	chatClient.OnConversationMessageDelta(func(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketConversationMessageDeltaEvent) error {
-		fmt.Printf("Message delta: %s\n", event.Data.Content)
-		return nil
-	})
-	chatClient.OnConversationChatCompleted(func(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketConversationChatCompletedEvent) error {
-		fmt.Printf("Chat completed: %s\n", event.Data.ID)
-		return nil
-	})
-	chatClient.OnError(func(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketErrorEvent) error {
-		fmt.Printf("Error: %v\n", event)
-		return nil
-	})
-	chatClient.OnClosed(func(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketClosedEvent) error {
-		fmt.Println("Connection closed")
-		return nil
-	})
+	chatClient.RegisterHandler(&handler{})
 
 	// Connect to WebSocket
 	fmt.Println("Connecting to WebSocket...")
@@ -70,7 +99,7 @@ func main() {
 	defer chatClient.Close()
 
 	// Send a message
-	message := "Hello! How are you today?"
+	message := "今天天气真不错"
 	fmt.Printf("Sending message: %s\n", message)
 	if err := chatClient.ConversationMessageCreate(&coze.WebSocketConversationMessageCreateEventData{
 		Role:        coze.MessageRoleUser,

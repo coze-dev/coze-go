@@ -6,7 +6,8 @@ import (
 )
 
 type eventWaiter struct {
-	events sync.Map
+	events       sync.Map
+	shutdownChan chan struct{}
 }
 
 type eventWaitState struct {
@@ -31,6 +32,16 @@ func (r *eventWaiter) getState(key string) *eventWaitState {
 	}
 	r.events.Store(key, state)
 	return state
+}
+
+func (r *eventWaiter) shutdown() {
+	r.events.Range(func(key, value any) bool {
+		state := value.(*eventWaitState)
+		state.once.Do(func() {
+			close(state.ch)
+		})
+		return true
+	})
 }
 
 // waitAll: true 表示等待所有事件都触发，false 表示等待任意一个事件触发
