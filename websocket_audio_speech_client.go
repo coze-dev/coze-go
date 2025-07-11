@@ -65,6 +65,7 @@ func (c *WebSocketAudioSpeech) InputTextBufferComplete(data *WebSocketInputTextB
 func (c *WebSocketAudioSpeech) Wait() error {
 	return c.ws.WaitForEvent([]WebSocketEventType{
 		WebSocketEventTypeSpeechAudioCompleted,
+		WebSocketEventTypeError,
 	}, false)
 }
 

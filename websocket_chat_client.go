@@ -85,6 +85,7 @@ func (c *WebSocketChat) Wait() error {
 	return c.ws.WaitForEvent([]WebSocketEventType{
 		WebSocketEventTypeConversationChatCompleted,
 		WebSocketEventTypeConversationChatFailed,
+		WebSocketEventTypeError,
 	}, false)
 }
 

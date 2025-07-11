@@ -68,7 +68,8 @@ func (c *WebSocketAudioTranscription) InputAudioBufferClear(data *WebSocketInput
 func (c *WebSocketAudioTranscription) Wait() error {
 	return c.ws.WaitForEvent([]WebSocketEventType{
 		WebSocketEventTypeTranscriptionsMessageCompleted,
-	}, true)
+		WebSocketEventTypeError,
+	}, false)
 }
 
 // OnEvent registers an event handler
