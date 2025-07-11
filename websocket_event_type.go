@@ -165,7 +165,7 @@ func parseWebSocketEvent(message []byte) (IWebSocketEvent, error) {
 	}
 
 	event := reflect.New(eventTypeRef).Interface()
-	// fmt.Println(string(common.Data))
+	fmt.Println(string(message))
 	if err := json.Unmarshal(message, &event); err != nil {
 		return nil, fmt.Errorf("2-failed to unmarshal event data: %w", err)
 	}

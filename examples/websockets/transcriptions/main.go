@@ -9,50 +9,22 @@ import (
 	"github.com/coze-dev/coze-go"
 )
 
-type handler struct{}
+type handler struct {
+	coze.BaseWebSocketAudioTranscriptionHandler
+}
 
-func (r handler) OnClientError(ctx context.Context, cli *coze.WebSocketAudioTranscription, event *coze.WebSocketClientErrorEvent) error {
-	fmt.Printf("transcriptions client error: %v", event)
+func (r *handler) OnClientError(ctx context.Context, cli *coze.WebSocketAudioTranscription, event *coze.WebSocketClientErrorEvent) error {
+	fmt.Printf("transcriptions client error: %v\n", event)
 	return nil
 }
 
-func (r handler) OnClosed(ctx context.Context, cli *coze.WebSocketAudioTranscription, event *coze.WebSocketClosedEvent) error {
-	fmt.Printf("transcriptions closed: %v", event)
+func (r *handler) OnError(ctx context.Context, cli *coze.WebSocketAudioTranscription, event *coze.WebSocketErrorEvent) error {
+	fmt.Printf("transcriptions error: %v\n", event)
 	return nil
 }
 
-func (r handler) OnError(ctx context.Context, cli *coze.WebSocketAudioTranscription, event *coze.WebSocketErrorEvent) error {
-	fmt.Printf("transcriptions error: %v", event)
-	return nil
-}
-
-func (r handler) OnTranscriptionsCreated(ctx context.Context, cli *coze.WebSocketAudioTranscription, event *coze.WebSocketTranscriptionsCreatedEvent) error {
-	fmt.Printf("transcriptions created: %v", event)
-	return nil
-}
-
-func (r handler) OnTranscriptionsUpdated(ctx context.Context, cli *coze.WebSocketAudioTranscription, event *coze.WebSocketTranscriptionsUpdatedEvent) error {
-	fmt.Printf("transcriptions updated: %v", event)
-	return nil
-}
-
-func (r handler) OnInputAudioBufferCompleted(ctx context.Context, cli *coze.WebSocketAudioTranscription, event *coze.WebSocketInputAudioBufferCompletedEvent) error {
-	fmt.Printf("transcriptions input audio buffer completed: %v", event)
-	return nil
-}
-
-func (r handler) OnInputAudioBufferCleared(ctx context.Context, cli *coze.WebSocketAudioTranscription, event *coze.WebSocketInputAudioBufferClearedEvent) error {
-	fmt.Printf("transcriptions input audio buffer cleared: %v", event)
-	return nil
-}
-
-func (r handler) OnTranscriptionsMessageUpdate(ctx context.Context, cli *coze.WebSocketAudioTranscription, event *coze.WebSocketTranscriptionsMessageUpdateEvent) error {
-	fmt.Printf("transcriptions message update: %v", event)
-	return nil
-}
-
-func (r handler) OnTranscriptionsMessageCompleted(ctx context.Context, cli *coze.WebSocketAudioTranscription, event *coze.WebSocketTranscriptionsMessageCompletedEvent) error {
-	fmt.Printf("transcriptions message completed: %v", event)
+func (r *handler) OnTranscriptionsMessageUpdate(ctx context.Context, cli *coze.WebSocketAudioTranscription, event *coze.WebSocketTranscriptionsMessageUpdateEvent) error {
+	fmt.Printf("transcriptions message update: %s\n", event.Data.Content)
 	return nil
 }
 
@@ -81,7 +53,10 @@ func main() {
 	// Simulate sending audio data (in a real implementation, this would be actual audio data)
 	// For this example, we'll just send some dummy data
 	fmt.Println("Sending audio data...")
-	audioData := []byte("This is simulated audio data for transcription testing")
+	audioData, err := os.ReadFile("output.wav")
+	if err != nil {
+		log.Fatalf("Failed to read audio file: %v", err)
+	}
 
 	if err := transcriptionsClient.InputAudioBufferAppend(&coze.WebSocketInputAudioBufferAppendEventData{
 		Delta: audioData,
@@ -95,8 +70,7 @@ func main() {
 
 	// Wait for transcription completion
 	fmt.Println("Waiting for transcription completion...")
-	err := transcriptionsClient.Wait()
-	if err != nil {
+	if err := transcriptionsClient.Wait(); err != nil {
 		log.Fatalf("Failed to wait for completion: %v", err)
 	}
 
