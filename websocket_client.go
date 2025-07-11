@@ -24,7 +24,7 @@ type websocketClient struct {
 	receiveChan chan IWebSocketEvent // 接收队列, 长度 100
 	closeChan   chan struct{}
 	processing  sync.WaitGroup
-	handlers    map[WebSocketEventType]EventHandler
+	handlers    sync.Map // map[WebSocketEventType]EventHandler
 	mu          sync.RWMutex
 	connected   bool
 	ctx         context.Context
@@ -65,7 +65,7 @@ func newWebSocketClient(opt *WebSocketClientOption) *websocketClient {
 		sendChan:    make(chan []byte, opt.SendChanCapacity),
 		receiveChan: make(chan IWebSocketEvent, opt.ReceiveChanCapacity),
 		closeChan:   make(chan struct{}),
-		handlers:    make(map[WebSocketEventType]EventHandler),
+		handlers:    sync.Map{},
 		ctx:         ctx,
 		cancel:      cancel,
 		waiter:      newEventWaiter(),
@@ -126,7 +126,7 @@ func (c *websocketClient) Connect() error {
 		HandshakeTimeout: c.opt.HandshakeTimeout,
 	}
 
-	c.core.Log(c.ctx, LogLevelDebug, "Connecting to WebSocket: %s", u.String())
+	c.core.Log(c.ctx, LogLevelDebug, "[%s] connecting to websocket: %s", c.opt.path, u.String())
 	conn, _, err := dialer.Dial(u.String(), headers)
 	if err != nil {
 		return fmt.Errorf("failed to connect to WebSocket: %w", err)
@@ -200,9 +200,7 @@ func (c *websocketClient) sendEvent(event any) error {
 
 // OnEvent registers an event handler
 func (c *websocketClient) OnEvent(eventType WebSocketEventType, handler EventHandler) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.handlers[eventType] = handler
+	c.handlers.Store(eventType, handler)
 }
 
 // WaitForEvent waits for specific events
@@ -252,11 +250,6 @@ func (c *websocketClient) receiveLoop() {
 				continue
 			}
 
-			// if event.GetEventType() == WebSocketEventTypeSpeechAudioCompleted {
-			// 	fmt.Println()
-			// 	fmt.Println()
-			// }
-
 			c.waiter.trigger(string(event.GetEventType()))
 
 			if event.GetEventType() == WebSocketEventTypeSpeechAudioUpdate {
@@ -268,13 +261,6 @@ func (c *websocketClient) receiveLoop() {
 			// 没有 timeout 或者 channel full 处理, 暂时符合预期
 			c.processing.Add(1)
 			c.receiveChan <- event
-
-			// select {
-			// case c.receiveChan <- event:
-			// default:
-			// todo log
-			// Channel full, skip event
-			// }
 		}
 	}
 }
@@ -294,11 +280,9 @@ func (c *websocketClient) handleEvents() {
 func (c *websocketClient) handleEvent(event IWebSocketEvent) {
 	defer c.processing.Done()
 
-	c.mu.RLock()
-	handler, exists := c.handlers[event.GetEventType()]
-	c.mu.RUnlock()
+	handler := c.getHandler(event.GetEventType())
 
-	if exists && handler != nil {
+	if handler != nil {
 		if err := handler(event); err != nil {
 			// TODO: handler 返回错误类型？
 			c.handleError(WebSocketEventTypeClientError, fmt.Errorf("event handler error: %w", err))
@@ -310,25 +294,31 @@ func (c *websocketClient) handleEvent(event IWebSocketEvent) {
 func (c *websocketClient) handleError(eventType WebSocketEventType, err error) {
 	c.core.Log(c.ctx, LogLevelWarn, "[%s] receive event, type=%s, event=%s", c.opt.path, eventType, err)
 
-	c.mu.RLock()
-	handler, ok := c.handlers[eventType]
-	c.mu.RUnlock()
-
-	if ok && handler != nil {
-		if eventType == WebSocketEventTypeError {
-			handler(&WebSocketErrorEvent{
-				baseWebSocketEvent: baseWebSocketEvent{
-					EventType: eventType,
-				},
-				Data: err,
-			})
-		} else if eventType == WebSocketEventTypeClientError {
-			handler(&WebSocketClientErrorEvent{
-				baseWebSocketEvent: baseWebSocketEvent{
-					EventType: eventType,
-				},
-				Data: err,
-			})
-		}
+	handler := c.getHandler(eventType)
+	if handler == nil {
+		return
 	}
+	if eventType == WebSocketEventTypeError {
+		handler(&WebSocketErrorEvent{
+			baseWebSocketEvent: baseWebSocketEvent{
+				EventType: eventType,
+			},
+			Data: err,
+		})
+	} else if eventType == WebSocketEventTypeClientError {
+		handler(&WebSocketClientErrorEvent{
+			baseWebSocketEvent: baseWebSocketEvent{
+				EventType: eventType,
+			},
+			Data: err,
+		})
+	}
+}
+
+func (c *websocketClient) getHandler(eventType WebSocketEventType) EventHandler {
+	handler, ok := c.handlers.Load(eventType)
+	if !ok {
+		return nil
+	}
+	return handler.(EventHandler)
 }

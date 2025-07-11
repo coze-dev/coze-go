@@ -37,7 +37,7 @@ func main() {
 
 	// Init the Coze client through the access_token.
 	authCli := coze.NewTokenAuth(cozeAPIToken)
-	client := coze.NewCozeAPI(authCli, coze.WithBaseURL(cozeAPIBase))
+	client := coze.NewCozeAPI(authCli, coze.WithBaseURL(cozeAPIBase), coze.WithLogLevel(coze.LogLevelDebug))
 
 	// Create transcriptions WebSocket client
 	transcriptionsClient := client.WebSockets.Audio.Transcriptions.Create(context.Background(), &coze.CreateWebsocketAudioTranscriptionReq{})

@@ -18,7 +18,7 @@ func newWebSocketAudioTranscriptionClient(ctx context.Context, core *core, req *
 		&WebSocketClientOption{
 			ctx:   ctx,
 			core:  core,
-			path:  "/v1/transcriptions",
+			path:  "/v1/audio/transcriptions",
 			query: req.toQuery(),
 		},
 	)
