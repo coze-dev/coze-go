@@ -14,23 +14,19 @@ type WebSocketAudioTranscription struct {
 }
 
 func newWebSocketAudioTranscriptionClient(ctx context.Context, core *core, req *CreateWebsocketAudioTranscriptionReq) *WebSocketAudioTranscription {
-	ws := newWebSocketClient(
-		&WebSocketClientOption{
-			ctx:                ctx,
-			core:               core,
-			path:               "/v1/audio/transcriptions",
-			query:              req.toQuery(),
-			responseEventTypes: audioTranscriptionResponseEventTypes,
-		},
-	)
+	ws := newWebSocketClient(mergeWebSocketClientOption(&WebSocketClientOption{
+		ctx:                ctx,
+		core:               core,
+		path:               "/v1/audio/transcriptions",
+		query:              req.toQuery(),
+		responseEventTypes: audioTranscriptionResponseEventTypes,
+	}, req.WebSocketClientOption))
 
-	client := &WebSocketAudioTranscription{
+	return &WebSocketAudioTranscription{
 		ctx:  ctx,
 		core: core,
 		ws:   ws,
 	}
-
-	return client
 }
 
 // Connect establishes the WebSocket connection

@@ -43,6 +43,16 @@ type WebSocketClientOption struct {
 	HandshakeTimeout    time.Duration // 默认 3s
 }
 
+func mergeWebSocketClientOption(opt *WebSocketClientOption, merge *WebSocketClientOption) *WebSocketClientOption {
+	if merge == nil {
+		return opt
+	}
+	opt.SendChanCapacity = merge.SendChanCapacity
+	opt.ReceiveChanCapacity = merge.ReceiveChanCapacity
+	opt.HandshakeTimeout = merge.HandshakeTimeout
+	return opt
+}
+
 // EventHandler represents a WebSocket event handler
 type EventHandler func(event IWebSocketEvent) error
 

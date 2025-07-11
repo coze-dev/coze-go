@@ -14,23 +14,19 @@ type WebSocketChat struct {
 }
 
 func newWebsocketChatClient(ctx context.Context, core *core, req *CreateWebsocketChatReq) *WebSocketChat {
-	ws := newWebSocketClient(
-		&WebSocketClientOption{
-			ctx:                ctx,
-			core:               core,
-			path:               "/v1/chat",
-			query:              req.toQuery(),
-			responseEventTypes: chatResponseEventTypes,
-		},
-	)
+	ws := newWebSocketClient(mergeWebSocketClientOption(&WebSocketClientOption{
+		ctx:                ctx,
+		core:               core,
+		path:               "/v1/chat",
+		query:              req.toQuery(),
+		responseEventTypes: chatResponseEventTypes,
+	}, req.WebSocketClientOption))
 
-	client := &WebSocketChat{
+	return &WebSocketChat{
 		ctx:  ctx,
 		core: core,
 		ws:   ws,
 	}
-
-	return client
 }
 
 // Connect establishes the WebSocket connection

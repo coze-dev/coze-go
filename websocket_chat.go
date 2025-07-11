@@ -10,6 +10,8 @@ func (c *websocketChatBuilder) Create(ctx context.Context, req *CreateWebsocketC
 }
 
 type CreateWebsocketChatReq struct {
+	WebSocketClientOption *WebSocketClientOption
+
 	// BotID is the ID of the bot.
 	BotID *string `json:"bot_id"`
 	// WorkflowID is the ID of the workflow.

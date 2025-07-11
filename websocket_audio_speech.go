@@ -6,7 +6,9 @@ func (r *websocketAudioSpeechBuild) Create(ctx context.Context, req *CreateWebso
 	return newWebSocketAudioSpeechClient(ctx, r.core, req)
 }
 
-type CreateWebsocketAudioSpeechReq struct{}
+type CreateWebsocketAudioSpeechReq struct {
+	WebSocketClientOption *WebSocketClientOption
+}
 
 func (r *CreateWebsocketAudioSpeechReq) toQuery() map[string]string {
 	q := map[string]string{}
