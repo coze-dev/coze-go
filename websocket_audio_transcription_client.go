@@ -14,7 +14,7 @@ type WebSocketAudioTranscription struct {
 	ws *websocketClient
 }
 
-func newWebSocketAudioTranscriptionClient(ctx context.Context, core *core, req *CreateWebsocketChatReq) *WebSocketAudioTranscription {
+func newWebSocketAudioTranscriptionClient(ctx context.Context, core *core, req *CreateWebsocketAudioTranscriptionReq) *WebSocketAudioTranscription {
 	ws := newWebSocketClient(
 		&WebSocketClientOption{
 			ctx:   ctx,
