@@ -22,15 +22,10 @@ func newEventWaiter() *eventWaiter {
 }
 
 func (r *eventWaiter) getState(key string) *eventWaitState {
-	if state, exists := r.events.Load(key); exists {
-		return state.(*eventWaitState)
-	}
-
-	state := &eventWaitState{
+	state, _ := r.events.LoadOrStore(key, &eventWaitState{
 		ch: make(chan struct{}, 1),
-	}
-	r.events.Store(key, state)
-	return state
+	})
+	return state.(*eventWaitState)
 }
 
 func (r *eventWaiter) shutdown() {
