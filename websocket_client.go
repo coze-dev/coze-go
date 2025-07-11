@@ -103,8 +103,11 @@ func (c *websocketClient) Connect() error {
 
 	// Setup headers
 	headers := http.Header{}
+	// auth
 	headers.Set("Authorization", "Bearer "+accessToken)
-	headers.Set("User-Agent", "coze-go/1.0") // todo
+	// agent
+	headers.Set("User-Agent", userAgent)
+	headers.Set("X-Coze-Client-User-Agent", clientUserAgent)
 
 	// Establish connection
 	dialer := websocket.Dialer{
@@ -316,11 +319,7 @@ func (c *websocketClient) handleError(err error) {
 			baseWebSocketEvent: baseWebSocketEvent{
 				EventType: WebSocketEventTypeError,
 			},
-			// todo
-			Data: &WebSocketErrorEventData{
-				Code: 0,
-				Msg:  "",
-			},
+			Data: err,
 		}
 		handler(errorEvent)
 	}
