@@ -24,9 +24,7 @@ func (r *handler) OnClientError(ctx context.Context, cli *coze.WebSocketChat, ev
 	}
 	var wsErr *websocket.CloseError
 	if errors.As(event.Data, &wsErr) {
-		// if wsErr.Code == websocket.CloseNormalClosure {
 		return nil
-		// }
 	}
 	fmt.Printf("chat client_error=%s\n", event.Data)
 	return nil
