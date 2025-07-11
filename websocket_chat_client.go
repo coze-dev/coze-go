@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-var _ WebsocketXXX = (*WebSocketChat)(nil)
+var _ WebSocketClient = (*WebSocketChat)(nil)
 
 type WebSocketChat struct {
 	ctx  context.Context

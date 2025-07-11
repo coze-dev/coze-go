@@ -1,6 +1,6 @@
 package coze
 
-type WebsocketXXX interface {
+type WebSocketClient interface {
 	Connect() error
 	Close() error
 	IsConnected() bool

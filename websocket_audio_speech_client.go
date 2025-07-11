@@ -4,7 +4,7 @@ import (
 	"context"
 )
 
-var _ WebsocketXXX = (*WebSocketAudioSpeech)(nil)
+var _ WebSocketClient = (*WebSocketAudioSpeech)(nil)
 
 type WebSocketAudioSpeech struct {
 	ctx  context.Context
