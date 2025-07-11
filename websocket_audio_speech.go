@@ -7,12 +7,6 @@ func (r *websocketAudioSpeechBuild) Create(ctx context.Context, req *CreateWebso
 }
 
 type CreateWebsocketAudioSpeechReq struct {
-	// BotID is the ID of the bot.
-	BotID *string `json:"bot_id"`
-	// WorkflowID is the ID of the workflow.
-	WorkflowID *string `json:"workflow_id"`
-	// DeviceID is the ID of the device.
-	DeviceID *int64 `json:"device_id"`
 }
 
 func (r *CreateWebsocketAudioSpeechReq) toQuery() map[string]string {

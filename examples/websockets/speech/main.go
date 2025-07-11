@@ -62,12 +62,10 @@ func main() {
 
 	// Init the Coze client through the access_token.
 	authCli := coze.NewTokenAuth(cozeAPIToken)
-	client := coze.NewCozeAPI(authCli, coze.WithBaseURL(cozeAPIBase))
+	client := coze.NewCozeAPI(authCli, coze.WithBaseURL(cozeAPIBase), coze.WithLogLevel(coze.LogLevelDebug))
 
 	// Create speech WebSocket client
-	speechClient := client.WebSockets.Audio.Speech.Create(context.Background(), &coze.CreateWebsocketAudioSpeechReq{
-		// Model: "tts-1",
-	})
+	speechClient := client.WebSockets.Audio.Speech.Create(context.Background(), &coze.CreateWebsocketAudioSpeechReq{})
 	speechClient.RegisterHandler(&handler{})
 
 	// Connect to WebSocket

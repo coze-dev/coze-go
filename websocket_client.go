@@ -16,6 +16,7 @@ import (
 type websocketClient struct {
 	opt *WebSocketClientOption
 
+	core        *core
 	conn        *websocket.Conn
 	sendChan    chan []byte          // 发送队列, 长度 100
 	receiveChan chan IWebSocketEvent // 接收队列, 长度 100
@@ -56,6 +57,7 @@ func newWebSocketClient(opt *WebSocketClientOption) *websocketClient {
 
 	client := &websocketClient{
 		opt:         opt,
+		core:        opt.core,
 		sendChan:    make(chan []byte, opt.SendChanCapacity),
 		receiveChan: make(chan IWebSocketEvent, opt.ReceiveChanCapacity),
 		closeChan:   make(chan struct{}),
@@ -92,6 +94,11 @@ func (c *websocketClient) Connect() error {
 	} else if u.Scheme == "https" {
 		u.Scheme = "wss"
 	}
+	if u.Host == "api.coze.cn" {
+		u.Host = "ws.coze.cn"
+	} else if u.Host == "api.coze.com" {
+		u.Host = "ws.coze.com"
+	}
 
 	u.Path = path
 
@@ -114,6 +121,7 @@ func (c *websocketClient) Connect() error {
 		HandshakeTimeout: c.opt.HandshakeTimeout,
 	}
 
+	c.core.Log(c.ctx, LogLevelDebug, "Connecting to WebSocket: %s", u.String())
 	conn, _, err := dialer.Dial(u.String(), headers)
 	if err != nil {
 		return fmt.Errorf("failed to connect to WebSocket: %w", err)
