@@ -87,68 +87,64 @@ const (
 	WebSocketEventTypeInputAudioBufferSpeechStopped        WebSocketEventType = "input_audio_buffer.speech_stopped"       // 用户结束说话
 )
 
-var websocketEvents = map[string]reflect.Type{}
+var websocketEvents = map[string]reflect.Type{
+	// common
+	string(WebSocketEventTypeClientError): reflect.TypeOf(WebSocketClientErrorEvent{}),
+	string(WebSocketEventTypeClosed):      reflect.TypeOf(WebSocketClosedEvent{}),
+	string(WebSocketEventTypeError):       reflect.TypeOf(WebSocketErrorEvent{}),
 
-func registerWebSocketEvent() {
-	websocketEvents = map[string]reflect.Type{
-		// common
-		string(WebSocketEventTypeClientError): reflect.TypeOf(WebSocketClientErrorEvent{}),
-		string(WebSocketEventTypeClosed):      reflect.TypeOf(WebSocketClosedEvent{}),
-		string(WebSocketEventTypeError):       reflect.TypeOf(WebSocketErrorEvent{}),
-
-		// v1/audio/speech req
-		string(WebSocketEventTypeSpeechUpdate):            reflect.TypeOf(WebSocketSpeechUpdateEvent{}),
-		string(WebSocketEventTypeInputTextBufferAppend):   reflect.TypeOf(WebSocketInputTextBufferAppendEvent{}),
-		string(WebSocketEventTypeInputTextBufferComplete): reflect.TypeOf(WebSocketInputTextBufferCompleteEvent{}),
-		// v1/audio/speech resp
-		string(WebSocketEventTypeSpeechCreated):            reflect.TypeOf(WebSocketSpeechCreatedEvent{}),
-		string(WebSocketEventTypeSpeechUpdated):            reflect.TypeOf(WebSocketSpeechUpdatedEvent{}),
-		string(WebSocketEventTypeInputTextBufferCompleted): reflect.TypeOf(WebSocketInputTextBufferCompletedEvent{}),
-		string(WebSocketEventTypeSpeechAudioUpdate):        reflect.TypeOf(WebSocketSpeechAudioUpdateEvent{}),
-		string(WebSocketEventTypeSpeechAudioCompleted):     reflect.TypeOf(WebSocketSpeechAudioCompletedEvent{}),
-		// v1/audio/transcriptions req
-		string(WebSocketEventTypeTranscriptionsUpdate):     reflect.TypeOf(WebSocketTranscriptionsUpdateEvent{}),
-		string(WebSocketEventTypeInputAudioBufferAppend):   reflect.TypeOf(WebSocketInputAudioBufferAppendEvent{}),
-		string(WebSocketEventTypeInputAudioBufferComplete): reflect.TypeOf(WebSocketInputAudioBufferCompleteEvent{}),
-		string(WebSocketEventTypeInputAudioBufferClear):    reflect.TypeOf(WebSocketInputAudioBufferClearEvent{}),
-		// v1/audio/transcriptions resp
-		string(WebSocketEventTypeTranscriptionsCreated):          reflect.TypeOf(WebSocketTranscriptionsCreatedEvent{}),
-		string(WebSocketEventTypeTranscriptionsUpdated):          reflect.TypeOf(WebSocketTranscriptionsUpdatedEvent{}),
-		string(WebSocketEventTypeInputAudioBufferCompleted):      reflect.TypeOf(WebSocketInputAudioBufferCompletedEvent{}),
-		string(WebSocketEventTypeInputAudioBufferCleared):        reflect.TypeOf(WebSocketInputAudioBufferClearedEvent{}),
-		string(WebSocketEventTypeTranscriptionsMessageUpdate):    reflect.TypeOf(WebSocketTranscriptionsMessageUpdateEvent{}),
-		string(WebSocketEventTypeTranscriptionsMessageCompleted): reflect.TypeOf(WebSocketTranscriptionsMessageCompletedEvent{}),
-		// v1/chat req
-		string(WebSocketEventTypeChatUpdate): reflect.TypeOf(WebSocketChatUpdateEvent{}),
-		// string(WebSocketEventTypeInputAudioBufferAppend):   reflect.TypeOf(WebSocketInputAudioBufferAppendEvent{}),
-		// string(WebSocketEventTypeInputAudioBufferComplete): reflect.TypeOf(WebSocketInputAudioBufferCompleteEvent{}),
-		// string(WebSocketEventTypeInputAudioBufferClear):    reflect.TypeOf(WebSocketInputAudioBufferClearEvent{}),
-		string(WebSocketEventTypeConversationMessageCreate):         reflect.TypeOf(WebSocketConversationMessageCreateEvent{}),
-		string(WebSocketEventTypeConversationClear):                 reflect.TypeOf(WebSocketConversationClearEvent{}),
-		string(WebSocketEventTypeConversationChatSubmitToolOutputs): reflect.TypeOf(WebSocketConversationChatSubmitToolOutputsEvent{}),
-		string(WebSocketEventTypeConversationChatCancel):            reflect.TypeOf(WebSocketConversationChatCancelEvent{}),
-		// v1/chat resp
-		string(WebSocketEventTypeChatCreated):                    reflect.TypeOf(WebSocketChatCreatedEvent{}),
-		string(WebSocketEventTypeChatUpdated):                    reflect.TypeOf(WebSocketChatUpdatedEvent{}),
-		string(WebSocketEventTypeConversationChatCreated):        reflect.TypeOf(WebSocketConversationChatCreatedEvent{}),
-		string(WebSocketEventTypeConversationChatInProgress):     reflect.TypeOf(WebSocketConversationChatInProgressEvent{}),
-		string(WebSocketEventTypeConversationMessageDelta):       reflect.TypeOf(WebSocketConversationMessageDeltaEvent{}),
-		string(WebSocketEventTypeConversationAudioSentenceStart): reflect.TypeOf(WebSocketConversationAudioSentenceStartEvent{}),
-		string(WebSocketEventTypeConversationAudioDelta):         reflect.TypeOf(WebSocketConversationAudioDeltaEvent{}),
-		string(WebSocketEventTypeConversationMessageCompleted):   reflect.TypeOf(WebSocketConversationMessageCompletedEvent{}),
-		string(WebSocketEventTypeConversationAudioCompleted):     reflect.TypeOf(WebSocketConversationAudioCompletedEvent{}),
-		string(WebSocketEventTypeConversationChatCompleted):      reflect.TypeOf(WebSocketConversationChatCompletedEvent{}),
-		string(WebSocketEventTypeConversationChatFailed):         reflect.TypeOf(WebSocketConversationChatFailedEvent{}),
-		// string(WebSocketEventTypeInputAudioBufferCompleted):      reflect.TypeOf(WebSocketInputAudioBufferCompletedEvent{}),
-		// string(WebSocketEventTypeInputAudioBufferCleared):        reflect.TypeOf(WebSocketInputAudioBufferClearEvent{}),
-		string(WebSocketEventTypeConversationCleared):                  reflect.TypeOf(WebSocketConversationClearedEvent{}),
-		string(WebSocketEventTypeConversationChatCanceled):             reflect.TypeOf(WebSocketConversationChatCanceledEvent{}),
-		string(WebSocketEventTypeConversationAudioTranscriptUpdate):    reflect.TypeOf(WebSocketConversationAudioTranscriptUpdateEvent{}),
-		string(WebSocketEventTypeConversationAudioTranscriptCompleted): reflect.TypeOf(WebSocketConversationAudioTranscriptCompletedEvent{}),
-		string(WebSocketEventTypeConversationChatRequiresAction):       reflect.TypeOf(WebSocketConversationChatRequiresActionEvent{}),
-		string(WebSocketEventTypeInputAudioBufferSpeechStarted):        reflect.TypeOf(WebSocketInputAudioBufferSpeechStartedEvent{}),
-		string(WebSocketEventTypeInputAudioBufferSpeechStopped):        reflect.TypeOf(WebSocketInputAudioBufferSpeechStoppedEvent{}),
-	}
+	// v1/audio/speech req
+	string(WebSocketEventTypeSpeechUpdate):            reflect.TypeOf(WebSocketSpeechUpdateEvent{}),
+	string(WebSocketEventTypeInputTextBufferAppend):   reflect.TypeOf(WebSocketInputTextBufferAppendEvent{}),
+	string(WebSocketEventTypeInputTextBufferComplete): reflect.TypeOf(WebSocketInputTextBufferCompleteEvent{}),
+	// v1/audio/speech resp
+	string(WebSocketEventTypeSpeechCreated):            reflect.TypeOf(WebSocketSpeechCreatedEvent{}),
+	string(WebSocketEventTypeSpeechUpdated):            reflect.TypeOf(WebSocketSpeechUpdatedEvent{}),
+	string(WebSocketEventTypeInputTextBufferCompleted): reflect.TypeOf(WebSocketInputTextBufferCompletedEvent{}),
+	string(WebSocketEventTypeSpeechAudioUpdate):        reflect.TypeOf(WebSocketSpeechAudioUpdateEvent{}),
+	string(WebSocketEventTypeSpeechAudioCompleted):     reflect.TypeOf(WebSocketSpeechAudioCompletedEvent{}),
+	// v1/audio/transcriptions req
+	string(WebSocketEventTypeTranscriptionsUpdate):     reflect.TypeOf(WebSocketTranscriptionsUpdateEvent{}),
+	string(WebSocketEventTypeInputAudioBufferAppend):   reflect.TypeOf(WebSocketInputAudioBufferAppendEvent{}),
+	string(WebSocketEventTypeInputAudioBufferComplete): reflect.TypeOf(WebSocketInputAudioBufferCompleteEvent{}),
+	string(WebSocketEventTypeInputAudioBufferClear):    reflect.TypeOf(WebSocketInputAudioBufferClearEvent{}),
+	// v1/audio/transcriptions resp
+	string(WebSocketEventTypeTranscriptionsCreated):          reflect.TypeOf(WebSocketTranscriptionsCreatedEvent{}),
+	string(WebSocketEventTypeTranscriptionsUpdated):          reflect.TypeOf(WebSocketTranscriptionsUpdatedEvent{}),
+	string(WebSocketEventTypeInputAudioBufferCompleted):      reflect.TypeOf(WebSocketInputAudioBufferCompletedEvent{}),
+	string(WebSocketEventTypeInputAudioBufferCleared):        reflect.TypeOf(WebSocketInputAudioBufferClearedEvent{}),
+	string(WebSocketEventTypeTranscriptionsMessageUpdate):    reflect.TypeOf(WebSocketTranscriptionsMessageUpdateEvent{}),
+	string(WebSocketEventTypeTranscriptionsMessageCompleted): reflect.TypeOf(WebSocketTranscriptionsMessageCompletedEvent{}),
+	// v1/chat req
+	string(WebSocketEventTypeChatUpdate): reflect.TypeOf(WebSocketChatUpdateEvent{}),
+	// string(WebSocketEventTypeInputAudioBufferAppend):   reflect.TypeOf(WebSocketInputAudioBufferAppendEvent{}),
+	// string(WebSocketEventTypeInputAudioBufferComplete): reflect.TypeOf(WebSocketInputAudioBufferCompleteEvent{}),
+	// string(WebSocketEventTypeInputAudioBufferClear):    reflect.TypeOf(WebSocketInputAudioBufferClearEvent{}),
+	string(WebSocketEventTypeConversationMessageCreate):         reflect.TypeOf(WebSocketConversationMessageCreateEvent{}),
+	string(WebSocketEventTypeConversationClear):                 reflect.TypeOf(WebSocketConversationClearEvent{}),
+	string(WebSocketEventTypeConversationChatSubmitToolOutputs): reflect.TypeOf(WebSocketConversationChatSubmitToolOutputsEvent{}),
+	string(WebSocketEventTypeConversationChatCancel):            reflect.TypeOf(WebSocketConversationChatCancelEvent{}),
+	// v1/chat resp
+	string(WebSocketEventTypeChatCreated):                    reflect.TypeOf(WebSocketChatCreatedEvent{}),
+	string(WebSocketEventTypeChatUpdated):                    reflect.TypeOf(WebSocketChatUpdatedEvent{}),
+	string(WebSocketEventTypeConversationChatCreated):        reflect.TypeOf(WebSocketConversationChatCreatedEvent{}),
+	string(WebSocketEventTypeConversationChatInProgress):     reflect.TypeOf(WebSocketConversationChatInProgressEvent{}),
+	string(WebSocketEventTypeConversationMessageDelta):       reflect.TypeOf(WebSocketConversationMessageDeltaEvent{}),
+	string(WebSocketEventTypeConversationAudioSentenceStart): reflect.TypeOf(WebSocketConversationAudioSentenceStartEvent{}),
+	string(WebSocketEventTypeConversationAudioDelta):         reflect.TypeOf(WebSocketConversationAudioDeltaEvent{}),
+	string(WebSocketEventTypeConversationMessageCompleted):   reflect.TypeOf(WebSocketConversationMessageCompletedEvent{}),
+	string(WebSocketEventTypeConversationAudioCompleted):     reflect.TypeOf(WebSocketConversationAudioCompletedEvent{}),
+	string(WebSocketEventTypeConversationChatCompleted):      reflect.TypeOf(WebSocketConversationChatCompletedEvent{}),
+	string(WebSocketEventTypeConversationChatFailed):         reflect.TypeOf(WebSocketConversationChatFailedEvent{}),
+	// string(WebSocketEventTypeInputAudioBufferCompleted):      reflect.TypeOf(WebSocketInputAudioBufferCompletedEvent{}),
+	// string(WebSocketEventTypeInputAudioBufferCleared):        reflect.TypeOf(WebSocketInputAudioBufferClearEvent{}),
+	string(WebSocketEventTypeConversationCleared):                  reflect.TypeOf(WebSocketConversationClearedEvent{}),
+	string(WebSocketEventTypeConversationChatCanceled):             reflect.TypeOf(WebSocketConversationChatCanceledEvent{}),
+	string(WebSocketEventTypeConversationAudioTranscriptUpdate):    reflect.TypeOf(WebSocketConversationAudioTranscriptUpdateEvent{}),
+	string(WebSocketEventTypeConversationAudioTranscriptCompleted): reflect.TypeOf(WebSocketConversationAudioTranscriptCompletedEvent{}),
+	string(WebSocketEventTypeConversationChatRequiresAction):       reflect.TypeOf(WebSocketConversationChatRequiresActionEvent{}),
+	string(WebSocketEventTypeInputAudioBufferSpeechStarted):        reflect.TypeOf(WebSocketInputAudioBufferSpeechStartedEvent{}),
+	string(WebSocketEventTypeInputAudioBufferSpeechStopped):        reflect.TypeOf(WebSocketInputAudioBufferSpeechStoppedEvent{}),
 }
 
 type commonWebSocketEvent struct {
