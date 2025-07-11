@@ -133,6 +133,9 @@ type WebSocketInputTextBufferCompleteEvent struct {
 	baseWebSocketEvent
 }
 
+type WebSocketInputTextBufferCompleteEventData struct {
+}
+
 // WebSocketSpeechCreatedEvent 语音合成连接成功
 //
 // 语音合成连接成功后，返回此事件。
@@ -162,6 +165,16 @@ type WebSocketSpeechUpdatedEventData struct {
 	// 输出音频格式。
 	OutputAudio *OutputAudio `json:"output_audio,omitempty"`
 }
+
+// WebSocketInputTextBufferCompletedEvent input_text_buffer 提交完成
+//
+// 流式提交的文字完成后，返回此事件。
+// docs: https://www.coze.cn/open/docs/developer_guides/tts_event#cf5e0495
+type WebSocketInputTextBufferCompletedEvent struct {
+	baseWebSocketEvent
+}
+
+type WebSocketInputTextBufferCompletedEventData struct{}
 
 // WebSocketSpeechAudioUpdateEvent 合成增量语音
 //
@@ -806,6 +819,101 @@ func (BaseWebSocketChatHandler) OnInputAudioBufferSpeechStarted(ctx context.Cont
 }
 
 func (BaseWebSocketChatHandler) OnInputAudioBufferSpeechStopped(ctx context.Context, cli *WebSocketChat, event *WebSocketInputAudioBufferSpeechStoppedEvent) error {
+	return nil
+}
+
+type IWebSocketAudioSpeechHandler interface {
+	OnClientError(ctx context.Context, cli *WebSocketAudioSpeech, event *WebSocketClientErrorEvent) error
+	OnClosed(ctx context.Context, cli *WebSocketAudioSpeech, event *WebSocketClosedEvent) error
+	OnError(ctx context.Context, cli *WebSocketAudioSpeech, event *WebSocketErrorEvent) error
+	OnSpeechCreated(ctx context.Context, cli *WebSocketAudioSpeech, event *WebSocketSpeechCreatedEvent) error
+	OnSpeechUpdated(ctx context.Context, cli *WebSocketAudioSpeech, event *WebSocketSpeechUpdatedEvent) error
+	OnInputTextBufferCompleted(ctx context.Context, cli *WebSocketAudioSpeech, event *WebSocketInputTextBufferCompletedEvent) error
+	OnSpeechAudioUpdate(ctx context.Context, cli *WebSocketAudioSpeech, event *WebSocketSpeechAudioUpdateEvent) error
+	OnSpeechAudioCompleted(ctx context.Context, cli *WebSocketAudioSpeech, event *WebSocketSpeechAudioCompletedEvent) error
+}
+
+type BaseWebSocketAudioSpeechHandler struct{}
+
+func (BaseWebSocketAudioSpeechHandler) OnClientError(ctx context.Context, cli *WebSocketAudioSpeech, event *WebSocketClientErrorEvent) error {
+	return nil
+}
+
+func (BaseWebSocketAudioSpeechHandler) OnClosed(ctx context.Context, cli *WebSocketAudioSpeech, event *WebSocketClosedEvent) error {
+	return nil
+}
+
+func (BaseWebSocketAudioSpeechHandler) OnError(ctx context.Context, cli *WebSocketAudioSpeech, event *WebSocketErrorEvent) error {
+	return nil
+}
+
+func (BaseWebSocketAudioSpeechHandler) OnSpeechCreated(ctx context.Context, cli *WebSocketAudioSpeech, event *WebSocketSpeechCreatedEvent) error {
+	return nil
+}
+
+func (BaseWebSocketAudioSpeechHandler) OnSpeechUpdated(ctx context.Context, cli *WebSocketAudioSpeech, event *WebSocketSpeechUpdatedEvent) error {
+	return nil
+}
+
+func (BaseWebSocketAudioSpeechHandler) OnInputTextBufferCompleted(ctx context.Context, cli *WebSocketAudioSpeech, event *WebSocketInputTextBufferCompletedEvent) error {
+	return nil
+}
+
+func (BaseWebSocketAudioSpeechHandler) OnSpeechAudioUpdate(ctx context.Context, cli *WebSocketAudioSpeech, event *WebSocketSpeechAudioUpdateEvent) error {
+	return nil
+}
+
+func (BaseWebSocketAudioSpeechHandler) OnSpeechAudioCompleted(ctx context.Context, cli *WebSocketAudioSpeech, event *WebSocketSpeechAudioCompletedEvent) error {
+	return nil
+}
+
+type IWebSocketAudioTranscriptionHandler interface {
+	OnClientError(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketClientErrorEvent) error
+	OnClosed(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketClosedEvent) error
+	OnError(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketErrorEvent) error
+	OnTranscriptionsCreated(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketTranscriptionsCreatedEvent) error
+	OnTranscriptionsUpdated(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketTranscriptionsUpdatedEvent) error
+	OnInputAudioBufferCompleted(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketInputAudioBufferCompletedEvent) error
+	OnInputAudioBufferCleared(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketInputAudioBufferClearedEvent) error
+	OnTranscriptionsMessageUpdate(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketTranscriptionsMessageUpdateEvent) error
+	OnTranscriptionsMessageCompleted(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketTranscriptionsMessageCompletedEvent) error
+}
+
+type BaseWebSocketAudioTranscriptionHandler struct{}
+
+func (BaseWebSocketAudioTranscriptionHandler) OnClientError(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketClientErrorEvent) error {
+	return nil
+}
+
+func (BaseWebSocketAudioTranscriptionHandler) OnClosed(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketClosedEvent) error {
+	return nil
+}
+
+func (BaseWebSocketAudioTranscriptionHandler) OnError(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketErrorEvent) error {
+	return nil
+}
+
+func (BaseWebSocketAudioTranscriptionHandler) OnTranscriptionsCreated(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketTranscriptionsCreatedEvent) error {
+	return nil
+}
+
+func (BaseWebSocketAudioTranscriptionHandler) OnTranscriptionsUpdated(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketTranscriptionsUpdatedEvent) error {
+	return nil
+}
+
+func (BaseWebSocketAudioTranscriptionHandler) OnInputAudioBufferCompleted(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketInputAudioBufferCompletedEvent) error {
+	return nil
+}
+
+func (BaseWebSocketAudioTranscriptionHandler) OnInputAudioBufferCleared(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketInputAudioBufferClearedEvent) error {
+	return nil
+}
+
+func (BaseWebSocketAudioTranscriptionHandler) OnTranscriptionsMessageUpdate(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketTranscriptionsMessageUpdateEvent) error {
+	return nil
+}
+
+func (BaseWebSocketAudioTranscriptionHandler) OnTranscriptionsMessageCompleted(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketTranscriptionsMessageCompletedEvent) error {
 	return nil
 }
 

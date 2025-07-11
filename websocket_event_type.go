@@ -103,7 +103,7 @@ func registerWebSocketEvent() {
 		// v1/audio/speech resp
 		string(WebSocketEventTypeSpeechCreated):            reflect.TypeOf(WebSocketSpeechCreatedEvent{}),
 		string(WebSocketEventTypeSpeechUpdated):            reflect.TypeOf(WebSocketSpeechUpdatedEvent{}),
-		string(WebSocketEventTypeInputTextBufferCompleted): reflect.TypeOf(WebSocketInputTextBufferCompleteEvent{}),
+		string(WebSocketEventTypeInputTextBufferCompleted): reflect.TypeOf(WebSocketInputTextBufferCompletedEvent{}),
 		string(WebSocketEventTypeSpeechAudioUpdate):        reflect.TypeOf(WebSocketSpeechAudioUpdateEvent{}),
 		string(WebSocketEventTypeSpeechAudioCompleted):     reflect.TypeOf(WebSocketSpeechAudioCompletedEvent{}),
 		// v1/audio/transcriptions req

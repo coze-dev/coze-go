@@ -5,10 +5,11 @@ import (
 	"time"
 )
 
+var _ WebsocketXXX = (*WebSocketChat)(nil)
+
 type WebSocketChat struct {
 	ctx  context.Context
 	core *core
-	req  *CreateWebsocketChatReq
 
 	ws *websocketClient
 }
@@ -26,7 +27,6 @@ func newWebsocketChatClient(ctx context.Context, core *core, req *CreateWebsocke
 	client := &WebSocketChat{
 		ctx:  ctx,
 		core: core,
-		req:  req,
 		ws:   ws,
 	}
 
@@ -86,102 +86,102 @@ func (c *WebSocketChat) OnEvent(eventType WebSocketEventType, handler EventHandl
 	c.ws.OnEvent(eventType, handler)
 }
 
-func registerEventHandler[T any](c *WebSocketChat, eventType WebSocketEventType, handler func(ctx context.Context, cli *WebSocketChat, event *T) error) {
+func registerChatEventHandler[T any](c *WebSocketChat, eventType WebSocketEventType, handler func(ctx context.Context, cli *WebSocketChat, event *T) error) {
 	c.ws.OnEvent(eventType, func(event IWebSocketEvent) error {
 		return handler(c.ctx, c, (any)(event).(*T))
 	})
 }
 
 func (c *WebSocketChat) OnError(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketErrorEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeError, handler)
+	registerChatEventHandler(c, WebSocketEventTypeError, handler)
 }
 
 func (c *WebSocketChat) OnClientError(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketClientErrorEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeClientError, handler)
+	registerChatEventHandler(c, WebSocketEventTypeClientError, handler)
 }
 
 func (c *WebSocketChat) OnClosed(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketClosedEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeClosed, handler)
+	registerChatEventHandler(c, WebSocketEventTypeClosed, handler)
 }
 
 func (c *WebSocketChat) OnChatCreated(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketChatCreatedEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeChatCreated, handler)
+	registerChatEventHandler(c, WebSocketEventTypeChatCreated, handler)
 }
 
 func (c *WebSocketChat) OnChatUpdated(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketChatUpdatedEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeChatUpdated, handler)
+	registerChatEventHandler(c, WebSocketEventTypeChatUpdated, handler)
 }
 
 func (c *WebSocketChat) OnConversationChatCreated(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationChatCreatedEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeConversationChatCreated, handler)
+	registerChatEventHandler(c, WebSocketEventTypeConversationChatCreated, handler)
 }
 
 func (c *WebSocketChat) OnConversationChatInProgress(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationChatInProgressEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeConversationChatInProgress, handler)
+	registerChatEventHandler(c, WebSocketEventTypeConversationChatInProgress, handler)
 }
 
 func (c *WebSocketChat) OnConversationMessageDelta(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationMessageDeltaEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeConversationMessageDelta, handler)
+	registerChatEventHandler(c, WebSocketEventTypeConversationMessageDelta, handler)
 }
 
 func (c *WebSocketChat) OnConversationAudioSentenceStart(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationAudioSentenceStartEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeConversationAudioSentenceStart, handler)
+	registerChatEventHandler(c, WebSocketEventTypeConversationAudioSentenceStart, handler)
 }
 
 func (c *WebSocketChat) OnConversationAudioDelta(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationAudioDeltaEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeConversationAudioDelta, handler)
+	registerChatEventHandler(c, WebSocketEventTypeConversationAudioDelta, handler)
 }
 
 func (c *WebSocketChat) OnConversationMessageCompleted(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationMessageCompletedEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeConversationMessageCompleted, handler)
+	registerChatEventHandler(c, WebSocketEventTypeConversationMessageCompleted, handler)
 }
 
 func (c *WebSocketChat) OnConversationAudioCompleted(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationAudioCompletedEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeConversationAudioCompleted, handler)
+	registerChatEventHandler(c, WebSocketEventTypeConversationAudioCompleted, handler)
 }
 
 func (c *WebSocketChat) OnConversationChatCompleted(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationChatCompletedEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeConversationChatCompleted, handler)
+	registerChatEventHandler(c, WebSocketEventTypeConversationChatCompleted, handler)
 }
 
 func (c *WebSocketChat) OnConversationChatFailed(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationChatFailedEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeConversationChatFailed, handler)
+	registerChatEventHandler(c, WebSocketEventTypeConversationChatFailed, handler)
 }
 
 func (c *WebSocketChat) OnInputAudioBufferCompleted(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketInputAudioBufferCompletedEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeInputAudioBufferCompleted, handler)
+	registerChatEventHandler(c, WebSocketEventTypeInputAudioBufferCompleted, handler)
 }
 
 func (c *WebSocketChat) OnInputAudioBufferCleared(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketInputAudioBufferClearedEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeInputAudioBufferCleared, handler)
+	registerChatEventHandler(c, WebSocketEventTypeInputAudioBufferCleared, handler)
 }
 
 func (c *WebSocketChat) OnConversationCleared(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationClearedEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeConversationCleared, handler)
+	registerChatEventHandler(c, WebSocketEventTypeConversationCleared, handler)
 }
 
 func (c *WebSocketChat) OnConversationChatCanceled(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationChatCanceledEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeConversationChatCanceled, handler)
+	registerChatEventHandler(c, WebSocketEventTypeConversationChatCanceled, handler)
 }
 
 func (c *WebSocketChat) OnConversationAudioTranscriptUpdate(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationAudioTranscriptUpdateEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeConversationAudioTranscriptUpdate, handler)
+	registerChatEventHandler(c, WebSocketEventTypeConversationAudioTranscriptUpdate, handler)
 }
 
 func (c *WebSocketChat) OnConversationAudioTranscriptCompleted(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationAudioTranscriptCompletedEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeConversationAudioTranscriptCompleted, handler)
+	registerChatEventHandler(c, WebSocketEventTypeConversationAudioTranscriptCompleted, handler)
 }
 
 func (c *WebSocketChat) OnConversationChatRequiresAction(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationChatRequiresActionEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeConversationChatRequiresAction, handler)
+	registerChatEventHandler(c, WebSocketEventTypeConversationChatRequiresAction, handler)
 }
 
 func (c *WebSocketChat) OnInputAudioBufferSpeechStarted(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketInputAudioBufferSpeechStartedEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeInputAudioBufferSpeechStarted, handler)
+	registerChatEventHandler(c, WebSocketEventTypeInputAudioBufferSpeechStarted, handler)
 }
 
 func (c *WebSocketChat) OnInputAudioBufferSpeechStopped(handler func(ctx context.Context, cli *WebSocketChat, event *WebSocketInputAudioBufferSpeechStoppedEvent) error) {
-	registerEventHandler(c, WebSocketEventTypeInputAudioBufferSpeechStopped, handler)
+	registerChatEventHandler(c, WebSocketEventTypeInputAudioBufferSpeechStopped, handler)
 }
 
 // RegisterHandler registers all handlers with the client
