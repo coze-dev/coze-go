@@ -20,8 +20,8 @@ type websocketClient struct {
 
 	core        *core
 	conn        *websocket.Conn
-	sendChan    chan []byte          // 发送队列, 长度 100
-	receiveChan chan IWebSocketEvent // 接收队列, 长度 100
+	sendChan    chan []byte          // 发送队列, 长度 1000
+	receiveChan chan IWebSocketEvent // 接收队列, 长度 1000
 	closeChan   chan struct{}
 	processing  sync.WaitGroup
 	handlers    sync.Map // map[WebSocketEventType]EventHandler
