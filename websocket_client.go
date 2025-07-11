@@ -258,7 +258,7 @@ func (c *websocketClient) sendLoop() {
 		select {
 		case data := <-c.sendChan:
 			if err := c.conn.WriteMessage(websocket.TextMessage, data); err != nil {
-				c.handleError(fmt.Errorf("failed to send message: %w", err))
+				c.handleError(WebSocketEventTypeClientError, fmt.Errorf("failed to send message: %w", err))
 				return
 			}
 		case <-c.ctx.Done():
@@ -276,15 +276,18 @@ func (c *websocketClient) receiveLoop() {
 		default:
 			_, message, err := c.conn.ReadMessage()
 			if err != nil {
-				c.handleError(fmt.Errorf("failed to read message: %w", err))
+				c.handleError(WebSocketEventTypeClientError, fmt.Errorf("failed to read message: %w", err))
 				return
 			}
 
 			event, err := parseWebSocketEvent(message)
 			if err := json.Unmarshal(message, &event); err != nil {
-				c.handleError(err)
+				// TODO: 这里不应该发 client error？
+				c.handleError(WebSocketEventTypeClientError, err)
 				continue
 			}
+
+			c.core.Log(c.ctx, LogLevelWarn, "[%s] receive event, type=%s, event=%s", c.opt.path, "", message)
 
 			select {
 			case c.receiveChan <- event:
@@ -307,7 +310,8 @@ func (c *websocketClient) handleEvents() {
 
 			if exists && handler != nil {
 				if err := handler(event); err != nil {
-					c.handleError(fmt.Errorf("event handler error: %w", err))
+					// TODO: handler 返回错误类型？
+					c.handleError(WebSocketEventTypeClientError, fmt.Errorf("event handler error: %w", err))
 				}
 			}
 		case <-c.ctx.Done():
@@ -317,18 +321,28 @@ func (c *websocketClient) handleEvents() {
 }
 
 // handleError handles errors
-func (c *websocketClient) handleError(err error) {
+func (c *websocketClient) handleError(eventType WebSocketEventType, err error) {
+	c.core.Log(c.ctx, LogLevelWarn, "[%s] receive event, type=%s, event=%s", c.opt.path, eventType, err)
+
 	c.mu.RLock()
-	handler, ok := c.handlers[WebSocketEventTypeError]
+	handler, ok := c.handlers[eventType]
 	c.mu.RUnlock()
 
 	if ok && handler != nil {
-		errorEvent := &WebSocketErrorEvent{
-			baseWebSocketEvent: baseWebSocketEvent{
-				EventType: WebSocketEventTypeError,
-			},
-			Data: err,
+		if eventType == WebSocketEventTypeError {
+			handler(&WebSocketErrorEvent{
+				baseWebSocketEvent: baseWebSocketEvent{
+					EventType: eventType,
+				},
+				Data: err,
+			})
+		} else if eventType == WebSocketEventTypeClientError {
+			handler(&WebSocketClientErrorEvent{
+				baseWebSocketEvent: baseWebSocketEvent{
+					EventType: eventType,
+				},
+				Data: err,
+			})
 		}
-		handler(errorEvent)
 	}
 }
