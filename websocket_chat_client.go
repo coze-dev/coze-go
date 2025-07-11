@@ -2,7 +2,6 @@ package coze
 
 import (
 	"context"
-	"time"
 )
 
 var _ WebsocketXXX = (*WebSocketChat)(nil)
@@ -51,34 +50,41 @@ func (c *WebSocketChat) IsConnected() bool {
 func (c *WebSocketChat) ChatUpdate(data *WebSocketChatUpdateEventData) error {
 	return c.ws.sendEvent(newWebSocketEvent(WebSocketEventTypeChatUpdate, data).(WebSocketChatUpdateEvent))
 }
+
 func (c *WebSocketChat) InputAudioBufferAppend(data *WebSocketInputAudioBufferAppendEventData) error {
 	return c.ws.sendEvent(newWebSocketEvent(WebSocketEventTypeInputAudioBufferAppend, data).(WebSocketInputAudioBufferAppendEvent))
 }
+
 func (c *WebSocketChat) InputAudioBufferComplete(data *WebSocketInputAudioBufferCompleteEventData) error {
 	return c.ws.sendEvent(newWebSocketEvent(WebSocketEventTypeInputAudioBufferComplete, data).(WebSocketInputAudioBufferCompleteEvent))
 }
+
 func (c *WebSocketChat) InputAudioBufferClear(data *WebSocketInputAudioBufferClearEventData) error {
 	return c.ws.sendEvent(newWebSocketEvent(WebSocketEventTypeInputAudioBufferClear, data).(WebSocketInputAudioBufferClearEvent))
 }
+
 func (c *WebSocketChat) ConversationMessageCreate(data *WebSocketConversationMessageCreateEventData) error {
 	return c.ws.sendEvent(newWebSocketEvent(WebSocketEventTypeConversationMessageCreate, data).(WebSocketConversationMessageCreateEvent))
 }
+
 func (c *WebSocketChat) ConversationClear(data *WebSocketConversationClearEventData) error {
 	return c.ws.sendEvent(newWebSocketEvent(WebSocketEventTypeConversationClear, data).(WebSocketConversationClearEvent))
 }
+
 func (c *WebSocketChat) ConversationChatSubmitToolOutputs(data *WebSocketConversationChatSubmitToolOutputsEventData) error {
 	return c.ws.sendEvent(newWebSocketEvent(WebSocketEventTypeConversationChatSubmitToolOutputs, data).(WebSocketConversationChatSubmitToolOutputsEvent))
 }
+
 func (c *WebSocketChat) ConversationChatCancel(data *WebSocketConversationChatCancelEventData) error {
 	return c.ws.sendEvent(newWebSocketEvent(WebSocketEventTypeConversationChatCancel, data).(WebSocketConversationChatCancelEvent))
 }
 
 // Wait waits for chat to complete
-func (c *WebSocketChat) Wait(timeout time.Duration) (IWebSocketEvent, error) {
+func (c *WebSocketChat) Wait() error {
 	return c.ws.WaitForEvent([]WebSocketEventType{
 		WebSocketEventTypeConversationChatCompleted,
 		WebSocketEventTypeConversationChatFailed,
-	}, timeout)
+	}, false)
 }
 
 // OnEvent registers an event handler

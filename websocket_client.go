@@ -23,11 +23,13 @@ type websocketClient struct {
 	sendChan    chan []byte          // 发送队列, 长度 100
 	receiveChan chan IWebSocketEvent // 接收队列, 长度 100
 	closeChan   chan struct{}
+	processing  sync.WaitGroup
 	handlers    map[WebSocketEventType]EventHandler
 	mu          sync.RWMutex
 	connected   bool
 	ctx         context.Context
 	cancel      context.CancelFunc
+	waiter      *eventWaiter
 }
 
 type WebSocketClientOption struct {
@@ -66,6 +68,7 @@ func newWebSocketClient(opt *WebSocketClientOption) *websocketClient {
 		handlers:    make(map[WebSocketEventType]EventHandler),
 		ctx:         ctx,
 		cancel:      cancel,
+		waiter:      newEventWaiter(),
 	}
 
 	return client
@@ -149,6 +152,9 @@ func (c *websocketClient) Close() error {
 		return nil
 	}
 
+	// wait for receive channels to be empty
+	c.processing.Wait()
+
 	c.connected = false
 	c.cancel()
 
@@ -200,58 +206,12 @@ func (c *websocketClient) OnEvent(eventType WebSocketEventType, handler EventHan
 }
 
 // WaitForEvent waits for specific events
-func (c *websocketClient) WaitForEvent(eventTypes []WebSocketEventType, timeout time.Duration) (IWebSocketEvent, error) {
-	eventChan := make(chan IWebSocketEvent, 1)
-
-	// Register temporary handlers
-	handlers := make(map[WebSocketEventType]EventHandler)
+func (c *websocketClient) WaitForEvent(eventTypes []WebSocketEventType, waitAll bool) error {
+	keys := make([]string, 0, 10)
 	for _, eventType := range eventTypes {
-		handlers[eventType] = func(event IWebSocketEvent) error {
-			select {
-			case eventChan <- event:
-			default:
-			}
-			return nil
-		}
+		keys = append(keys, string(eventType))
 	}
-
-	c.mu.Lock()
-	originalHandlers := make(map[WebSocketEventType]EventHandler)
-	for eventType, handler := range handlers {
-		originalHandlers[eventType] = c.handlers[eventType]
-		c.handlers[eventType] = handler
-	}
-	c.mu.Unlock()
-
-	// Wait for event or timeout
-	select {
-	case event := <-eventChan:
-		// Restore original handlers
-		c.mu.Lock()
-		for eventType, handler := range originalHandlers {
-			if handler != nil {
-				c.handlers[eventType] = handler
-			} else {
-				delete(c.handlers, eventType)
-			}
-		}
-		c.mu.Unlock()
-		return event, nil
-	case <-time.After(timeout):
-		// Restore original handlers
-		c.mu.Lock()
-		for eventType, handler := range originalHandlers {
-			if handler != nil {
-				c.handlers[eventType] = handler
-			} else {
-				delete(c.handlers, eventType)
-			}
-		}
-		c.mu.Unlock()
-		return nil, fmt.Errorf("timeout waiting for event")
-	case <-c.ctx.Done():
-		return nil, fmt.Errorf("context cancelled")
-	}
+	return c.waiter.wait(c.ctx, keys, waitAll)
 }
 
 // sendLoop handles sending messages
@@ -297,18 +257,24 @@ func (c *websocketClient) receiveLoop() {
 			// 	fmt.Println()
 			// }
 
+			c.waiter.trigger(string(event.GetEventType()))
+
 			if event.GetEventType() == WebSocketEventTypeSpeechAudioUpdate {
 				c.core.Log(c.ctx, LogLevelDebug, "[%s] receive event, type=%s, event=%s", c.opt.path, event.GetEventType(), event.(*WebSocketSpeechAudioUpdateEvent).dumpWithoutBinary())
 			} else {
 				c.core.Log(c.ctx, LogLevelDebug, "[%s] receive event, type=%s, event=%s", c.opt.path, event.GetEventType(), message)
 			}
 
-			select {
-			case c.receiveChan <- event:
-			default:
-				// todo log
-				// Channel full, skip event
-			}
+			// 没有 timeout 或者 channel full 处理, 暂时符合预期
+			c.processing.Add(1)
+			c.receiveChan <- event
+
+			// select {
+			// case c.receiveChan <- event:
+			// default:
+			// todo log
+			// Channel full, skip event
+			// }
 		}
 	}
 }
@@ -318,18 +284,24 @@ func (c *websocketClient) handleEvents() {
 	for {
 		select {
 		case event := <-c.receiveChan:
-			c.mu.RLock()
-			handler, exists := c.handlers[event.GetEventType()]
-			c.mu.RUnlock()
-
-			if exists && handler != nil {
-				if err := handler(event); err != nil {
-					// TODO: handler 返回错误类型？
-					c.handleError(WebSocketEventTypeClientError, fmt.Errorf("event handler error: %w", err))
-				}
-			}
+			c.handleEvent(event)
 		case <-c.ctx.Done():
 			return
+		}
+	}
+}
+
+func (c *websocketClient) handleEvent(event IWebSocketEvent) {
+	defer c.processing.Done()
+
+	c.mu.RLock()
+	handler, exists := c.handlers[event.GetEventType()]
+	c.mu.RUnlock()
+
+	if exists && handler != nil {
+		if err := handler(event); err != nil {
+			// TODO: handler 返回错误类型？
+			c.handleError(WebSocketEventTypeClientError, fmt.Errorf("event handler error: %w", err))
 		}
 	}
 }

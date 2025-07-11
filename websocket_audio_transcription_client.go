@@ -2,7 +2,6 @@ package coze
 
 import (
 	"context"
-	"time"
 )
 
 var _ WebsocketXXX = (*WebSocketAudioTranscription)(nil)
@@ -65,10 +64,10 @@ func (c *WebSocketAudioTranscription) InputAudioBufferClear(data *WebSocketInput
 }
 
 // Wait waits for transcription to complete
-func (c *WebSocketAudioTranscription) Wait(timeout time.Duration) (IWebSocketEvent, error) {
+func (c *WebSocketAudioTranscription) Wait() error {
 	return c.ws.WaitForEvent([]WebSocketEventType{
 		WebSocketEventTypeTranscriptionsMessageCompleted,
-	}, timeout)
+	}, true)
 }
 
 // OnEvent registers an event handler

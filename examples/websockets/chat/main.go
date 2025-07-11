@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/coze-dev/coze-go"
 )
@@ -83,10 +82,10 @@ func main() {
 
 	// Wait for chat completion
 	fmt.Println("Waiting for chat completion...")
-	event, err := chatClient.Wait(60 * time.Second)
+	err := chatClient.Wait()
 	if err != nil {
 		log.Fatalf("Failed to wait for completion: %v", err)
 	}
 
-	fmt.Printf("Chat completed! Event: %+v\n", event)
+	fmt.Printf("Chat completed!\n")
 }

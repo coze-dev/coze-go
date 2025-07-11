@@ -145,12 +145,11 @@ func main() {
 		log.Fatalf("Failed to complete text buffer: %v", err)
 	}
 
-	// time.Sleep(time.Hour)
 	// Wait for speech completion
 	fmt.Println("Waiting for speech completion...")
-	event, err := speechClient.Wait(300000 * time.Second)
+	err := speechClient.Wait()
 	if err != nil {
 		log.Fatalf("Failed to wait for completion: %v", err)
 	}
-	fmt.Printf("Speech completed! Event: %+v\n", event)
+	time.Sleep(time.Second)
 }

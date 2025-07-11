@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/coze-dev/coze-go"
 )
 
-type handler struct {
-}
+type handler struct{}
 
 func (r handler) OnClientError(ctx context.Context, cli *coze.WebSocketAudioTranscription, event *coze.WebSocketClientErrorEvent) error {
 	fmt.Printf("transcriptions client error: %v", event)
@@ -97,10 +95,10 @@ func main() {
 
 	// Wait for transcription completion
 	fmt.Println("Waiting for transcription completion...")
-	event, err := transcriptionsClient.Wait(30 * time.Second)
+	err := transcriptionsClient.Wait()
 	if err != nil {
 		log.Fatalf("Failed to wait for completion: %v", err)
 	}
 
-	fmt.Printf("Transcription completed! Event: %+v\n", event)
+	fmt.Printf("Transcription completed!\n")
 }

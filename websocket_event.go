@@ -135,8 +135,7 @@ type WebSocketInputTextBufferCompleteEvent struct {
 	baseWebSocketEvent
 }
 
-type WebSocketInputTextBufferCompleteEventData struct {
-}
+type WebSocketInputTextBufferCompleteEventData struct{}
 
 // WebSocketSpeechCreatedEvent 语音合成连接成功
 //
