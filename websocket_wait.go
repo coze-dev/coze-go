@@ -6,8 +6,7 @@ import (
 )
 
 type eventWaiter struct {
-	events       sync.Map
-	shutdownChan chan struct{}
+	events sync.Map
 }
 
 type eventWaitState struct {

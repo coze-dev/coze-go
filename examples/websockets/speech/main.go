@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 
 	"github.com/coze-dev/coze-go"
 	"github.com/coze-dev/coze-go/examples/websockets/util"
@@ -80,9 +79,7 @@ func main() {
 
 	// Wait for speech completion
 	fmt.Println("Waiting for speech completion...")
-	err := speechClient.Wait()
-	if err != nil {
+	if err := speechClient.Wait(); err != nil {
 		log.Fatalf("Failed to wait for completion: %v", err)
 	}
-	time.Sleep(time.Second)
 }
