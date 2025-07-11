@@ -3,9 +3,12 @@ package coze
 import (
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParseWebSocketEvent(t *testing.T) {
+	as := assert.New(t)
 	tests := []struct {
 		name      string
 		message   []byte
@@ -15,32 +18,23 @@ func TestParseWebSocketEvent(t *testing.T) {
 	}{
 		{
 			name:     "Parse SpeechCreated Event",
-			message:  []byte(`{"event_type": "speech.created", "id": "123", "data": {"session_id": "session-abc"}}`),
+			message:  []byte(`{"event_type": "speech.created", "id": "123"}`),
 			wantType: reflect.TypeOf(&WebSocketSpeechCreatedEvent{}),
 			wantErr:  false,
 			checkData: func(t *testing.T, event IWebSocketEvent) {
 				e := event.(*WebSocketSpeechCreatedEvent)
-				if e.ID != "123" {
-					t.Errorf("ID = %v, want %v", e.ID, "123")
-				}
-				if e.Data.SessionID != "session-abc" {
-					t.Errorf("SessionID = %v, want %v", e.Data.SessionID, "session-abc")
-				}
+				as.Equal("123", e.ID)
 			},
 		},
 		{
 			name:     "Parse ChatMessageDelta Event",
-			message:  []byte(`{"event_type": "conversation.message.delta", "id": "456", "data": {"message": {"content": "hello"}}}`),
+			message:  []byte(`{"event_type": "conversation.message.delta", "id": "456", "data": {"content": "hello"}}`),
 			wantType: reflect.TypeOf(&WebSocketConversationMessageDeltaEvent{}),
 			wantErr:  false,
 			checkData: func(t *testing.T, event IWebSocketEvent) {
 				e := event.(*WebSocketConversationMessageDeltaEvent)
-				if e.ID != "456" {
-					t.Errorf("ID = %v, want %v", e.ID, "456")
-				}
-				if e.Data.Message.Content != "hello" {
-					t.Errorf("Content = %v, want %v", e.Data.Message.Content, "hello")
-				}
+				as.Equal("456", e.ID)
+				as.Equal("hello", e.Data.Content)
 			},
 		},
 		{
@@ -50,9 +44,7 @@ func TestParseWebSocketEvent(t *testing.T) {
 			wantErr:  false,
 			checkData: func(t *testing.T, event IWebSocketEvent) {
 				e := event.(*commonWebSocketEvent)
-				if e.GetEventType() != "unknown.event" {
-					t.Errorf("EventType = %v, want %v", e.GetEventType(), "unknown.event")
-				}
+				as.Equal("unknown.event", string(e.GetEventType()))
 			},
 		},
 		{
