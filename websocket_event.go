@@ -146,11 +146,6 @@ type WebSocketSpeechCreatedEvent struct {
 	baseWebSocketEvent
 }
 
-// WebSocketSpeechCreatedEventData contains speech session information
-type WebSocketSpeechCreatedEventData struct {
-	SessionID string `json:"session_id"`
-}
-
 // WebSocketSpeechUpdatedEvent 配置更新完成
 //
 // 配置更新成功后，会返回最新的配置。
