@@ -31,3 +31,5 @@ integrations/
 debug/
 coverage.html
 test.mp3
+output_speech.wav
+output_chat.wav
