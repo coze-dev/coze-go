@@ -28,12 +28,12 @@ func (r *handler) OnClientError(ctx context.Context, cli *coze.WebSocketChat, ev
 		return nil
 		// }
 	}
-	fmt.Printf("chat client_error=%s\n", event)
+	fmt.Printf("chat client_error=%s\n", event.Data)
 	return nil
 }
 
 func (r *handler) OnError(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketErrorEvent) error {
-	fmt.Printf("chat error=%s\n", event)
+	fmt.Printf("chat error=%s\n", event.Data)
 	return nil
 }
 
