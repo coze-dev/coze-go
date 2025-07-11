@@ -50,7 +50,7 @@ func (r *handler) OnConversationAudioDelta(ctx context.Context, cli *coze.WebSoc
 func (r *handler) OnConversationAudioCompleted(ctx context.Context, cli *coze.WebSocketChat, event *coze.WebSocketConversationAudioCompletedEvent) error {
 	err := util.WritePCMToWavFile("output_chat.wav", r.data)
 	if err != nil {
-		fmt.Printf("错误: %v\n", err)
+		fmt.Printf("Error: %v\n", err)
 		return err
 	}
 
