@@ -153,9 +153,10 @@ type commonWebSocketEvent struct {
 }
 
 func parseWebSocketEvent(message []byte) (IWebSocketEvent, error) {
+	// fmt.Println(string(message))
 	var common commonWebSocketEvent
 	if err := json.Unmarshal(message, &common); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal event: %w", err)
+		return nil, fmt.Errorf("1-failed to unmarshal event: %w", err)
 	}
 
 	eventTypeRef, ok := websocketEvents[string(common.GetEventType())]
@@ -163,12 +164,13 @@ func parseWebSocketEvent(message []byte) (IWebSocketEvent, error) {
 		return &common, nil
 	}
 
-	event := reflect.New(eventTypeRef).Interface().(IWebSocketEvent)
-	if err := json.Unmarshal(common.Data, event); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal event data: %w", err)
+	event := reflect.New(eventTypeRef).Interface()
+	// fmt.Println(string(common.Data))
+	if err := json.Unmarshal(message, &event); err != nil {
+		return nil, fmt.Errorf("2-failed to unmarshal event data: %w", err)
 	}
 
-	return event, nil
+	return any(event).(IWebSocketEvent), nil
 }
 
 type baseWebSocketEvent struct {
@@ -192,5 +194,6 @@ func (r baseWebSocketEvent) GetDetail() *EventDetail {
 // EventDetail contains additional event details
 type EventDetail struct {
 	LogID         string `json:"logid,omitempty"`
+	RespondAt     string `json:"respond_at,omitempty"`
 	OriginMessage string `json:"origin_message,omitempty"`
 }

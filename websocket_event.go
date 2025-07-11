@@ -2,6 +2,8 @@ package coze
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"reflect"
 )
 
@@ -191,6 +193,18 @@ type WebSocketSpeechAudioUpdateEvent struct {
 type WebSocketSpeechAudioUpdateEventData struct {
 	// 音频片段。(API 返回的是base64编码的音频片段, SDK 已经自动解码为 bytes)
 	Delta []byte `json:"delta"`
+}
+
+func (r WebSocketSpeechAudioUpdateEvent) dumpWithoutBinary() string {
+	b, _ := json.Marshal(map[string]any{
+		"type":   r.GetEventType(),
+		"id":     r.GetID(),
+		"detail": r.GetDetail(),
+		"data": map[string]any{
+			"delta": fmt.Sprintf("<length: %d>", len(r.Data.Delta)),
+		},
+	})
+	return string(b)
 }
 
 // WebSocketSpeechAudioCompletedEvent 合成完成

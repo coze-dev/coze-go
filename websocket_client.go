@@ -3,7 +3,9 @@ package coze
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"sync"
@@ -276,18 +278,30 @@ func (c *websocketClient) receiveLoop() {
 		default:
 			_, message, err := c.conn.ReadMessage()
 			if err != nil {
+				if errors.Is(err, net.ErrClosed) {
+					return
+				}
 				c.handleError(WebSocketEventTypeClientError, fmt.Errorf("failed to read message: %w", err))
 				return
 			}
 
 			event, err := parseWebSocketEvent(message)
-			if err := json.Unmarshal(message, &event); err != nil {
+			if err != nil {
 				// TODO: 这里不应该发 client error？
 				c.handleError(WebSocketEventTypeClientError, err)
 				continue
 			}
 
-			c.core.Log(c.ctx, LogLevelWarn, "[%s] receive event, type=%s, event=%s", c.opt.path, "", message)
+			// if event.GetEventType() == WebSocketEventTypeSpeechAudioCompleted {
+			// 	fmt.Println()
+			// 	fmt.Println()
+			// }
+
+			if event.GetEventType() == WebSocketEventTypeSpeechAudioUpdate {
+				c.core.Log(c.ctx, LogLevelDebug, "[%s] receive event, type=%s, event=%s", c.opt.path, event.GetEventType(), event.(*WebSocketSpeechAudioUpdateEvent).dumpWithoutBinary())
+			} else {
+				c.core.Log(c.ctx, LogLevelDebug, "[%s] receive event, type=%s, event=%s", c.opt.path, event.GetEventType(), message)
+			}
 
 			select {
 			case c.receiveChan <- event:
