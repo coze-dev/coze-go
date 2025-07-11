@@ -258,6 +258,10 @@ func (c *websocketClient) receiveLoop() {
 
 			_ = c.waiter.trigger(event.GetEventType())
 
+			if err := c.waiter.trigger(event.GetEventType()); err != nil {
+				c.core.Log(c.ctx, LogLevelWarn, "[%s] trigger event failed, event_type=%s, err=%s", c.opt.path, event.GetEventType(), err)
+			}
+
 			if event.GetEventType() == WebSocketEventTypeSpeechAudioUpdate {
 				c.core.Log(c.ctx, LogLevelDebug, "[%s] receive event, type=%s, event=%s", c.opt.path, event.GetEventType(), event.(*WebSocketSpeechAudioUpdateEvent).dumpWithoutBinary())
 			} else if event.GetEventType() == WebSocketEventTypeConversationAudioDelta {
