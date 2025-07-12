@@ -19,7 +19,8 @@ type websocketClient struct {
 	opt *WebSocketClientOption
 
 	core        *core
-	conn        *websocket.Conn
+	dial        websocketDialer
+	conn        websocketConn
 	sendChan    chan []byte          // 发送队列, 长度 1000
 	receiveChan chan IWebSocketEvent // 接收队列, 长度 1000
 	closeChan   chan struct{}
@@ -38,9 +39,23 @@ type WebSocketClientOption struct {
 	path                string
 	query               map[string]string
 	responseEventTypes  []WebSocketEventType
+	dial                websocketDialer
 	SendChanCapacity    int           // 默认 1000
 	ReceiveChanCapacity int           // 默认 1000
 	HandshakeTimeout    time.Duration // 默认 3s
+}
+
+type websocketConn interface {
+	Close() error
+	WriteMessage(messageType int, data []byte) error
+	ReadMessage() (messageType int, p []byte, err error)
+}
+
+type websocketDialer func(dialer websocket.Dialer, urlStr string, requestHeader http.Header) (websocketConn, error)
+
+func dialWebSocket(dialer websocket.Dialer, urlStr string, requestHeader http.Header) (websocketConn, error) {
+	conn, _, err := dialer.Dial(urlStr, requestHeader)
+	return conn, err
 }
 
 func mergeWebSocketClientOption(opt *WebSocketClientOption, merge *WebSocketClientOption) *WebSocketClientOption {
@@ -69,10 +84,14 @@ func newWebSocketClient(opt *WebSocketClientOption) *websocketClient {
 	if opt.HandshakeTimeout == 0 {
 		opt.HandshakeTimeout = 3 * time.Second
 	}
+	if opt.dial == nil {
+		opt.dial = dialWebSocket
+	}
 
 	client := &websocketClient{
 		opt:         opt,
 		core:        opt.core,
+		dial:        opt.dial,
 		sendChan:    make(chan []byte, opt.SendChanCapacity),
 		receiveChan: make(chan IWebSocketEvent, opt.ReceiveChanCapacity),
 		closeChan:   make(chan struct{}),
@@ -147,7 +166,7 @@ func (c *websocketClient) Connect() error {
 	}
 
 	c.core.Log(c.ctx, LogLevelDebug, "[%s] connecting to websocket: %s", c.opt.path, u.String())
-	conn, _, err := dialer.Dial(u.String(), headers)
+	conn, err := c.dial(dialer, u.String(), headers)
 	if err != nil {
 		return fmt.Errorf("failed to connect to WebSocket: %w", err)
 	}
