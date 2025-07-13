@@ -986,7 +986,7 @@ func (BaseWebSocketAudioTranscriptionHandler) OnTranscriptionsMessageCompleted(c
 	return nil
 }
 
-func newWebSocketEvent(eventType WebSocketEventType, data any) any {
+func newWebSocketEvent(eventType WebSocketEventType, data any) IWebSocketEvent {
 	eventStructType, exists := websocketEvents[string(eventType)]
 	if !exists {
 		return nil
@@ -1001,5 +1001,5 @@ func newWebSocketEvent(eventType WebSocketEventType, data any) any {
 	if dataField.IsValid() && dataField.CanSet() {
 		dataField.Set(reflect.ValueOf(data))
 	}
-	return eventValue.Interface()
+	return eventValue.Interface().(IWebSocketEvent)
 }

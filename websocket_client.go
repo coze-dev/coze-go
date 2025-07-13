@@ -21,7 +21,7 @@ type websocketClient struct {
 	core        *core
 	dial        websocketDialer
 	conn        websocketConn
-	sendChan    chan []byte          // 发送队列, 长度 1000
+	sendChan    chan IWebSocketEvent // 发送队列, 长度 1000
 	receiveChan chan IWebSocketEvent // 接收队列, 长度 1000
 	closeChan   chan struct{}
 	processing  sync.WaitGroup
@@ -92,7 +92,7 @@ func newWebSocketClient(opt *WebSocketClientOption) *websocketClient {
 		opt:         opt,
 		core:        opt.core,
 		dial:        opt.dial,
-		sendChan:    make(chan []byte, opt.SendChanCapacity),
+		sendChan:    make(chan IWebSocketEvent, opt.SendChanCapacity),
 		receiveChan: make(chan IWebSocketEvent, opt.ReceiveChanCapacity),
 		closeChan:   make(chan struct{}),
 		handlers:    sync.Map{},
@@ -217,18 +217,13 @@ func (c *websocketClient) IsConnected() bool {
 }
 
 // 发送事件
-func (c *websocketClient) sendEvent(event any) error {
+func (c *websocketClient) sendEvent(event IWebSocketEvent) error {
 	if !c.IsConnected() {
 		return fmt.Errorf("websocket not connected")
 	}
 
-	data, err := json.Marshal(event)
-	if err != nil {
-		return fmt.Errorf("failed to marshal event: %w", err)
-	}
-
 	select {
-	case c.sendChan <- data:
+	case c.sendChan <- event:
 		return nil
 	case <-c.ctx.Done():
 		return fmt.Errorf("context cancelled")
@@ -251,10 +246,25 @@ func (c *websocketClient) WaitForEvent(eventTypes []WebSocketEventType, waitAll 
 func (c *websocketClient) sendLoop() {
 	for {
 		select {
-		case data := <-c.sendChan:
+		case event := <-c.sendChan:
+			data, err := json.Marshal(event)
+			if err != nil {
+				if c.core.logLevel <= LogLevelDebug {
+					c.core.Log(c.ctx, LogLevelDebug, "[%s] send event, marshal_failed, type=%s, event=%s, err=%s", c.opt.path, event.GetEventType(), mustToJson(event), err)
+				}
+				c.handleClientError(fmt.Errorf("failed to marshal event: %w", err))
+				continue
+			}
+
 			if err := c.conn.WriteMessage(websocket.TextMessage, data); err != nil {
+				if c.core.logLevel <= LogLevelDebug {
+					c.core.Log(c.ctx, LogLevelDebug, "[%s] send event, write_failed, type=%s, event=%s, err=%s", c.opt.path, event.GetEventType(), mustToJson(event), err)
+				}
 				c.handleClientError(fmt.Errorf("failed to send message: %w", err))
 				continue
+			}
+			if c.core.logLevel <= LogLevelDebug {
+				c.core.Log(c.ctx, LogLevelDebug, "[%s] send event, type=%s, event=%s", c.opt.path, event.GetEventType(), mustToJson(event))
 			}
 		case <-c.ctx.Done():
 			return
@@ -281,6 +291,7 @@ func (c *websocketClient) receiveLoop() {
 
 			event, err := parseWebSocketEvent(message)
 			if err != nil {
+				c.core.Log(c.ctx, LogLevelDebug, "[%s] receive event, parse_failed, event=%s, err=%s", c.opt.path, message, err)
 				c.handleClientError(err)
 				continue
 			}
