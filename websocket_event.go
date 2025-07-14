@@ -522,10 +522,16 @@ type WebSocketInputTextGenerateAudioEvent struct {
 // WebSocketInputTextGenerateAudioEventData contains text to audio data
 type WebSocketInputTextGenerateAudioEventData struct {
 	// 消息内容的类型，支持设置为：text：文本
-	Mode string `json:"mode,omitempty"`
+	Mode WebSocketInputTextGenerateAudioEventDataMode `json:"mode,omitempty"`
 	// 当 mode == text 时候必填。长度限制 (0, 1024) 字节
 	Text string `json:"text,omitempty"`
 }
+
+type WebSocketInputTextGenerateAudioEventDataMode string
+
+const (
+	WebSocketInputTextGenerateAudioEventDataModeText WebSocketInputTextGenerateAudioEventDataMode = "text"
+)
 
 // WebSocketChatCreatedEvent 对话连接成功
 //

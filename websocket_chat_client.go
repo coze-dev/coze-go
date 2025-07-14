@@ -82,7 +82,7 @@ func (c *WebSocketChat) InputTextGenerateAudio(data *WebSocketInputTextGenerateA
 
 // Wait waits for chat to complete
 func (c *WebSocketChat) Wait(eventTypes ...WebSocketEventType) error {
-	if eventTypes == nil {
+	if len(eventTypes) == 0 {
 		eventTypes = []WebSocketEventType{
 			WebSocketEventTypeConversationChatCompleted,
 			WebSocketEventTypeConversationChatFailed,

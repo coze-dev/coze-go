@@ -2,7 +2,6 @@ package coze
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"sync"
 	"testing"
@@ -32,14 +31,13 @@ func (r *chatGenerateAudioSuccessTestdataHandler) assert(t *testing.T) {
 	f, err := os.CreateTemp("", "*-coze-ws-chat.wav")
 	as.Nil(err)
 	defer f.Close()
-	// defer os.Remove(f.Name())
+	defer os.Remove(f.Name())
 
 	as.Nil(util.WritePCMToWavFile(f.Name(), r.audio))
 
 	// audio
 	expected, err := os.ReadFile("testdata/websocket_chat_generate_audio_success.wav")
 	as.Nil(err)
-	fmt.Println(f.Name())
 	actual, err := os.ReadFile(f.Name())
 	as.Nil(err)
 	as.Equal(expected, actual)
@@ -65,7 +63,7 @@ func TestWebSocketChatGenerateAudioSuccess(t *testing.T) {
 	as.Nil(client.Connect())
 
 	as.Nil(client.InputTextGenerateAudio(&WebSocketInputTextGenerateAudioEventData{
-		Mode: "text",
+		Mode: WebSocketInputTextGenerateAudioEventDataModeText,
 		Text: "亲，你怎么不说话了。",
 	}))
 
