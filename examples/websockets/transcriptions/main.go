@@ -34,12 +34,16 @@ func main() {
 	if cozeAPIBase == "" {
 		cozeAPIBase = coze.CnBaseURL
 	}
+	cozeAudioFile := os.Getenv("COZE_AUDIO_FILE")
+	if cozeAudioFile == "" {
+		cozeAudioFile = "output.wav"
+	}
 
 	// Init the Coze client through the access_token.
 	authCli := coze.NewTokenAuth(cozeAPIToken)
 	client := coze.NewCozeAPI(authCli,
 		coze.WithBaseURL(cozeAPIBase),
-		// coze.WithLogLevel(coze.LogLevelDebug)
+		coze.WithLogLevel(coze.LogLevelDebug),
 	)
 
 	// Create transcriptions WebSocket client
@@ -56,7 +60,7 @@ func main() {
 	// Simulate sending audio data (in a real implementation, this would be actual audio data)
 	// For this example, we'll just send some dummy data
 	fmt.Println("Sending audio data...")
-	audioData, err := os.ReadFile("output.wav")
+	audioData, err := os.ReadFile(cozeAudioFile)
 	if err != nil {
 		log.Fatalf("Failed to read audio file: %v", err)
 	}

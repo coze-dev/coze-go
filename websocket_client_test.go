@@ -16,6 +16,9 @@ import (
 //go:embed testdata/websocket_speech_success.txt
 var websocketSpeechSuccessTestData string
 
+//go:embed testdata/websocket_transcriptions_success.txt
+var websocketTranscriptionsSuccessTestData string
+
 type testdataWebSocketItem struct {
 	Type  string // send, receive
 	Event string //
