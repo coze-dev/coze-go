@@ -40,7 +40,7 @@ func (r *chatSuccessTestdataHandler) assert(t *testing.T) {
 	f, err := os.CreateTemp("", "*-coze-ws-chat.wav")
 	as.Nil(err)
 	defer f.Close()
-	// defer os.Remove(f.Name())
+	defer os.Remove(f.Name())
 
 	as.Nil(util.WritePCMToWavFile(f.Name(), r.audio))
 
@@ -50,9 +50,7 @@ func (r *chatSuccessTestdataHandler) assert(t *testing.T) {
 	fmt.Println(f.Name())
 	actual, err := os.ReadFile(f.Name())
 	as.Nil(err)
-	_ = expected
-	_ = actual
-	// as.Equal(expected, actual)
+	as.Equal(expected, actual)
 
 	// text
 	as.Equal("是啊，好天气总能让人心情也跟着变好呢！你有没有打算趁着这好天气出门走走，做点有意思的事儿？  ", r.text)
