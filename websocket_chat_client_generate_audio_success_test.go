@@ -63,7 +63,7 @@ func TestWebSocketChatGenerateAudioSuccess(t *testing.T) {
 	as.Nil(client.Connect())
 
 	as.Nil(client.InputTextGenerateAudio(&WebSocketInputTextGenerateAudioEventData{
-		Mode: WebSocketInputTextGenerateAudioEventDataModeText,
+		Mode: WebSocketInputTextGenerateAudioModeText,
 		Text: "亲，你怎么不说话了。",
 	}))
 

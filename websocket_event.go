@@ -49,19 +49,19 @@ type WebSocketSpeechUpdateEvent struct {
 // WebSocketSpeechUpdateEventData contains speech update configuration
 type WebSocketSpeechUpdateEventData struct {
 	// 输出音频格式。
-	OutputAudio *OutputAudio `json:"output_audio,omitempty"`
+	OutputAudio *WebSocketOutputAudio `json:"output_audio,omitempty"`
 }
 
-// LimitConfig configures audio limits
-type LimitConfig struct {
+// WebSocketAudioLimitConfig configures audio limits
+type WebSocketAudioLimitConfig struct {
 	// 周期的时长，单位为秒。例如设置为 10 秒，则以 10 秒作为一个周期。
 	Period *int `json:"period,omitempty"`
 	// 周期内，最大返回包数量。
 	MaxFrameNum *int `json:"max_frame_num,omitempty"`
 }
 
-// InputAudio configuration for audio input
-type InputAudio struct {
+// WebSocketInputAudio configuration for audio input
+type WebSocketInputAudio struct {
 	// 输入音频的格式，支持 pcm、wav、ogg。默认为 wav。
 	Format *string `json:"format,omitempty"`
 	// 输入音频的编码，支持 pcm、opus、g711a、g711u。默认为 pcm。如果音频编码格式为 g711a 或 g711u，format 请设置为 pcm。
@@ -74,8 +74,8 @@ type InputAudio struct {
 	BitDepth *int `json:"bit_depth,omitempty"`
 }
 
-// OpusConfig configures Opus audio output
-type OpusConfig struct {
+// WebSocketOpusConfig configures Opus audio output
+type WebSocketOpusConfig struct {
 	// 输出 opus 的码率，默认 48000。
 	Bitrate *int `json:"bitrate,omitempty"`
 	// 输出 opus 是否使用 CBR 编码，默认为 false。
@@ -83,27 +83,27 @@ type OpusConfig struct {
 	// 输出 opus 的帧长，默认是 10。可选值：2.5、5、10、20、40、60
 	FrameSizeMs *float64 `json:"frame_size_ms,omitempty"`
 	// 输出音频限流配置，默认不限制。
-	LimitConfig *LimitConfig `json:"limit_config,omitempty"`
+	LimitConfig *WebSocketAudioLimitConfig `json:"limit_config,omitempty"`
 }
 
-// PCMConfig configures PCM audio output
-type PCMConfig struct {
+// WebSocketPCMConfig configures PCM audio output
+type WebSocketPCMConfig struct {
 	// 输出 pcm 音频的采样率，默认是 24000。支持 8000、16000、22050、24000、32000、44100、48000。
 	SampleRate *int `json:"sample_rate,omitempty"`
 	// 输出每个 pcm 包的时长，单位 ms，默认不限制。
 	FrameSizeMs *float64 `json:"frame_size_ms,omitempty"`
 	// 输出音频限流配置，默认不限制。
-	LimitConfig *LimitConfig `json:"limit_config,omitempty"`
+	LimitConfig *WebSocketAudioLimitConfig `json:"limit_config,omitempty"`
 }
 
-// OutputAudio configuration for audio output
-type OutputAudio struct {
+// WebSocketOutputAudio configuration for audio output
+type WebSocketOutputAudio struct {
 	// Output audio codec, supports pcm, g711a, g711u, opus. Default is pcm.
 	Codec *string `json:"codec,omitempty"`
 	// 当 codec 设置为 pcm、g711a 或 g711u 时，用于配置 PCM 音频参数。当 codec 设置为 opus 时，不需要设置此字段
-	PCMConfig *PCMConfig `json:"pcm_config,omitempty"`
+	PCMConfig *WebSocketPCMConfig `json:"pcm_config,omitempty"`
 	// 当 codec 设置为 pcm 时，不需要设置此字段。
-	OpusConfig *OpusConfig `json:"opus_config,omitempty"`
+	OpusConfig *WebSocketOpusConfig `json:"opus_config,omitempty"`
 	// 输出音频的语速，取值范围 [-50, 100]，默认为 0。-50 表示 0.5 倍速，100 表示 2 倍速。
 	SpeechRate *int `json:"speech_rate,omitempty"`
 	// 输出音频的音色 ID，默认是柔美女友音色。你可以调用[查看音色列表](https://www.coze.cn/open/docs/developer_guides/list_voices) API 查看当前可用的所有音色 ID。
@@ -159,7 +159,7 @@ type WebSocketSpeechUpdatedEvent struct {
 // WebSocketSpeechUpdatedEventData contains speech session information
 type WebSocketSpeechUpdatedEventData struct {
 	// 输出音频格式。
-	OutputAudio *OutputAudio `json:"output_audio,omitempty"`
+	OutputAudio *WebSocketOutputAudio `json:"output_audio,omitempty"`
 }
 
 // WebSocketInputTextBufferCompletedEvent input_text_buffer 提交完成
@@ -226,7 +226,7 @@ type WebSocketTranscriptionsUpdateEvent struct {
 // WebSocketTranscriptionsUpdateEventData contains transcription configuration
 type WebSocketTranscriptionsUpdateEventData struct {
 	// 输入音频格式。
-	InputAudio *InputAudio `json:"input_audio,omitempty"`
+	InputAudio *WebSocketInputAudio `json:"input_audio,omitempty"`
 }
 
 // WebSocketInputAudioBufferAppendEvent 流式上传音频片段
@@ -288,7 +288,7 @@ type WebSocketTranscriptionsUpdatedEvent struct {
 
 type WebSocketTranscriptionsUpdatedEventData struct {
 	// 输入音频格式。
-	InputAudio *InputAudio `json:"input_audio,omitempty"`
+	InputAudio *WebSocketInputAudio `json:"input_audio,omitempty"`
 }
 
 // WebSocketInputAudioBufferCompletedEvent 音频提交完成
@@ -347,11 +347,11 @@ type WebSocketChatUpdateEvent struct {
 // WebSocketChatUpdateEventData contains chat configuration
 type WebSocketChatUpdateEventData struct {
 	// 输出音频格式。
-	OutputAudio *OutputAudio `json:"output_audio,omitempty"`
+	OutputAudio *WebSocketOutputAudio `json:"output_audio,omitempty"`
 	// 输入音频格式。
-	InputAudio *InputAudio `json:"input_audio,omitempty"`
+	InputAudio *WebSocketInputAudio `json:"input_audio,omitempty"`
 	// 对话配置。
-	ChatConfig *ChatConfig `json:"chat_config,omitempty"`
+	ChatConfig *WebSocketChatConfig `json:"chat_config,omitempty"`
 	// 需要订阅下行事件的事件类型列表。不设置或者设置为空为订阅所有下行事件。
 	EventSubscriptions []string `json:"event_subscriptions,omitempty"`
 	// 是否需要播放开场白，默认为 false。
@@ -359,12 +359,12 @@ type WebSocketChatUpdateEventData struct {
 	// 自定义开场白，need_play_prologue 设置为 true 时生效。如果不设定自定义开场白则使用智能体上设置的开场白。
 	PrologueContent string `json:"prologue_content,omitempty"`
 	// 转检测配置。
-	TurnDetection *TurnDetection `json:"turn_detection,omitempty"`
+	TurnDetection *WebSocketTurnDetection `json:"turn_detection,omitempty"`
 	// 语音识别配置，包括热词和上下文信息，以便优化语音识别的准确性和相关性。
-	AsrConfig *ASRConfig `json:"asr_config,omitempty"`
+	AsrConfig *WebSocketASRConfig `json:"asr_config,omitempty"`
 }
 
-type ChatConfig struct {
+type WebSocketChatConfig struct {
 	// 标识对话发生在哪一次会话中。会话是智能体和用户之间的一段问答交互。一个会话包含一条或多条消息。对话是会话中对智能体的一次调用，智能体会将对话中产生的消息添加到会话中。可以使用已创建的会话，会话中已存在的消息将作为上下文传递给模型。创建会话的方式可参考创建会话。对于一问一答等不需要区分 conversation 的场合可不传该参数，系统会自动生成一个会话。不传的话会默认创建一个新的 conversation。
 	ConversationID *string `json:"conversation_id,omitempty"`
 	// 标识当前与智能体的用户，由使用方自行定义、生成与维护。user_id 用于标识对话中的不同用户，不同的 user_id，其对话的上下文消息、数据库等对话记忆数据互相隔离。如果不需要用户数据隔离，可将此参数固定为一个任意字符串，例如 123，abc 等。
@@ -381,49 +381,49 @@ type ChatConfig struct {
 	Parameters map[string]any `json:"parameters,omitempty"`
 }
 
-type TurnDetection struct {
+type WebSocketTurnDetection struct {
 	// 用户演讲检测模式
-	Type *TurnDetectionType `json:"type,omitempty"`
+	Type *WebSocketTurnDetectionType `json:"type,omitempty"`
 	// server_vad 模式下，VAD 检测到语音之前要包含的音频量，单位为 ms。默认为 600ms。
 	PrefixPaddingMS *int64 `json:"prefix_padding_ms,omitempty"`
 	// server_vad 模式下，检测语音停止的静音持续时间，单位为 ms。默认为 500ms。
 	SilenceDurationMS *int64 `json:"silence_duration_ms,omitempty"`
 	// server_vad 模式下打断策略配置
-	InterruptConfig *InterruptConfig `json:"interrupt_config,omitempty"`
+	InterruptConfig *WebSocketTurnDetectionInterruptConfig `json:"interrupt_config,omitempty"`
 }
 
-type TurnDetectionType string
+type WebSocketTurnDetectionType string
 
 const (
 	// TurnDetectionTypeServerVAD 自由对话模式，语音数据会传输到服务器端进行实时分析，服务器端的语音活动检测算法会判断用户是否在说话。
-	TurnDetectionTypeServerVAD TurnDetectionType = "server_vad"
+	TurnDetectionTypeServerVAD WebSocketTurnDetectionType = "server_vad"
 	// TurnDetectionTypeClientInterrupt 按键说话模式，客户端实时分析语音数据，并检测用户是否已停止说话。
-	TurnDetectionTypeClientInterrupt TurnDetectionType = "client_interrupt"
+	TurnDetectionTypeClientInterrupt WebSocketTurnDetectionType = "client_interrupt"
 )
 
-type InterruptConfig struct {
+type WebSocketTurnDetectionInterruptConfig struct {
 	// 打断模式
-	Mode *InterruptConfigMode `json:"mode,omitempty"`
+	Mode *WebSocketTurnDetectionInterruptConfigMode `json:"mode,omitempty"`
 	// 打断的关键词配置，最多同时限制 5 个关键词，每个关键词限定长度在6-24个字节以内(2-8个汉字以内), 不能有标点符号。
 	Keywords []string `json:"keywords,omitempty"`
 }
 
-type InterruptConfigMode string
+type WebSocketTurnDetectionInterruptConfigMode string
 
 const (
-	// InterruptConfigModeKeywordContains keyword_contains模式下，说话内容包含关键词才会打断模型回复。例如关键词"扣子"，用户正在说“你好呀扣子......” / “扣子你好呀”，模型回复都会被打断。
-	InterruptConfigModeKeywordContains InterruptConfigMode = "keyword_contains"
-	// InterruptConfigModeKeywordPrefix keyword_prefix模式下，说话内容前缀匹配关键词才会打断模型回复。例如关键词"扣子"，用户正在说“扣子你好呀......”，模型回复就会被打断，而用户说“你好呀扣子......”，模型回复不会被打断。
-	InterruptConfigModeKeywordPrefix InterruptConfigMode = "keyword_prefix"
+	// WebSocketTurnDetectionInterruptConfigModeKeywordContains keyword_contains模式下，说话内容包含关键词才会打断模型回复。例如关键词"扣子"，用户正在说“你好呀扣子......” / “扣子你好呀”，模型回复都会被打断。
+	WebSocketTurnDetectionInterruptConfigModeKeywordContains WebSocketTurnDetectionInterruptConfigMode = "keyword_contains"
+	// WebSocketTurnDetectionInterruptConfigModeKeywordPrefix keyword_prefix模式下，说话内容前缀匹配关键词才会打断模型回复。例如关键词"扣子"，用户正在说“扣子你好呀......”，模型回复就会被打断，而用户说“你好呀扣子......”，模型回复不会被打断。
+	WebSocketTurnDetectionInterruptConfigModeKeywordPrefix WebSocketTurnDetectionInterruptConfigMode = "keyword_prefix"
 )
 
-type ASRConfig struct {
+type WebSocketASRConfig struct {
 	// 请输入热词列表，以便提升这些词汇的识别准确率。所有热词加起来最多100个 Tokens，超出部分将自动截断。
 	HotWords []string `json:"hot_words,omitempty"`
 	// 请输入上下文信息。最多输入 800 个 Tokens，超出部分将自动截断。
 	Context *string `json:"context,omitempty"`
 	// 用户说话的语种，默认为 common。选项包括：
-	UserLanguage *ASRConfigUserLanguage `json:"user_language,omitempty"`
+	UserLanguage *WebSocketASRConfigUserLanguage `json:"user_language,omitempty"`
 	// 将语音转为文本时，是否启用语义顺滑。默认为 true。true：系统在进行语音处理时，会去掉识别结果中诸如 “啊”“嗯” 等语气词，使得输出的文本语义更加流畅自然，符合正常的语言表达习惯，尤其适用于对文本质量要求较高的场景，如正式的会议记录、新闻稿件生成等。false：系统不会对识别结果中的语气词进行处理，识别结果会保留原始的语气词。
 	EnableDDC *bool `json:"enable_ddc,omitempty"`
 	// 将语音转为文本时，是否开启文本规范化（ITN）处理，将识别结果转换为更符合书面表达习惯的格式以提升可读性。默认为 true。开启后，会将口语化数字转换为标准数字格式，示例：将两点十五分转换为 14:15。将一百美元转换为 $100。
@@ -432,22 +432,22 @@ type ASRConfig struct {
 	EnablePunc *bool `json:"enable_punc,omitempty"`
 }
 
-type ASRConfigUserLanguage string
+type WebSocketASRConfigUserLanguage string
 
 const (
-	ASRConfigUserLanguageCommon ASRConfigUserLanguage = "common" // 大模型语音识别，可自动识别中英粤。
-	ASRConfigUserLanguageZH     ASRConfigUserLanguage = "zh"     // 小模型语音识别，中文。
-	ASRConfigUserLanguageCANT   ASRConfigUserLanguage = "cant"   // 小模型语音识别，粤语。
-	ASRConfigUserLanguageSC     ASRConfigUserLanguage = "sc"     // 小模型语音识别，川渝。
-	ASRConfigUserLanguageEN     ASRConfigUserLanguage = "en"     // 小模型语音识别，英语。
-	ASRConfigUserLanguageJA     ASRConfigUserLanguage = "ja"     // 小模型语音识别，日语。
-	ASRConfigUserLanguageKO     ASRConfigUserLanguage = "ko"     // 小模型语音识别，韩语。
-	ASRConfigUserLanguageFR     ASRConfigUserLanguage = "fr"     // 小模型语音识别，法语。
-	ASRConfigUserLanguageID     ASRConfigUserLanguage = "id"     // 小模型语音识别，印尼语。
-	ASRConfigUserLanguageES     ASRConfigUserLanguage = "es"     // 小模型语音识别，西班牙语。
-	ASRConfigUserLanguagePT     ASRConfigUserLanguage = "pt"     // 小模型语音识别，葡萄牙语。
-	ASRConfigUserLanguageMS     ASRConfigUserLanguage = "ms"     // 小模型语音识别，马来语。
-	ASRConfigUserLanguageRU     ASRConfigUserLanguage = "ru"     // 小模型语音识别，俄语。
+	WebSocketASRConfigUserLanguageCommon WebSocketASRConfigUserLanguage = "common" // 大模型语音识别，可自动识别中英粤。
+	WebSocketASRConfigUserLanguageZH     WebSocketASRConfigUserLanguage = "zh"     // 小模型语音识别，中文。
+	WebSocketASRConfigUserLanguageCANT   WebSocketASRConfigUserLanguage = "cant"   // 小模型语音识别，粤语。
+	WebSocketASRConfigUserLanguageSC     WebSocketASRConfigUserLanguage = "sc"     // 小模型语音识别，川渝。
+	WebSocketASRConfigUserLanguageEN     WebSocketASRConfigUserLanguage = "en"     // 小模型语音识别，英语。
+	WebSocketASRConfigUserLanguageJA     WebSocketASRConfigUserLanguage = "ja"     // 小模型语音识别，日语。
+	WebSocketASRConfigUserLanguageKO     WebSocketASRConfigUserLanguage = "ko"     // 小模型语音识别，韩语。
+	WebSocketASRConfigUserLanguageFR     WebSocketASRConfigUserLanguage = "fr"     // 小模型语音识别，法语。
+	WebSocketASRConfigUserLanguageID     WebSocketASRConfigUserLanguage = "id"     // 小模型语音识别，印尼语。
+	WebSocketASRConfigUserLanguageES     WebSocketASRConfigUserLanguage = "es"     // 小模型语音识别，西班牙语。
+	WebSocketASRConfigUserLanguagePT     WebSocketASRConfigUserLanguage = "pt"     // 小模型语音识别，葡萄牙语。
+	WebSocketASRConfigUserLanguageMS     WebSocketASRConfigUserLanguage = "ms"     // 小模型语音识别，马来语。
+	WebSocketASRConfigUserLanguageRU     WebSocketASRConfigUserLanguage = "ru"     // 小模型语音识别，俄语。
 )
 
 // WebSocketConversationMessageCreateEvent 手动提交对话内容
@@ -522,15 +522,15 @@ type WebSocketInputTextGenerateAudioEvent struct {
 // WebSocketInputTextGenerateAudioEventData contains text to audio data
 type WebSocketInputTextGenerateAudioEventData struct {
 	// 消息内容的类型，支持设置为：text：文本
-	Mode WebSocketInputTextGenerateAudioEventDataMode `json:"mode,omitempty"`
+	Mode WebSocketInputTextGenerateAudioMode `json:"mode,omitempty"`
 	// 当 mode == text 时候必填。长度限制 (0, 1024) 字节
 	Text string `json:"text,omitempty"`
 }
 
-type WebSocketInputTextGenerateAudioEventDataMode string
+type WebSocketInputTextGenerateAudioMode string
 
 const (
-	WebSocketInputTextGenerateAudioEventDataModeText WebSocketInputTextGenerateAudioEventDataMode = "text"
+	WebSocketInputTextGenerateAudioModeText WebSocketInputTextGenerateAudioMode = "text"
 )
 
 // WebSocketChatCreatedEvent 对话连接成功

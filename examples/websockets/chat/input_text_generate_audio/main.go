@@ -84,7 +84,7 @@ func main() {
 	// Example: Use input_text.generate_audio to synthesize voice without triggering bot response
 	fmt.Println("Generating voice synthesis without bot response...")
 	if err := chatClient.InputTextGenerateAudio(&coze.WebSocketInputTextGenerateAudioEventData{
-		Mode: coze.WebSocketInputTextGenerateAudioEventDataModeText,
+		Mode: coze.WebSocketInputTextGenerateAudioModeText,
 		Text: "亲，你怎么不说话了。",
 	}); err != nil {
 		log.Fatalf("Failed to generate audio: %v", err)
