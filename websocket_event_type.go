@@ -62,7 +62,7 @@ const (
 	WebSocketEventTypeConversationClear                 WebSocketEventType = "conversation.clear"                    // 清除上下文
 	WebSocketEventTypeConversationChatSubmitToolOutputs WebSocketEventType = "conversation.chat.submit_tool_outputs" // 提交端插件执行结果
 	WebSocketEventTypeConversationChatCancel            WebSocketEventType = "conversation.chat.cancel"              // 打断智能体输出
-	WebSocketEventTypeInputTextGenerateAudio            WebSocketEventType = "input_text.generate_audio"            // 文本生成语音
+	WebSocketEventTypeInputTextGenerateAudio            WebSocketEventType = "input_text.generate_audio"             // 文本生成语音
 
 	// resp
 
