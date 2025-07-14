@@ -58,13 +58,15 @@ func dialWebSocket(dialer websocket.Dialer, urlStr string, requestHeader http.He
 	return conn, err
 }
 
-func mergeWebSocketClientOption(opt *WebSocketClientOption, merge *WebSocketClientOption) *WebSocketClientOption {
-	if merge == nil {
-		return opt
+func mergeWebSocketClientOption(opt *WebSocketClientOption, other *WebSocketClientOption) *WebSocketClientOption {
+	if opt == nil {
+		opt = &WebSocketClientOption{}
 	}
-	opt.SendChanCapacity = merge.SendChanCapacity
-	opt.ReceiveChanCapacity = merge.ReceiveChanCapacity
-	opt.HandshakeTimeout = merge.HandshakeTimeout
+	opt.ctx = other.ctx
+	opt.core = other.core
+	opt.path = other.path
+	opt.query = other.query
+	opt.responseEventTypes = other.responseEventTypes
 	return opt
 }
 
@@ -342,7 +344,7 @@ func (c *websocketClient) handleEvent(event IWebSocketEvent) {
 // handleClientError handles errors
 func (c *websocketClient) handleClientError(err error) {
 	handler := c.getHandler(WebSocketEventTypeClientError)
-	if handler == nil {
+	if handler == nil || err == nil {
 		return
 	}
 	if err := handler(&WebSocketClientErrorEvent{
