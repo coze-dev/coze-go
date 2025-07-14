@@ -68,7 +68,7 @@ func main() {
 	authCli := coze.NewTokenAuth(cozeAPIToken)
 	client := coze.NewCozeAPI(authCli,
 		coze.WithBaseURL(cozeAPIBase),
-		// coze.WithLogLevel(coze.LogLevelDebug),
+		coze.WithLogLevel(coze.LogLevelDebug),
 	)
 
 	// Create chat WebSocket client
