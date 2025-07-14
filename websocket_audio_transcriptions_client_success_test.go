@@ -11,9 +11,8 @@ import (
 
 type transcriptionsSuccessTestdataHandler struct {
 	BaseWebSocketAudioTranscriptionHandler
-	expectedItems []*testdataWebSocketItem
-	content       string
-	mu            sync.Mutex
+	content string
+	mu      sync.Mutex
 }
 
 func (r *transcriptionsSuccessTestdataHandler) OnTranscriptionsMessageUpdate(ctx context.Context, cli *WebSocketAudioTranscription, event *WebSocketTranscriptionsMessageUpdateEvent) error {
@@ -33,8 +32,6 @@ func (r *transcriptionsSuccessTestdataHandler) assert(t *testing.T) {
 
 func TestWebSocketTranscriptionsSuccess(t *testing.T) {
 	as := assert.New(t)
-	items, err := readTestdataWebSocket(websocketTranscriptionsSuccessTestData)
-	as.Nil(err)
 
 	client := newWebSocketAudioTranscriptionClient(context.Background(), newCore(&clientOption{
 		baseURL:  CnBaseURL,
@@ -43,11 +40,11 @@ func TestWebSocketTranscriptionsSuccess(t *testing.T) {
 		auth:     NewTokenAuth("token"),
 	}), &CreateWebsocketAudioTranscriptionReq{
 		WebSocketClientOption: &WebSocketClientOption{
-			dial: connSpeechSuccessTestdata(items),
+			dial: connMockWebSocket(websocketTranscriptionsSuccessTestData),
 		},
 	})
 	as.NotNil(client)
-	handler := &transcriptionsSuccessTestdataHandler{expectedItems: items}
+	handler := &transcriptionsSuccessTestdataHandler{}
 	client.RegisterHandler(handler)
 
 	as.Nil(client.Connect())

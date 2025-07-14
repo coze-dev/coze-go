@@ -12,9 +12,8 @@ import (
 
 type speechSuccessTestdataHandler struct {
 	BaseWebSocketAudioSpeechHandler
-	expectedItems []*testdataWebSocketItem
-	audio         []byte
-	mu            sync.Mutex
+	audio []byte
+	mu    sync.Mutex
 }
 
 func (r *speechSuccessTestdataHandler) OnSpeechAudioUpdate(ctx context.Context, cli *WebSocketAudioSpeech, event *WebSocketSpeechAudioUpdateEvent) error {
@@ -45,8 +44,6 @@ func (r *speechSuccessTestdataHandler) assert(t *testing.T) {
 
 func TestWebSocketSpeechSuccess(t *testing.T) {
 	as := assert.New(t)
-	items, err := readTestdataWebSocket(websocketSpeechSuccessTestData)
-	as.Nil(err)
 
 	client := newWebSocketAudioSpeechClient(context.Background(), newCore(&clientOption{
 		baseURL:  CnBaseURL,
@@ -55,11 +52,11 @@ func TestWebSocketSpeechSuccess(t *testing.T) {
 		auth:     NewTokenAuth("token"),
 	}), &CreateWebsocketAudioSpeechReq{
 		WebSocketClientOption: &WebSocketClientOption{
-			dial: connSpeechSuccessTestdata(items),
+			dial: connMockWebSocket(websocketSpeechSuccessTestData),
 		},
 	})
 	as.NotNil(client)
-	handler := &speechSuccessTestdataHandler{expectedItems: items}
+	handler := &speechSuccessTestdataHandler{}
 	client.RegisterHandler(handler)
 
 	as.Nil(client.Connect())

@@ -13,10 +13,9 @@ import (
 
 type chatSuccessTestdataHandler struct {
 	BaseWebSocketChatHandler
-	expectedItems []*testdataWebSocketItem
-	audio         []byte
-	text          string
-	mu            sync.Mutex
+	audio []byte
+	text  string
+	mu    sync.Mutex
 }
 
 func (r *chatSuccessTestdataHandler) OnConversationMessageDelta(ctx context.Context, cli *WebSocketChat, event *WebSocketConversationMessageDeltaEvent) error {
@@ -61,8 +60,6 @@ func (r *chatSuccessTestdataHandler) assert(t *testing.T) {
 
 func TestWebSocketChatSuccess(t *testing.T) {
 	as := assert.New(t)
-	items, err := readTestdataWebSocket(websocketChatSuccessTestData)
-	as.Nil(err)
 
 	client := newWebsocketChatClient(context.Background(), newCore(&clientOption{
 		baseURL:  CnBaseURL,
@@ -71,11 +68,11 @@ func TestWebSocketChatSuccess(t *testing.T) {
 		auth:     NewTokenAuth("token"),
 	}), &CreateWebsocketChatReq{
 		WebSocketClientOption: &WebSocketClientOption{
-			dial: connSpeechSuccessTestdata(items),
+			dial: connMockWebSocket(websocketChatSuccessTestData),
 		},
 	})
 	as.NotNil(client)
-	handler := &chatSuccessTestdataHandler{expectedItems: items}
+	handler := &chatSuccessTestdataHandler{}
 	client.RegisterHandler(handler)
 
 	as.Nil(client.Connect())

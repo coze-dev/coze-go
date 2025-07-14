@@ -56,28 +56,26 @@ func readTestdataWebSocket(content string) ([]*testdataWebSocketItem, error) {
 	return res, nil
 }
 
-func connSpeechSuccessTestdata(expectedItems []*testdataWebSocketItem) func(dialer websocket.Dialer, urlStr string, requestHeader http.Header) (websocketConn, error) {
+func connMockWebSocket(mockData string) func(dialer websocket.Dialer, urlStr string, requestHeader http.Header) (websocketConn, error) {
+	items, err := readTestdataWebSocket(mockData)
+	if err != nil {
+		panic(err)
+	}
 	return func(dialer websocket.Dialer, urlStr string, requestHeader http.Header) (websocketConn, error) {
-		return newSpeechSuccessTestdataConn(expectedItems), nil
+		return newMockWebSocketConn(items), nil
 	}
 }
 
-type speechSuccessTestdataConn struct {
-	mu    sync.RWMutex
-	items []*testdataWebSocketItem
-	idx   int
-
-	sendMu   sync.Mutex
-	sendLeft bool
-	sendCh   chan string
-
-	receiveMu   sync.Mutex
-	receiveLeft bool
-	receiveCh   chan string
+type mockWebSocketConn struct {
+	mu        sync.RWMutex
+	items     []*testdataWebSocketItem
+	idx       int
+	sendCh    chan string
+	receiveCh chan string
 }
 
-func newSpeechSuccessTestdataConn(expectedItems []*testdataWebSocketItem) *speechSuccessTestdataConn {
-	conn := &speechSuccessTestdataConn{
+func newMockWebSocketConn(expectedItems []*testdataWebSocketItem) *mockWebSocketConn {
+	conn := &mockWebSocketConn{
 		items:     expectedItems,
 		sendCh:    make(chan string),
 		receiveCh: make(chan string),
@@ -96,11 +94,11 @@ func newSpeechSuccessTestdataConn(expectedItems []*testdataWebSocketItem) *speec
 	return conn
 }
 
-func (r *speechSuccessTestdataConn) Close() error {
+func (r *mockWebSocketConn) Close() error {
 	return nil
 }
 
-func (r *speechSuccessTestdataConn) readCh(ch chan string) (string, error) {
+func (r *mockWebSocketConn) readCh(ch chan string) (string, error) {
 	for {
 		excepted := ""
 		read := false
@@ -127,7 +125,7 @@ func (r *speechSuccessTestdataConn) readCh(ch chan string) (string, error) {
 	}
 }
 
-func (r *speechSuccessTestdataConn) WriteMessage(messageType int, data []byte) error {
+func (r *mockWebSocketConn) WriteMessage(messageType int, data []byte) error {
 	excepted, err := r.readCh(r.sendCh)
 	if err != nil {
 		return fmt.Errorf("no left, write failed: %s", data)
@@ -139,7 +137,7 @@ func (r *speechSuccessTestdataConn) WriteMessage(messageType int, data []byte) e
 	return nil
 }
 
-func (r *speechSuccessTestdataConn) ReadMessage() (messageType int, p []byte, err error) {
+func (r *mockWebSocketConn) ReadMessage() (messageType int, p []byte, err error) {
 	excepted, err := r.readCh(r.receiveCh)
 	if err != nil {
 		return 0, nil, net.ErrClosed
