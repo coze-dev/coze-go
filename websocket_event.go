@@ -509,6 +509,24 @@ type WebSocketConversationChatCancelEvent struct {
 
 type WebSocketConversationChatCancelEventData struct{}
 
+// WebSocketInputTextGenerateAudioEvent 文本生成语音
+//
+// 你可以主动提交一段文字用来做语音合成，提交的消息不会触发智能体的回复，只会合成音频内容下发到客户端。
+// 提交事件的时候如果智能体正在输出语音会被中断输出。
+// 适合在和智能体聊天过程中客户端长时间没有响应，智能体可以主动说话暖场的场景。
+type WebSocketInputTextGenerateAudioEvent struct {
+	baseWebSocketEvent
+	Data *WebSocketInputTextGenerateAudioEventData `json:"data,omitempty"`
+}
+
+// WebSocketInputTextGenerateAudioEventData contains text to audio data
+type WebSocketInputTextGenerateAudioEventData struct {
+	// 消息内容的类型，支持设置为：text：文本
+	Mode string `json:"mode,omitempty"`
+	// 当 mode == text 时候必填。长度限制 (0, 1024) 字节
+	Text string `json:"text,omitempty"`
+}
+
 // WebSocketChatCreatedEvent 对话连接成功
 //
 // 流式对话接口成功建立连接后服务端会发送此事件。

@@ -62,6 +62,7 @@ const (
 	WebSocketEventTypeConversationClear                 WebSocketEventType = "conversation.clear"                    // 清除上下文
 	WebSocketEventTypeConversationChatSubmitToolOutputs WebSocketEventType = "conversation.chat.submit_tool_outputs" // 提交端插件执行结果
 	WebSocketEventTypeConversationChatCancel            WebSocketEventType = "conversation.chat.cancel"              // 打断智能体输出
+	WebSocketEventTypeInputTextGenerateAudio            WebSocketEventType = "input_text.generate_audio"            // 文本生成语音
 
 	// resp
 
@@ -124,6 +125,7 @@ var websocketEvents = map[string]reflect.Type{
 	string(WebSocketEventTypeConversationClear):                 reflect.TypeOf(WebSocketConversationClearEvent{}),
 	string(WebSocketEventTypeConversationChatSubmitToolOutputs): reflect.TypeOf(WebSocketConversationChatSubmitToolOutputsEvent{}),
 	string(WebSocketEventTypeConversationChatCancel):            reflect.TypeOf(WebSocketConversationChatCancelEvent{}),
+	string(WebSocketEventTypeInputTextGenerateAudio):            reflect.TypeOf(WebSocketInputTextGenerateAudioEvent{}),
 	// v1/chat resp
 	string(WebSocketEventTypeChatCreated):                    reflect.TypeOf(WebSocketChatCreatedEvent{}),
 	string(WebSocketEventTypeChatUpdated):                    reflect.TypeOf(WebSocketChatUpdatedEvent{}),
@@ -199,7 +201,7 @@ var chatResponseEventTypes = []WebSocketEventType{
 	WebSocketEventTypeInputAudioBufferSpeechStopped,
 }
 
-const websocketEventTypeSize = 44
+const websocketEventTypeSize = 45
 
 var websocketEventTypes = [websocketEventTypeSize]WebSocketEventType{
 	WebSocketEventTypeClientError,
@@ -228,6 +230,7 @@ var websocketEventTypes = [websocketEventTypeSize]WebSocketEventType{
 	WebSocketEventTypeConversationClear,
 	WebSocketEventTypeConversationChatSubmitToolOutputs,
 	WebSocketEventTypeConversationChatCancel,
+	WebSocketEventTypeInputTextGenerateAudio,
 	WebSocketEventTypeChatCreated,
 	WebSocketEventTypeChatUpdated,
 	WebSocketEventTypeConversationChatCreated,

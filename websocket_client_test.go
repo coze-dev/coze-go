@@ -22,6 +22,9 @@ var websocketTranscriptionsSuccessTestData string
 //go:embed testdata/websocket_chat_success.txt
 var websocketChatSuccessTestData string
 
+//go:embed testdata/websocket_chat_generate_audio_success.txt
+var websocketChatGenerateAudioSuccessTestData string
+
 type testdataWebSocketItem struct {
 	Type  string // send, receive
 	Event string //

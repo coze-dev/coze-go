@@ -4,7 +4,7 @@ type WebSocketClient interface {
 	Connect() error
 	Close() error
 	IsConnected() bool
-	Wait() error
+	Wait(eventTypes ...WebSocketEventType) error
 	OnEvent(eventType WebSocketEventType, handler EventHandler)
 }
 

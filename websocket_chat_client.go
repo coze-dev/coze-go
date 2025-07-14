@@ -76,13 +76,20 @@ func (c *WebSocketChat) ConversationChatCancel(data *WebSocketConversationChatCa
 	return c.ws.sendEvent(newWebSocketEvent(WebSocketEventTypeConversationChatCancel, data).(WebSocketConversationChatCancelEvent))
 }
 
+func (c *WebSocketChat) InputTextGenerateAudio(data *WebSocketInputTextGenerateAudioEventData) error {
+	return c.ws.sendEvent(newWebSocketEvent(WebSocketEventTypeInputTextGenerateAudio, data).(WebSocketInputTextGenerateAudioEvent))
+}
+
 // Wait waits for chat to complete
-func (c *WebSocketChat) Wait() error {
-	return c.ws.WaitForEvent([]WebSocketEventType{
-		WebSocketEventTypeConversationChatCompleted,
-		WebSocketEventTypeConversationChatFailed,
-		WebSocketEventTypeError,
-	}, false)
+func (c *WebSocketChat) Wait(eventTypes ...WebSocketEventType) error {
+	if eventTypes == nil {
+		eventTypes = []WebSocketEventType{
+			WebSocketEventTypeConversationChatCompleted,
+			WebSocketEventTypeConversationChatFailed,
+			WebSocketEventTypeError,
+		}
+	}
+	return c.ws.WaitForEvent(eventTypes, false)
 }
 
 // OnEvent registers an event handler
