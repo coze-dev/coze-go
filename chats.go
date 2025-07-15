@@ -39,7 +39,7 @@ func (r *chat) CreateAndPoll(ctx context.Context, req *CreateChatsReq, timeout *
 		if timeout != nil && time.Since(now) > time.Duration(*timeout)*time.Second {
 			if chat.Status == ChatStatusFailed || chat.Status == ChatStatusCancelled || chat.Status == ChatStatusRequiresAction {
 				logger.Warnf(ctx, "chat status can not be cancel, conversationID:%v", conversationID)
-				return nil, err
+				return nil, errors.New("chat status can not be cancel")
 			}
 			logger.Infof(ctx, "Create timeout: ", *timeout, " seconds, cancel Create")
 			cancelResp, err := r.Cancel(ctx, &CancelChatsReq{
