@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"time"
 
@@ -29,8 +30,15 @@ func main() {
 	botID := os.Getenv("COZE_BOT_ID")
 	authCli := coze.NewTokenAuth(token)
 
+	customClient := &http.Client{
+		Timeout: time.Minute * 20,
+	}
+
 	// Init the Coze client through the access_token.
-	cozeCli := coze.NewCozeAPI(authCli, coze.WithBaseURL(os.Getenv("COZE_API_BASE")))
+	cozeCli := coze.NewCozeAPI(authCli,
+		coze.WithBaseURL(os.Getenv("COZE_API_BASE")),
+		coze.WithHttpClient(customClient),
+	)
 
 	//
 	// Step one, create chats
