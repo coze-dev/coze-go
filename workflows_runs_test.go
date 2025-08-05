@@ -41,6 +41,49 @@ func TestWorkflowRuns(t *testing.T) {
 		as.Equal("https://debug.example.com", resp.DebugURL)
 		as.Equal(100, resp.Token)
 		as.Equal("0.1", resp.Cost)
+		as.Nil(resp.Usage) // Usage is optional
+	})
+
+	t.Run("create workflow run with usage", func(t *testing.T) {
+		workflowRuns := newWorkflowRun(newCoreWithTransport(newMockTransport(func(req *http.Request) (*http.Response, error) {
+			as.Equal(http.MethodPost, req.Method)
+			as.Equal("/v1/workflow/run", req.URL.Path)
+			return mockResponse(http.StatusOK, &runWorkflowsResp{
+				RunWorkflowsResp: &RunWorkflowsResp{
+					ExecuteID: "exec1",
+					Data:      `{"result": "success"}`,
+					DebugURL:  "https://debug.example.com",
+					Token:     100,
+					Cost:      "0.1",
+					Usage: &ChatUsage{
+						TokenCount:  100,
+						OutputCount: 50,
+						InputCount:  50,
+					},
+				},
+			})
+		})))
+		resp, err := workflowRuns.Create(context.Background(), &RunWorkflowsReq{
+			WorkflowID: "workflow1",
+			Parameters: map[string]any{
+				"param1": "value1",
+			},
+			BotID:   "bot1",
+			IsAsync: true,
+			AppID:   "app1",
+		})
+		as.Nil(err)
+		as.NotNil(resp)
+		as.NotEmpty(resp.Response().LogID())
+		as.Equal("exec1", resp.ExecuteID)
+		as.Equal(`{"result": "success"}`, resp.Data)
+		as.Equal("https://debug.example.com", resp.DebugURL)
+		as.Equal(100, resp.Token)
+		as.Equal("0.1", resp.Cost)
+		as.NotNil(resp.Usage)
+		as.Equal(100, resp.Usage.TokenCount)
+		as.Equal(50, resp.Usage.OutputCount)
+		as.Equal(50, resp.Usage.InputCount)
 	})
 
 	t.Run("stream workflow run success", func(t *testing.T) {
