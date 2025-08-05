@@ -65,6 +65,9 @@ type RunWorkflowsResp struct {
 	DebugURL string `json:"debug_url,omitempty"`
 	Token    int    `json:"token,omitempty"`
 	Cost     string `json:"cost,omitempty"`
+
+	// Detailed information about Token consumption.
+	Usage *ChatUsage `json:"usage,omitempty"`
 }
 
 // RetrieveWorkflowRunsHistoriesResp represents response for retrieving workflow runs history
@@ -122,6 +125,9 @@ type WorkflowRunHistory struct {
 	// Workflow trial runs debugging page. Visit this page to view the running results, input and
 	// output information of each workflow node.
 	DebugURL string `json:"debug_url"`
+
+	// Detailed information about Token consumption.
+	Usage *ChatUsage `json:"usage,omitempty"`
 }
 
 // NodeExecuteStatus represents the status of a node execution

@@ -51,20 +51,6 @@ func (r *workflowRuns) Stream(ctx context.Context, req *RunWorkflowsReq) (Stream
 	return newStream(ctx, r.client, response.HTTPResponse, parseWorkflowEvent), err
 }
 
-// WorkflowRunResult represents the result of a workflow runs
-type WorkflowRunResult struct {
-	DebugUrl string `json:"debug_url"`
-
-	// Workflow execution result, usually a JSON serialized string. In some scenarios, a string with a
-	// non-JSON structure may be returned.
-	Data string `json:"data"`
-
-	// Execution ID of asynchronous execution. Only returned when the workflow is executed
-	// asynchronously (is_async=true). You can use execute_id to call the Query Workflow Asynchronous
-	// Execution Result API to obtain the final execution result of the workflow.
-	ExecuteID string `json:"execute_id"`
-}
-
 // WorkflowEvent represents an event in a workflow
 type WorkflowEvent struct {
 	// The event ID of this message in the interface response. It starts from 0.
@@ -150,6 +136,9 @@ type WorkflowEventMessage struct {
 
 	// Additional fields.
 	Ext map[string]any `json:"ext,omitempty"`
+
+	// Detailed information about Token consumption.
+	Usage *ChatUsage `json:"usage,omitempty"`
 }
 
 // WorkflowEventType represents the type of workflow event
