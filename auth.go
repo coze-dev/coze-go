@@ -108,6 +108,7 @@ type Scope struct {
 	AccountPermission   *ScopeAccountPermission   `json:"account_permission"`
 	AttributeConstraint *ScopeAttributeConstraint `json:"attribute_constraint,omitempty"`
 	WorkspacePermission *ScopeWorkspacePermission `json:"workspace_permission,omitempty"`
+	WorkflowPermission  *ScopeWorkflowPermission  `json:"workflow_permission,omitempty"`
 }
 
 type DeviceInfo struct {
@@ -145,10 +146,16 @@ type ScopeAccountPermission struct {
 	PermissionList []string `json:"permission_list"`
 }
 
-// ScopeAccountPermission represents the workspace permissions in the scope
+// ScopeWorkspacePermission represents the workspace permissions in the scope
 type ScopeWorkspacePermission struct {
 	WorkspaceIdList []string `json:"workspace_id_list"`
 	PermissionList  []string `json:"permission_list"`
+}
+
+// ScopeWorkflowPermission represents the workflow permissions in the scope
+type ScopeWorkflowPermission struct {
+	WorkflowIdList []string `json:"workflow_id_list"`
+	PermissionList []string `json:"permission_list"`
 }
 
 // ScopeAttributeConstraint represents the attribute constraints in the scope
