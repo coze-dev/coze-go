@@ -653,7 +653,12 @@ func (c *JWTOAuthClient) GetAccessToken(ctx context.Context, opts *GetJWTAccessT
 		ttl = opts.TTL
 	}
 
-	jwtCode, err := c.generateJWT(ttl, opts.SessionName, opts.SessionContext)
+	generateJWTReq := &GenerateJWTReq{
+		TTL:            ttl,
+		SessionName:    opts.SessionName,
+		SessionContext: opts.SessionContext,
+	}
+	jwtCode, err := c.GenerateJWT(ctx, generateJWTReq)
 	if err != nil {
 		return nil, err
 	}
@@ -673,12 +678,23 @@ func (c *JWTOAuthClient) GetAccessToken(ctx context.Context, opts *GetJWTAccessT
 	return c.getAccessToken(ctx, req)
 }
 
-func (c *JWTOAuthClient) generateJWT(ttl int, sessionName *string, sessionContext *SessionContext) (string, error) {
+// GenerateJWTReq represents options for generate JWT
+type GenerateJWTReq struct {
+	TTL            int             `json:"ttl,omitempty"`             // Token validity period (in seconds)
+	SessionName    *string         `json:"session_name,omitempty"`    // Session name
+	SessionContext *SessionContext `json:"session_context,omitempty"` // SessionContext
+}
+
+func (c *JWTOAuthClient) GenerateJWT(ctx context.Context, opts *GenerateJWTReq) (string, error) {
 	now := time.Now()
 	jti, err := generateRandomString(16)
 	if err != nil {
 		return "", err
 	}
+
+	ttl := opts.TTL
+	sessionName := opts.SessionName
+	sessionContext := opts.SessionContext
 
 	// Build claims
 	claims := jwt.MapClaims{
