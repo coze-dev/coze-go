@@ -25,6 +25,7 @@ type CreateAudioSpeechReq struct {
 	ResponseFormat *AudioFormat `json:"response_format"`
 	Speed          *float32     `json:"speed"`
 	SampleRate     *int         `json:"sample_rate"`
+	LoudnessRate   *int         `json:"loudness_rate"`
 }
 
 // CreateAudioSpeechResp represents the response for creating speech
