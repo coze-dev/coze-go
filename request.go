@@ -290,11 +290,12 @@ func (r *rawHttpRequest) parseRawRequestReqBody(body interface{}, isFile bool) e
 					fieldVV = fieldVV.Elem()
 				}
 				j = strings.TrimSuffix(j, ",omitempty")
-				fileKey = j
 				if r, ok := fieldVV.Interface().(FileTypes); ok {
+					fileKey = j
 					reader = r
 					fileName = r.Name()
 				} else if r, ok := fieldVV.Interface().(io.Reader); ok {
+					fileKey = j
 					reader = r
 				} else if j == "filename" {
 					fileName = reflectToString(fieldVV)
@@ -321,6 +322,9 @@ func (r *rawHttpRequest) parseRawRequestReqBody(body interface{}, isFile bool) e
 	}
 
 	if isFile {
+		if fileKey == "" {
+			fileKey = "file"
+		}
 		contentType, bod, err := newFileUploadRequest(fileData, fileKey, fileName, reader)
 		if err != nil {
 			return err
