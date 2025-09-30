@@ -36,8 +36,11 @@ func (r *chat) CreateAndPoll(ctx context.Context, req *CreateChatsReq, timeout *
 	conversationID := chat.ConversationID
 	now := time.Now()
 	for {
-		time.Sleep(time.Second)
 		if timeout != nil && time.Since(now) > time.Duration(*timeout)*time.Second {
+			if chat.Status == ChatStatusFailed || chat.Status == ChatStatusCancelled || chat.Status == ChatStatusRequiresAction {
+				logger.Warnf(ctx, "chat status can not be cancel, conversationID:%v", conversationID)
+				return nil, errors.New("chat status can not be cancel")
+			}
 			logger.Infof(ctx, "Create timeout: ", *timeout, " seconds, cancel Create")
 			cancelResp, err := r.Cancel(ctx, &CancelChatsReq{
 				ConversationID: conversationID,
@@ -50,6 +53,8 @@ func (r *chat) CreateAndPoll(ctx context.Context, req *CreateChatsReq, timeout *
 			chat = cancelResp.Chat
 			break
 		}
+
+		time.Sleep(time.Second)
 		retrieveChat, err := r.Retrieve(ctx, &RetrieveChatsReq{
 			ConversationID: conversationID,
 			ChatID:         chat.ID,
@@ -61,6 +66,11 @@ func (r *chat) CreateAndPoll(ctx context.Context, req *CreateChatsReq, timeout *
 			chat = retrieveChat.Chat
 			logger.Infof(ctx, "Create completed, spend: %v", time.Since(now))
 			break
+		}
+		if retrieveChat.Chat.Status == ChatStatusFailed || retrieveChat.Chat.Status == ChatStatusCancelled || retrieveChat.Chat.Status == ChatStatusRequiresAction {
+			chat = retrieveChat.Chat
+			logger.Infof(ctx, "Create failed, spend: %v", time.Since(now))
+			return nil, errors.New(" chat status exist; status: " + string(chat.Status))
 		}
 	}
 	messages, err := r.Messages.List(ctx, &ListChatsMessagesReq{
