@@ -21,6 +21,7 @@ type CozeAPI struct {
 	Enterprises   *enterprises
 	Apps          *apps
 	WebSockets    *websockets
+	Stores        *stores
 	baseURL       string
 }
 
@@ -111,6 +112,7 @@ func NewCozeAPI(auth Auth, opts ...CozeAPIOption) CozeAPI {
 		Enterprises:   newEnterprises(core),
 		Apps:          newApps(core),
 		WebSockets:    newWebSockets(core),
+		Stores:        newStores(core),
 		baseURL:       opt.baseURL,
 	}
 	return cozeClient
