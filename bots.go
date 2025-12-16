@@ -191,15 +191,21 @@ type BotPromptInfo struct {
 	Prompt string `json:"prompt"`
 }
 
+type BotSuggestReplyInfo struct {
+	ReplyMode        string `json:"reply_mode,omitempty"`        // enum: enable, disable, customized
+	CustomizedPrompt string `json:"customized_prompt,omitempty"` // when ReplyMode == customized
+}
+
 type CreateBotsReq struct {
-	SpaceID         string              `json:"space_id"`                    // Space ID
-	Name            string              `json:"name"`                        // Name
-	Description     string              `json:"description,omitempty"`       // Description
-	IconFileID      string              `json:"icon_file_id,omitempty"`      // Icon file ID
-	PromptInfo      *BotPromptInfo      `json:"prompt_info,omitempty"`       // Prompt information
-	OnboardingInfo  *BotOnboardingInfo  `json:"onboarding_info,omitempty"`   // Onboarding information
-	ModelInfoConfig *BotModelInfoConfig `json:"model_info_config,omitempty"` // ModelInfoConfig information
-	WorkflowIDList  *WorkflowIDList     `json:"workflow_id_list,omitempty"`  // WorkflowIDList information
+	SpaceID          string               `json:"space_id"`                     // Space ID
+	Name             string               `json:"name"`                         // Name
+	Description      string               `json:"description,omitempty"`        // Description
+	IconFileID       string               `json:"icon_file_id,omitempty"`       // Icon file ID
+	PromptInfo       *BotPromptInfo       `json:"prompt_info,omitempty"`        // Prompt information
+	OnboardingInfo   *BotOnboardingInfo   `json:"onboarding_info,omitempty"`    // Onboarding information
+	ModelInfoConfig  *BotModelInfoConfig  `json:"model_info_config,omitempty"`  // ModelInfoConfig information
+	WorkflowIDList   *WorkflowIDList      `json:"workflow_id_list,omitempty"`   // WorkflowIDList information
+	SuggestReplyInfo *BotSuggestReplyInfo `json:"suggest_reply_info,omitempty"` // SuggestReplyInfo information
 }
 
 type CreateBotsResp struct {
