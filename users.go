@@ -5,40 +5,24 @@ import (
 	"net/http"
 )
 
-// Me retrieves the current user's information
-func (r *users) Me(ctx context.Context) (*User, error) {
+func (r *users) Me(ctx context.Context, req *SwaggerOperationRequest) (*SwaggerOperationResponse, error) {
+	if req == nil {
+		req = &SwaggerOperationRequest{}
+	}
 	request := &RawRequestReq{
 		Method: http.MethodGet,
-		URL:    "/v1/users/me",
-		Body:   new(GetUserMeReq),
+		URL:    buildSwaggerOperationURL("/v1/users/me", req.PathParams, req.QueryParams),
+		Body:   req.Body,
 	}
-	response := new(meResp)
-	err := r.client.rawRequest(ctx, request, response)
-	return response.User, err
-}
-
-type GetUserMeReq struct{}
-
-// User represents a Coze user
-type User struct {
-	baseModel
-	UserID    string `json:"user_id"`
-	UserName  string `json:"user_name"`
-	NickName  string `json:"nick_name"`
-	AvatarURL string `json:"avatar_url"`
-}
-
-type meResp struct {
-	baseResponse
-	User *User `json:"data"`
+	response := new(SwaggerOperationResponse)
+	err := r.core.rawRequest(ctx, request, response)
+	return response, err
 }
 
 type users struct {
-	client *core
+	core *core
 }
 
 func newUsers(core *core) *users {
-	return &users{
-		client: core,
-	}
+	return &users{core: core}
 }

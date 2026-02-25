@@ -5,48 +5,18 @@ import (
 	"net/http"
 )
 
-// Duplicate creates a copy of an existing template
-func (r *templates) Duplicate(ctx context.Context, templateID string, req *DuplicateTemplateReq) (*TemplateDuplicateResp, error) {
+func (r *templates) Duplicate(ctx context.Context, req *SwaggerOperationRequest) (*SwaggerOperationResponse, error) {
 	if req == nil {
-		req = &DuplicateTemplateReq{}
+		req = &SwaggerOperationRequest{}
 	}
-	req.TemplateID = templateID
 	request := &RawRequestReq{
 		Method: http.MethodPost,
-		URL:    "/v1/templates/:template_id/duplicate",
-		Body:   req,
+		URL:    buildSwaggerOperationURL("/v1/templates/{template_id}/duplicate", req.PathParams, req.QueryParams),
+		Body:   req.Body,
 	}
-	response := new(templateDuplicateResp)
+	response := new(SwaggerOperationResponse)
 	err := r.core.rawRequest(ctx, request, response)
-	return response.Data, err
-}
-
-// TemplateEntityType represents the type of template entity
-type TemplateEntityType string
-
-const (
-	// TemplateEntityTypeAgent represents an agent template
-	TemplateEntityTypeAgent TemplateEntityType = "agent"
-)
-
-// TemplateDuplicateResp represents the response from duplicating a template
-type TemplateDuplicateResp struct {
-	baseModel
-	EntityID   string             `json:"entity_id"`
-	EntityType TemplateEntityType `json:"entity_type"`
-}
-
-// DuplicateTemplateReq represents the request to duplicate a template
-type DuplicateTemplateReq struct {
-	TemplateID  string  `path:"template_id" json:"-"`
-	WorkspaceID string  `json:"workspace_id,omitempty"`
-	Name        *string `json:"name,omitempty"`
-}
-
-// templateDuplicateResp represents response for creating document
-type templateDuplicateResp struct {
-	baseResponse
-	Data *TemplateDuplicateResp `json:"data"`
+	return response, err
 }
 
 type templates struct {

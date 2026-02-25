@@ -2,39 +2,23 @@ package coze
 
 import (
 	"context"
-	"io"
 	"net/http"
 )
 
-func (r *audioTranscriptions) Create(ctx context.Context, req *AudioSpeechTranscriptionsReq) (*CreateAudioTranscriptionsResp, error) {
+// Create 语音识别
+func (r *audioTranscriptions) Create(ctx context.Context, req *SwaggerOperationRequest) (*SwaggerOperationResponse, error) {
+	if req == nil {
+		req = &SwaggerOperationRequest{}
+	}
 	request := &RawRequestReq{
 		Method: http.MethodPost,
-		URL:    "/v1/audio/transcriptions",
-		Body:   req,
+		URL:    buildSwaggerOperationURL("/v1/audio/transcriptions", req.PathParams, req.QueryParams),
+		Body:   req.Body,
 		IsFile: true,
 	}
-	response := new(createAudioTranscriptionsResp)
+	response := new(SwaggerOperationResponse)
 	err := r.core.rawRequest(ctx, request, response)
-	return response.CreateAudioTranscriptionsResp, err
-}
-
-type AudioSpeechTranscriptionsReq struct {
-	Filename string    `json:"filename"`
-	Audio    io.Reader `json:"file"`
-}
-
-type createAudioTranscriptionsResp struct {
-	baseResponse
-	*CreateAudioTranscriptionsResp
-}
-
-type CreateAudioTranscriptionsResp struct {
-	baseModel
-	Data AudioTranscriptionsData `json:"data"`
-}
-
-type AudioTranscriptionsData struct {
-	Text string `json:"text"`
+	return response, err
 }
 
 type audioTranscriptions struct {
