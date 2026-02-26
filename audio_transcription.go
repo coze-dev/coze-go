@@ -2,23 +2,39 @@ package coze
 
 import (
 	"context"
+	"io"
 	"net/http"
 )
 
-// Create 语音识别
-func (r *audioTranscriptions) Create(ctx context.Context, req *SwaggerOperationRequest) (*SwaggerOperationResponse, error) {
-	if req == nil {
-		req = &SwaggerOperationRequest{}
-	}
+func (r *audioTranscriptions) Create(ctx context.Context, req *AudioSpeechTranscriptionsReq) (*CreateAudioTranscriptionsResp, error) {
 	request := &RawRequestReq{
 		Method: http.MethodPost,
-		URL:    buildSwaggerOperationURL("/v1/audio/transcriptions", req.PathParams, req.QueryParams),
-		Body:   req.Body,
+		URL:    "/v1/audio/transcriptions",
+		Body:   req,
 		IsFile: true,
 	}
-	response := new(SwaggerOperationResponse)
+	response := new(createAudioTranscriptionsResp)
 	err := r.core.rawRequest(ctx, request, response)
-	return response, err
+	return response.CreateAudioTranscriptionsResp, err
+}
+
+type AudioSpeechTranscriptionsReq struct {
+	Filename string    `json:"filename"`
+	Audio    io.Reader `json:"file"`
+}
+
+type createAudioTranscriptionsResp struct {
+	baseResponse
+	*CreateAudioTranscriptionsResp
+}
+
+type CreateAudioTranscriptionsResp struct {
+	baseModel
+	Data AudioTranscriptionsData `json:"data"`
+}
+
+type AudioTranscriptionsData struct {
+	Text string `json:"text"`
 }
 
 type audioTranscriptions struct {

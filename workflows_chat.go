@@ -5,40 +5,34 @@ import (
 	"net/http"
 )
 
-// Stream 执行对话流
-func (r *workflowsChat) Stream(ctx context.Context, req *SwaggerOperationRequest) (*SwaggerOperationResponse, error) {
-	if req == nil {
-		req = &SwaggerOperationRequest{}
-	}
+func (r *workflowsChat) Stream(ctx context.Context, req *WorkflowsChatStreamReq) (Stream[ChatEvent], error) {
 	request := &RawRequestReq{
 		Method: http.MethodPost,
-		URL:    buildSwaggerOperationURL("/v1/workflows/chat", req.PathParams, req.QueryParams),
-		Body:   req.Body,
+		URL:    "/v1/workflows/chat",
+		Body:   req,
 	}
-	response := new(SwaggerOperationResponse)
-	err := r.core.rawRequest(ctx, request, response)
-	return response, err
+	response := new(createChatsResp)
+	err := r.client.rawRequest(ctx, request, response)
+	return newStream(ctx, r.client, response.HTTPResponse, parseChatEvent), err
 }
 
-// Create 执行对话流
-func (r *workflowsChat) Create(ctx context.Context, req *SwaggerOperationRequest) (*SwaggerOperationResponse, error) {
-	if req == nil {
-		req = &SwaggerOperationRequest{}
-	}
-	request := &RawRequestReq{
-		Method: http.MethodPost,
-		URL:    buildSwaggerOperationURL("/v1/workflows/chat", req.PathParams, req.QueryParams),
-		Body:   req.Body,
-	}
-	response := new(SwaggerOperationResponse)
-	err := r.core.rawRequest(ctx, request, response)
-	return response, err
+// WorkflowsChatStreamReq 表示工作流聊天流式请求
+type WorkflowsChatStreamReq struct {
+	WorkflowID         string            `json:"workflow_id"`               // 工作流ID
+	AdditionalMessages []*Message        `json:"additional_messages"`       // 额外的消息信息
+	Parameters         map[string]any    `json:"parameters,omitempty"`      // 工作流参数
+	AppID              *string           `json:"app_id,omitempty"`          // 应用ID
+	BotID              *string           `json:"bot_id,omitempty"`          // 机器人ID
+	ConversationID     *string           `json:"conversation_id,omitempty"` // 会话ID
+	Ext                map[string]string `json:"ext,omitempty"`             // 扩展信息
 }
 
 type workflowsChat struct {
-	core *core
+	client *core
 }
 
 func newWorkflowsChat(core *core) *workflowsChat {
-	return &workflowsChat{core: core}
+	return &workflowsChat{
+		client: core,
+	}
 }
