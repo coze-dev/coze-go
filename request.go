@@ -243,6 +243,12 @@ func (r *rawHttpRequest) parseHeader(ctx context.Context, ins *core, req *RawReq
 		}
 	}
 
+	if len(ins.headers) > 0 {
+		for k, v := range ins.headers {
+			r.Headers[k] = v[0]
+		}
+	}
+
 	// logid
 	if ins.enableLogID {
 		logID, ok := getStringFromContext(ctx, ctxLogIDKey)
