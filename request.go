@@ -229,6 +229,14 @@ func (r *rawHttpRequest) parseHeader(ctx context.Context, ins *core, req *RawReq
 	r.Headers["User-Agent"] = userAgent
 	r.Headers["X-Coze-Client-User-Agent"] = clientUserAgent
 
+	// client-level default headers
+	for k, v := range ins.headers {
+		if len(v) == 0 {
+			continue
+		}
+		r.Headers[k] = v[0]
+	}
+
 	// req
 	for k, v := range req.Headers {
 		r.Headers[k] = v
