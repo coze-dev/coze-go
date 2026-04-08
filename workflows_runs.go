@@ -185,6 +185,10 @@ type RunWorkflowsReq struct {
 	IsAsync bool `json:"is_async,omitempty"`
 
 	AppID string `json:"app_id,omitempty"`
+
+	// The workflow version is valid only when the workflow is from the repository.
+	// If no version is specified, the latest version is executed by default.
+	WorkflowVersion string `json:"workflow_version,omitempty"`
 }
 
 // ResumeRunWorkflowsReq represents request for resuming workflow runs
