@@ -17,6 +17,9 @@ type NopEvent struct{}
 type Stream[T streamable] interface {
 	Responser
 	Close() error
+	// Recv returns the next event of the stream. After the terminal event has
+	// been returned, every further call reports io.EOF. Callers are still
+	// responsible for calling Close.
 	Recv() (*T, error)
 }
 
@@ -48,7 +51,13 @@ func newStream[T streamable](ctx context.Context, core *core, resp *http.Respons
 	}
 }
 
+// Recv returns the next event of the stream. Once the terminal event has been
+// delivered, the stream is finished and Recv reports io.EOF without reading
+// further from the HTTP response.
 func (s *streamReader[T]) Recv() (response *T, err error) {
+	if s.isFinished {
+		return nil, io.EOF
+	}
 	return s.processLines()
 }
 
